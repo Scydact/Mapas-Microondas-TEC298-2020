@@ -15,16 +15,13 @@ function draw() {
     mapLineList.draw(context);
     if (clickMode.mode == "setLinePoint2") {
         let pos = screenToMapPos(mousePos);
-        temp.mapline.templine.x2 = pos.x;
-        temp.mapline.templine.y2 = pos.y;
+        temp.mapline.templine.p2 = pos;
         temp.mapline.templine.draw(context);
     }
-
 
     // Cursor overlay
     drawCurrentPosition(context);
 }
-
 
 // Draws the map
 function drawMap(context) {
@@ -58,20 +55,29 @@ function drawMap(context) {
 // Draws coordenate indicator
 function drawPosition(context, screenPoint, coordPoint) {
     context.save();
-    padding = {x: 5, y:5};
-    margin = {x: 20, y:0};
+    padding = { x: 5, y: 5 };
+    margin = { x: 20, y: 0 };
 
     var position = formattedPixelPointToMapPoint(coordPoint);
-    var msg = 'Pos: (' + position.x + ',' + position.y + ')';
-    context.font = '15px Arial';
+    var msg = "Pos: (" + position.x + "," + position.y + ")";
+    context.font = "15px Arial";
 
-    context.textBaseline = 'top';
-    context.fillStyle = '#fff';
+    context.textBaseline = "top";
+    context.fillStyle = "#fff";
     var width = context.measureText(msg).width;
-    context.fillRect(screenPoint.x + margin.x, screenPoint.y + margin.y, width + 2*padding.x, 15 + 2*padding.y);
+    context.fillRect(
+        screenPoint.x + margin.x,
+        screenPoint.y + margin.y,
+        width + 2 * padding.x,
+        15 + 2 * padding.y
+    );
 
     context.fillStyle = "#333";
-    context.fillText(msg, screenPoint.x + margin.x + padding.x, screenPoint.y + margin.y + padding.y);
+    context.fillText(
+        msg,
+        screenPoint.x + margin.x + padding.x,
+        screenPoint.y + margin.y + padding.y
+    );
 
     context.restore();
 }
@@ -86,23 +92,34 @@ class p {
         this.y = y;
     }
 
+    copy() {
+        return {
+            x: this.x,
+            y: this.y
+        };
+    }
+
     static Dot(p1, p2) {
-    return p1.x * p2.x + p1.y * p2.y;
-}
+        return p1.x * p2.x + p1.y * p2.y;
+    }
 
-static Minus(p1, p2) {
-    return {
-        x: p1.x - p2.x,
-        y: p1.y - p2.y
-    };
-}
+    static Minus(p1, p2) {
+        return {
+            x: p1.x - p2.x,
+            y: p1.y - p2.y,
+        };
+    }
 
-static Plus(p1, p2) {
-    return {
-        x: p1.x + p2.x,
-        y: p1.y + p2.y
-    };
-}
+    static Plus(p1, p2) {
+        return {
+            x: p1.x + p2.x,
+            y: p1.y + p2.y,
+        };
+    }
+
+    static Distance(p1, p2) {
+        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
+    }
 }
 
 // Classes
@@ -111,19 +128,35 @@ let MapLine = class {
     active = false;
     disabled = false;
 
-    constructor(x1, y1, x2, y2, color, width) {
-        this.x1 = x1;
-        this.x2 = x2;
-        this.y1 = y1;
-        this.y2 = y2;
-        this.color = color;
-        this.width = width;
+    styles = {
+        normal: {
+            color: "red",
+            width: 1,
+        },
+        hover: {
+            color: "cyan",
+            width: 2,
+        },
+        active: {
+            color: "green",
+            width: 2,
+        },
+        disabled: {
+            color: "gray",
+            width: 1,
+        },
+    };
+
+    constructor(p1, p2, normalStyle) {
+        this.p1 = p1;
+        this.p2 = p2;
+        this.styles.normal = normalStyle;
     }
 
     mapToScreenPos() {
-        var p1 = mapToScreenPos({x: this.x1, y: this.y1});
-        var p2 = mapToScreenPos({x: this.x2, y: this.y2});
-        return {p1, p2};
+        var p1 = mapToScreenPos(this.p1);
+        var p2 = mapToScreenPos(this.p2);
+        return { p1, p2 };
     }
 
     drawWithoutContextSave(context) {
@@ -134,8 +167,16 @@ let MapLine = class {
         context.moveTo(sp.p1.x, sp.p1.y);
         context.lineTo(sp.p2.x, sp.p2.y);
 
-        context.strokeStyle = this.color;
-        context.lineWidth = (this.active) ? 4 : this.width;
+        
+        let selectedStyle;
+        if (this.disabled) {selectedStyle = this.styles.disabled}
+        else if (this.active) {selectedStyle = this.styles.active;}
+        else if (this.hover) {selectedStyle = this.styles.hover;}
+        else {selectedStyle = this.styles.normal;}
+
+        context.strokeStyle = selectedStyle.color;
+        context.lineWidth = selectedStyle.width;
+
         context.stroke();
 
         context.closePath();
@@ -151,8 +192,8 @@ let MapLine = class {
         var sp = this.mapToScreenPos();
         var angle = Math.atan2(sp.p2.y - sp.p1.y, sp.p2.x - sp.p1.x);
 
-        var offsetX = distance * Math.cos(Math.PI/2 + angle);
-        var offsetY = distance * Math.sin(Math.PI/2 + angle)
+        var offsetX = distance * Math.cos(Math.PI / 2 + angle);
+        var offsetY = distance * Math.sin(Math.PI / 2 + angle);
 
         var bpA = new p(sp.p1.x + offsetX, sp.p1.y + offsetY);
         var bpB = new p(sp.p1.x - offsetX, sp.p1.y - offsetY);
@@ -167,9 +208,17 @@ let MapLine = class {
         var AMxAD = p.Dot(AM, AD);
         var ADxAD = p.Dot(AD, AD);
 
-        return (0 < AMxAB && AMxAB < ABxAB) && (0 < AMxAD && AMxAD < ADxAD);
+        return 0 < AMxAB && AMxAB < ABxAB && 0 < AMxAD && AMxAD < ADxAD;
     }
-}
+
+    getDistancePx() {
+        return p.Distance(this.p1, this.p2);
+    }
+
+    getDistanceMetre() {
+        return this.getDistancePx() / oneMetreInPx;
+    }
+};
 
 let MapLineList = class {
     constructor() {
@@ -198,17 +247,18 @@ let MapLineList = class {
 
     draw(context) {
         context.save();
-        this.list.forEach(element => element.drawWithoutContextSave(context));
+        this.list.forEach((element) => element.drawWithoutContextSave(context));
         context.restore();
     }
 
     // Node stuff
     deselectAll() {
-        this.list.forEach(element => element.active = false);
+        this.list.forEach((element) => (element.active = false));
+        $(this.node).find(".active").removeClass("active");
     }
 
     deleteActive() {
-        this.list = this.list.filter(e => !e.active);
+        this.list = this.list.filter((e) => !e.active);
         draw();
     }
 
@@ -218,25 +268,44 @@ let MapLineList = class {
             let This = this;
 
             for (let i = 0; i < this.list.length; i++) {
-                let p = document.createElement("p");
-                p.innerHTML = i.toString();
+                let l = This.list[i];
 
-                let pjq = $(p);
-                pjq.addClass("lineList");
-                pjq.on("click", function () {
+                let d = document.createElement("div");
+                let djq = $(d);
+                if (l.active) {
+                    djq.addClass("active");
+                }
+                let p = document.createElement("p");
+                p.innerHTML = "(" + (i+1).toString() + ") d=" + l.getDistanceMetre().toFixed(2) + "m";
+                
+                // Append to list node
+                d.appendChild(p);
+                this.node.appendChild(d);
+
+                // Events
+                djq.addClass("lineList");
+                djq.on("click", function () {
                     if (!modifier.shift) {
                         This.deselectAll();
                     }
-                    This.list[i].active = true;
+                    l.active = true;
+
+                    let t = $(this);
+                    t.addClass("active");
+
                     draw();
                 });
 
+                djq.on("mouseover", function () {
+                    l.hover = true;
+                    draw();
+                });
 
-                this.node.appendChild(p);
+                djq.on("mouseout", function () {
+                    l.hover = false;
+                    draw();
+                });
             }
-
-
         }
     }
-
-}
+};

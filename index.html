@@ -1,6 +1,7 @@
 <html>
 
 <head>
+    <title>Mapa TEC298</title>
     <script src=https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js></script>
     <script src=map_helper.js></script>
     <script src=map_loader.js></script>
@@ -8,7 +9,7 @@
     <script src=ui_control.js></script>
 
 
-    <meta name=viewport content="width=device-width", initial-scale=1.0>
+    <meta name=viewport content="width=device-width" , initial-scale=1.0>
     <meta charset=UTF-8>
 
 
@@ -28,14 +29,11 @@
         <div id=settingsWrapper class='disabled pane'>
             <h1>Configuracion</h1>
 
-            
-
             <div>
                 <h2>
                     Mapa
                 </h2>
 
-            
                 <label for=map-select>Mapa: </label>
                 <select id="map-select">
                     <option value="azua">Azua</option>
@@ -43,52 +41,55 @@
                     <option value="hato_mayor">Hato Mayor</option>
                     <option value="jarabacoa">Jarabacoa</option>
                     <option value="puerto_plata">Puerto Plata</option>
-                  </select>
+                </select>
 
-                  <br>
-                  <label>1m(px): </label>
-                  <input type="number" id=one-metre-px step=any ></input>
-                  <input type=button id=one-metre-px-def value=Pick>
-                  
-                  <br>
-
-                  <div>
-                    <h2>Punto arriba-izquierda</h2>
-                    <label>Punto:</label>
-                    <input type=number id=up-left-pos-x></input>
-                    <input type=number id=up-left-pos-y></input>
-                    <input type=button id=up-left-set-btn value=Pick>
+                <div name=debug class=disabled>
+                    <br>
+                    <label>1m(px): </label>
+                    <input type="number" id=one-metre-px step=any></input>
+                    <input type=button id=one-metre-px-def value=Pick>
+    
                     <br>
     
-                    <label for=up-left-long>Longitud:</label>
-                    <input type=number step=any id=up-left-long></input>
-                    <br>
+                    <div>
+                        <h2>Punto arriba-izquierda</h2>
+                        <label>Punto:</label>
+                        <input type=number id=up-left-pos-x></input>
+                        <input type=number id=up-left-pos-y></input>
+                        <input type=button id=up-left-set-btn value=Pick>
+                        <br>
     
-                    <label for=up-left-lat>Latitud:</label>
-                    <input type=number step=any id=up-left-lat></input>
-                    <br>
+                        <label for=up-left-long>Longitud:</label>
+                        <input type=number step=any id=up-left-long></input>
+                        <br>
+    
+                        <label for=up-left-lat>Latitud:</label>
+                        <input type=number step=any id=up-left-lat></input>
+                        <br>
+                    </div>
+    
+                    <div>
+                        <h2>Punto abajo-derecha</h2>
+                        <label>Punto:</label>
+                        <input type=number id=down-right-pos-x></input>
+                        <input type=number id=down-right-pos-y></input>
+                        <input type=button id=down-right-set-btn value=Pick>
+                        <br>
+    
+                        <label for=down-right-long>Longitud:</label>
+                        <input type=number step=any id=down-right-long></input>
+                        <br>
+    
+                        <label for=down-right-lat>Latitud:</label>
+                        <input type=number step=any id=down-right-lat></input>
+                        <br>
+                    </div>
                 </div>
-    
-                <div>
-                    <h2>Punto abajo-derecha</h2>
-                    <label>Punto:</label>
-                    <input type=number id=down-right-pos-x></input>
-                    <input type=number id=down-right-pos-y></input>
-                    <input type=button id=down-right-set-btn value=Pick>
-                    <br>
-    
-                    <label for=down-right-long>Longitud:</label>
-                    <input type=number step=any id=down-right-long></input>
-                    <br>
-    
-                    <label for=down-right-lat>Latitud:</label>
-                    <input type=number step=any id=down-right-lat></input>
-                    <br>
-                </div>
+                
 
             </div>
 
-            
+
 
             <br>
             <input type=button id=set-ok-btn value=Ok>

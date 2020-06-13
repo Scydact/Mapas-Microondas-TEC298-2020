@@ -66,8 +66,8 @@ let MapLoader = class {
 
     setDefaultZoom() {
         // Focus entire map on screen
-        translatePos.x = -this.imageSize.w / 2;
-        translatePos.y = -this.imageSize.h / 2;
+        translatePos.x = -(this.imageSize.w - innerWidth) / 2;
+        translatePos.y = -(this.imageSize.h - innerHeight) / 2;
         scale = 1;
 
         zoomAtPosition(
@@ -259,12 +259,16 @@ class MapMeta {
 // This is a helper to save/restore the status of a map
 class MapState {
     name = "unnamed";
+
     // Current zoom/scale
-    translatePos = {x: 0, y: 0};
+    translatePos = new p(0,0);
     scale = 1;
 
     // Current map
     map = "jarabacoa";
+    version = "1";
+
+    DEBUG_EXIT_WITHOUT_SAVE = false;
 
     // Current Linelist
     mapLineList = new MapLineList();
@@ -274,6 +278,7 @@ class MapState {
             translatePos : this.translatePos,
             scale : this.scale,
             map : this.map,
+            version : this.version,
             
             mapLineList : this.mapLineList.toJson()
         };
@@ -281,16 +286,17 @@ class MapState {
         return JSON.stringify(o);
     }
 
-    setFromJsonString(c) {
-        let o = JSON.parse(c);
+    setFromObject(o) {
 
-        this.translatePos = o.translatePos;
+        this.translatePos = new p(o.translatePos.x, o.translatePos.y);
         this.scale = o.scale;
         this.map = o.map;
+        this.version = o.version;
         
         let m = new MapLineList();
         m.parseJson(o.mapLineList);
         this.mapLineList = m;
+        return true;
     }
 
     getFromGlobal() {
@@ -301,7 +307,7 @@ class MapState {
 
         // easy deep clone
         let t = this.getJsonString();
-        this.setFromJsonString(t);
+        this.setFromObject(JSON.parse(t));
     }
 
     setToGlobal() {
@@ -311,20 +317,30 @@ class MapState {
         mapLineList = this.mapLineList;
         mapLineList.node = $("#lineListWrapper")[0];
         mapLineList.updateNode();
+        return true;
     }
 
     setToCookies() {
-        let days = 30*12*3;
+        if (this.DEBUG_EXIT_WITHOUT_SAVE) {
+            return false;
+        }
         let value = this.getJsonString();
-        setCookie(this.name,value,days);
+        window.localStorage.setItem(this.name,value);
+        return true;
     }
 
     getFromCookies() {
-        let c = getCookie(this.name);
+        let c = window.localStorage.getItem(this.name);
         if (c == null) {
             return false;
         }
-        this.setFromJsonString(c);
-        return true;
+        
+        let o = JSON.parse(c);
+        if (o.version == null) {
+            window.localStorage.clear();
+            return false;
+        } 
+        
+        return this.setFromObject(o);
     }
 }

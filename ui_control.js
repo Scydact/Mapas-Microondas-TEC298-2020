@@ -12,11 +12,10 @@ var startDragOffset = {};
 var mouseDown = false;
 var dragging = false;
 var modifier = {
-    shift : false,
-    ctrl : false,
-    alt : false
-}
-
+    shift: false,
+    ctrl: false,
+    alt: false,
+};
 
 let ClickMode = class {
     constructor() {
@@ -88,19 +87,19 @@ $(window).ready(function () {
     statusBar = new StatusPane();
     clickMode = new ClickMode();
 
-    // This part is now managed by the savedMapState 
+    // This part is now managed by the savedMapState
     // mapLineList = new MapLineList();
     // mapLineList.node = $("#lineListWrapper")[0];
     temp = {
-        mapline : {
-            point1 : {x: 0, y: 0},
-            templine : new MapLine(0,0,0,0,"red")
-        }
+        mapline: {
+            point1: new p(0,0),
+            templine: new MapLine(new p(0,0), new p(1,1), {color: 'red', width: 1}),
+        },
     };
 
     // Keypress
     $(document).keyup(function (e) {
-        switch(e.key) {
+        switch (e.key) {
             case "Escape":
                 clickMode.clear();
                 break;
@@ -117,7 +116,7 @@ $(window).ready(function () {
     });
 
     $(document).keydown(function (e) {
-        switch(e.key) {
+        switch (e.key) {
             case "Shift":
                 modifier.shift = true;
                 break;
@@ -169,11 +168,11 @@ $(window).ready(function () {
         }
     });
 
-    $("#map-select").on("change", function() {
+    $("#map-select").on("change", function () {
         let m = $("#map-select").val();
         mapLoader.load(m);
         draw();
-    })
+    });
 
     $("#up-left-set-btn").on("click", function () {
         clickMode.set("setLeftUpPos");
@@ -201,7 +200,7 @@ $(window).ready(function () {
         mapMeta.alertJson();
     });
 
-    $("#one-metre-px-def").on("click", function() {
+    $("#one-metre-px-def").on("click", function () {
         clickMode.set("setMetreDefPoint1");
         msgBar.setText("Haga click en el 1er punto de la regla.");
     });
@@ -213,7 +212,7 @@ $(window).ready(function () {
     }
     $("#openLinePane").on("dblclick", createLineFun);
     $("#createLine").on("click", createLineFun);
-    
+
     $("#openLinePane").on("click", function () {
         linesPaneOpen = !linesPaneOpen;
         if (linesPaneOpen) {
@@ -229,7 +228,6 @@ $(window).ready(function () {
     }
     $("#deleteLine").on("click", deleteLineFun);
 
-
     // Redraw on resize
     $(window).resize(function () {
         draw();
@@ -239,7 +237,7 @@ $(window).ready(function () {
     // Mouse down (click downstroke)
     $(canvas).on("mousedown", function (evt) {
         mouseDown = true;
-        
+
         startDragOffset.x = evt.clientX - translatePos.x;
         startDragOffset.y = evt.clientY - translatePos.y;
     });
@@ -256,11 +254,9 @@ $(window).ready(function () {
         // Set mouse pointer
         if (dragging) {
             $(canvas).addClass("grabbing");
-        }
-        else {
+        } else {
             $(canvas).removeClass("grabbing");
         }
-
 
         // Draw data on mouse move
         var currentMousePos = getMousePos(canvas, evt);
@@ -282,13 +278,10 @@ $(window).ready(function () {
             zoomedMousePos.y;
         statusBar.setText(message);
         draw();
-
-
     });
 
     // Eqv to Click
     $(canvas).on("mouseup", function (evt) {
-
         var canvas = document.getElementById("renderCanvas");
         var context = canvas.getContext("2d");
 
@@ -307,14 +300,21 @@ $(window).ready(function () {
 
                 case "setLinePoint1":
                     temp.mapline.point1 = screenToMapPos(mousePos);
-                    temp.mapline.templine.x1 = temp.mapline.point1.x;
-                    temp.mapline.templine.y1 = temp.mapline.point1.y;
+                    temp.mapline.templine.p1 = temp.mapline.point1;
                     clickMode.set("setLinePoint2");
                     msgBar.setText("Click en el 2do punto de la linea");
                     break;
                 case "setLinePoint2":
                     var pos = screenToMapPos(mousePos);
-                    mapLineList.add(new MapLine(temp.mapline.point1.x, temp.mapline.point1.y, pos.x, pos.y, "#f00", 2));
+                    mapLineList.add(
+                        new MapLine(
+                            temp.mapline.point1, 
+                            pos, 
+                            {
+                                color: "#f00",
+                                width: 2,
+                            })
+                    );
                     clickMode.clear();
                     msgBar.clear();
                     draw();
@@ -328,16 +328,21 @@ $(window).ready(function () {
                     break;
                 case "setMetreDefPoint2":
                     var pos = screenToMapPos(mousePos);
-                    var dist = Math.sqrt((pos.x-temp.mapline.point1.x)**2+(pos.y-temp.mapline.point1.y)**2);
+                    var dist = Math.sqrt(
+                        (pos.x - temp.mapline.point1.x) ** 2 +
+                            (pos.y - temp.mapline.point1.y) ** 2
+                    );
 
                     clickMode.clear();
                     msgBar.clear();
-                    var i = parseInt(prompt("Cuanto media ese punto (en metros)?", "900"));
-                    $("#one-metre-px").val(dist/i);
+                    var i = parseInt(
+                        prompt("Cuanto media ese punto (en metros)?", "900")
+                    );
+                    $("#one-metre-px").val(dist / i);
                     break;
             }
         }
-        
+
         mouseDown = false;
         dragging = false;
     });
