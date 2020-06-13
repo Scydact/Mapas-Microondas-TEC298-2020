@@ -141,6 +141,7 @@ let MapLoader = class {
             context.save();
             context.translate(translatePos.x, translatePos.y);
             context.scale(scale, scale);
+            context.imageSmoothingEnabled = false;
 
             for (let i = 0; i < gridSize.h; i++) {
                 var y = i * elementSize.h;

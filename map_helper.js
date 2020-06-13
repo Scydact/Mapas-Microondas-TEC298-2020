@@ -25,12 +25,45 @@ let mapMeta;
 let mapLoader;
 let savedMapState;
 
+// Generic Point type
+class p {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    copy() {
+        return {
+            x: this.x,
+            y: this.y
+        };
+    }
+
+    static Dot(p1, p2) {
+        return p1.x * p2.x + p1.y * p2.y;
+    }
+
+    static Minus(p1, p2) {
+        return {
+            x: p1.x - p2.x,
+            y: p1.y - p2.y,
+        };
+    }
+
+    static Plus(p1, p2) {
+        return {
+            x: p1.x + p2.x,
+            y: p1.y + p2.y,
+        };
+    }
+
+    static Distance(p1, p2) {
+        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
+    }
+}
 
 // Navigation variables
-var translatePos = {
-    x: 500,
-    y: 500,
-};
+var translatePos = new p(500,500);
 
 // Canvas nav stuff
 var scale = 1.0;
@@ -123,8 +156,10 @@ $(document).ready(function () {
 
     // Setup
     savedMapState.name = "save_map_state";
-    savedMapState.getFromCookies();
+    let doLoad = savedMapState.getFromCookies();
     savedMapState.setToGlobal();
+
+    if (!doLoad) {mapLoader.setDefaultZoom();}
 
     $(window).resize(function () {
         draw();

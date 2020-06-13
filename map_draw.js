@@ -86,42 +86,6 @@ function drawCurrentPosition(context) {
     drawPosition(context, mousePos, coordPos);
 }
 
-class p {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    copy() {
-        return {
-            x: this.x,
-            y: this.y
-        };
-    }
-
-    static Dot(p1, p2) {
-        return p1.x * p2.x + p1.y * p2.y;
-    }
-
-    static Minus(p1, p2) {
-        return {
-            x: p1.x - p2.x,
-            y: p1.y - p2.y,
-        };
-    }
-
-    static Plus(p1, p2) {
-        return {
-            x: p1.x + p2.x,
-            y: p1.y + p2.y,
-        };
-    }
-
-    static Distance(p1, p2) {
-        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
-    }
-}
-
 // Classes
 let MapLine = class {
     hover = false;
