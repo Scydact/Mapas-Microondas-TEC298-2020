@@ -3,6 +3,7 @@ let linesPaneOpen = false;
 let msgBar;
 let statusBar;
 let clickMode;
+let MouseBar;
 
 let temp;
 let mapLineList;
@@ -17,32 +18,8 @@ var modifier = {
     alt: false,
 };
 
-let ClickMode = class {
-    constructor() {
-        this.clickMode = "";
-        this.oldClickMode = "";
-    }
-    get mode() {
-        return this.clickMode;
-    }
-
-    getCanvas() {
-        return document.getElementById("renderCanvas");
-    }
-
-    clear() {
-        this.clickMode = "";
-        msgBar.clear();
-    }
-
-    set(mode) {
-        this.clickMode = mode;
-    }
-};
-
 let MessagePane = class {
     constructor() {
-        this.text = "";
         this.node = document.getElementById("msgWrapper");
     }
 
@@ -53,7 +30,6 @@ let MessagePane = class {
 
     setText(txt) {
         this.clear();
-        this.text = txt;
         let p = document.createElement("p");
         let t = document.createTextNode(txt);
         p.appendChild(t);
@@ -64,7 +40,6 @@ let MessagePane = class {
 
 let StatusPane = class {
     constructor() {
-        this.text = "";
         this.node = document.getElementById("statusBarWrapper");
         this.p = document.getElementById("statusBar");
     }
@@ -80,22 +55,202 @@ let StatusPane = class {
     }
 };
 
+let MousePane = class {
+    constructor() {
+        this.node = document.getElementById("mouseMsg");
+        this.p = null;
+    }
+
+    clear() {
+        if (this.p) {
+            this.p.innerHTML = "";
+        } else {
+            this.node.innerHTML = "";
+        }
+    }
+
+    setText(txt) {
+        if (!this.p) {
+            this.node.innerHTML = "";
+            this.p = document.createElement("p");
+            this.node.appendChild(this.p);
+        }
+        this.p.innerHTML = txt;
+    }
+
+    setNode(n) {
+        if (this.p) {
+            this.p = null;
+            this.node.innerHTML = null;
+        }
+        this.node.appendChild(n);
+    }
+
+    setPosition(p) {
+        this.node.style.top = p.y;
+        this.node.style.left = p.x;
+    }
+};
+
+let ClickMode = class {
+    constructor() {
+        this.mode = "";
+        this.oldMode = "";
+        this.updateUITools();
+    }
+
+    clear() {
+        this.oldMode = this.mode;
+        this.mode = "";
+        msgBar.clear();
+        this.updateUITools(null);
+    }
+
+    set(mode) {
+        this.oldMode = this.mode;
+        this.mode = mode;
+        this.updateUITools(mode);
+    }
+
+    deselectUITools() {
+        $(".toolBtn").removeClass("active");
+    }
+
+    updateUITools(mode) {
+        this.deselectUITools();
+        switch (mode) {
+            case "setLinePoint1":
+            case "setLinePoint2":
+                $("#toolLine").addClass("active");
+                break;
+
+            default:
+                $("#toolPointer").addClass("active");
+        }
+    }
+};
+
+// UI Handlers
+/**
+ * On mouse move
+ * @param {event} evt
+ */
+function UIHandler_mousemove(evt) {
+    // move by drag
+    if (mouseDown) {
+        dragging = true;
+        translatePos.x = evt.clientX - startDragOffset.x;
+        translatePos.y = evt.clientY - startDragOffset.y;
+        draw(scale, translatePos);
+    }
+    // Set mouse pointer to 'move' if dragging
+    if (dragging) {
+        $(canvas).addClass("move");
+    } else {
+        $(canvas).removeClass("move");
+    }
+
+    // Draw data on mouse move
+    var currentMousePos = getMousePos(canvas, evt);
+    var zoomedMousePos = getMousePosInMap(canvas, evt);
+    var formattedPosition = formattedPixelPointToMapPoint(zoomedMousePos);
+    var msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
+    mouseBar.setText(msg);
+    mouseBar.setPosition(currentMousePos);
+    draw();
+}
+
+/**
+ * On mouse up (equivalent to clicking)
+ * @param {event} evt
+ */
+function UIHandler_mouseup(evt) {
+    var canvas = document.getElementById("renderCanvas");
+    var context = canvas.getContext("2d");
+
+    if (!dragging) {
+        switch (clickMode.mode) {
+            case "setLeftUpPos":
+                $("#up-left-pos-x").val(Math.round(coordPos.x));
+                $("#up-left-pos-y").val(Math.round(coordPos.y));
+                clickMode.clear();
+                break;
+            case "setRightDownPos":
+                $("#down-right-pos-x").val(Math.round(coordPos.x));
+                $("#down-right-pos-y").val(Math.round(coordPos.y));
+                clickMode.clear();
+                break;
+
+            case "setLinePoint1":
+                temp.mapline.point1 = screenToMapPos(mousePos);
+                temp.mapline.templine.p1 = temp.mapline.point1;
+                clickMode.set("setLinePoint2");
+                msgBar.setText("Click en el 2do punto de la linea");
+                break;
+            case "setLinePoint2":
+                var pos = screenToMapPos(mousePos);
+                mapLineList.add(
+                    new MapLine(temp.mapline.point1, pos, {
+                        color: "#f00",
+                        width: 2,
+                    })
+                );
+                clickMode.clear();
+                msgBar.clear();
+                draw();
+                break;
+
+            case "setMetreDefPoint1":
+                clickMode.set("setMetreDefPoint2");
+                msgBar.setText("Haga click en el 2do punto de la regla.");
+
+                temp.mapline.point1 = screenToMapPos(mousePos);
+                break;
+            case "setMetreDefPoint2":
+                var pos = screenToMapPos(mousePos);
+                var dist = Math.sqrt(
+                    (pos.x - temp.mapline.point1.x) ** 2 +
+                        (pos.y - temp.mapline.point1.y) ** 2
+                );
+
+                clickMode.clear();
+                msgBar.clear();
+                var i = parseInt(
+                    prompt("Cuanto media ese punto (en metros)?", "900")
+                );
+                $("#one-metre-px").val(dist / i);
+                break;
+        }
+    }
+
+    mouseDown = false;
+    dragging = false;
+}
+
 // On doc ready
 $(window).ready(function () {
     // Init stuff
     msgBar = new MessagePane();
     statusBar = new StatusPane();
     clickMode = new ClickMode();
+    mouseBar = new MousePane();
 
     // This part is now managed by the savedMapState
     // mapLineList = new MapLineList();
     // mapLineList.node = $("#lineListWrapper")[0];
     temp = {
         mapline: {
-            point1: new p(0,0),
-            templine: new MapLine(new p(0,0), new p(1,1), {color: 'red', width: 1}),
+            point1: new p(0, 0),
+            templine: new MapLine(new p(0, 0), new p(1, 1), {
+                color: "red",
+                width: 1,
+            }),
         },
     };
+
+    // Toolbox buttons
+    $("#toolPointer").on("click", (e) => clickMode.clear());
+    $("#toolLine").on("click", createLineFun);
 
     // Keypress
     $(document).keyup(function (e) {
@@ -243,109 +398,10 @@ $(window).ready(function () {
     });
 
     // Mousemove
-    $(canvas).on("mousemove", function (evt) {
-        if (mouseDown) {
-            dragging = true;
-            translatePos.x = evt.clientX - startDragOffset.x;
-            translatePos.y = evt.clientY - startDragOffset.y;
-            draw(scale, translatePos);
-        }
-
-        // Set mouse pointer
-        if (dragging) {
-            $(canvas).addClass("grabbing");
-        } else {
-            $(canvas).removeClass("grabbing");
-        }
-
-        // Draw data on mouse move
-        var currentMousePos = getMousePos(canvas, evt);
-        var zoomedMousePos = getMousePosInMap(canvas, evt);
-
-        var message =
-            currentMousePos.x +
-            "," +
-            currentMousePos.y +
-            "\n Translate: " +
-            translatePos.x +
-            ", " +
-            translatePos.y +
-            "\n Scale: " +
-            scale +
-            "\n Pos (inside)" +
-            zoomedMousePos.x +
-            ", " +
-            zoomedMousePos.y;
-        statusBar.setText(message);
-        draw();
-    });
+    $(canvas).on("mousemove", UIHandler_mousemove);
 
     // Eqv to Click
-    $(canvas).on("mouseup", function (evt) {
-        var canvas = document.getElementById("renderCanvas");
-        var context = canvas.getContext("2d");
-
-        if (!dragging) {
-            switch (clickMode.mode) {
-                case "setLeftUpPos":
-                    $("#up-left-pos-x").val(Math.round(coordPos.x));
-                    $("#up-left-pos-y").val(Math.round(coordPos.y));
-                    clickMode.clear();
-                    break;
-                case "setRightDownPos":
-                    $("#down-right-pos-x").val(Math.round(coordPos.x));
-                    $("#down-right-pos-y").val(Math.round(coordPos.y));
-                    clickMode.clear();
-                    break;
-
-                case "setLinePoint1":
-                    temp.mapline.point1 = screenToMapPos(mousePos);
-                    temp.mapline.templine.p1 = temp.mapline.point1;
-                    clickMode.set("setLinePoint2");
-                    msgBar.setText("Click en el 2do punto de la linea");
-                    break;
-                case "setLinePoint2":
-                    var pos = screenToMapPos(mousePos);
-                    mapLineList.add(
-                        new MapLine(
-                            temp.mapline.point1, 
-                            pos, 
-                            {
-                                color: "#f00",
-                                width: 2,
-                            })
-                    );
-                    clickMode.clear();
-                    msgBar.clear();
-                    draw();
-                    break;
-
-                case "setMetreDefPoint1":
-                    clickMode.set("setMetreDefPoint2");
-                    msgBar.setText("Haga click en el 2do punto de la regla.");
-
-                    temp.mapline.point1 = screenToMapPos(mousePos);
-                    break;
-                case "setMetreDefPoint2":
-                    var pos = screenToMapPos(mousePos);
-                    var dist = Math.sqrt(
-                        (pos.x - temp.mapline.point1.x) ** 2 +
-                            (pos.y - temp.mapline.point1.y) ** 2
-                    );
-
-                    clickMode.clear();
-                    msgBar.clear();
-                    var i = parseInt(
-                        prompt("Cuanto media ese punto (en metros)?", "900")
-                    );
-                    $("#one-metre-px").val(dist / i);
-                    break;
-            }
-        }
-
-        mouseDown = false;
-        dragging = false;
-    });
+    $(canvas).on("mouseup", UIHandler_mouseup);
 
     // Cancel mouse movements
     $(canvas).on("mouseover", function (evt) {

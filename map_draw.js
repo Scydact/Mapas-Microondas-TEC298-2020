@@ -20,7 +20,7 @@ function draw() {
     }
 
     // Cursor overlay
-    drawCurrentPosition(context);
+    //drawCurrentPosition(context);
 }
 
 // Draws the map
@@ -53,38 +53,38 @@ function drawMap(context) {
 }
 
 // Draws coordenate indicator
-function drawPosition(context, screenPoint, coordPoint) {
-    context.save();
-    padding = { x: 5, y: 5 };
-    margin = { x: 20, y: 0 };
+// function drawPosition(context, screenPoint, coordPoint) {
+//     context.save();
+//     padding = { x: 5, y: 5 };
+//     margin = { x: 20, y: 0 };
 
-    var position = formattedPixelPointToMapPoint(coordPoint);
-    var msg = "Pos: (" + position.x + "," + position.y + ")";
-    context.font = "15px Arial";
+//     var position = formattedPixelPointToMapPoint(coordPoint);
+//     var msg = "Pos: (" + position.x + "," + position.y + ")";
+//     context.font = "15px Arial";
 
-    context.textBaseline = "top";
-    context.fillStyle = "#fff";
-    var width = context.measureText(msg).width;
-    context.fillRect(
-        screenPoint.x + margin.x,
-        screenPoint.y + margin.y,
-        width + 2 * padding.x,
-        15 + 2 * padding.y
-    );
+//     context.textBaseline = "top";
+//     context.fillStyle = "#fff";
+//     var width = context.measureText(msg).width;
+//     context.fillRect(
+//         screenPoint.x + margin.x,
+//         screenPoint.y + margin.y,
+//         width + 2 * padding.x,
+//         15 + 2 * padding.y
+//     );
 
-    context.fillStyle = "#333";
-    context.fillText(
-        msg,
-        screenPoint.x + margin.x + padding.x,
-        screenPoint.y + margin.y + padding.y
-    );
+//     context.fillStyle = "#333";
+//     context.fillText(
+//         msg,
+//         screenPoint.x + margin.x + padding.x,
+//         screenPoint.y + margin.y + padding.y
+//     );
 
-    context.restore();
-}
+//     context.restore();
+// }
 
-function drawCurrentPosition(context) {
-    drawPosition(context, mousePos, coordPos);
-}
+// function drawCurrentPosition(context) {
+//     drawPosition(context, mousePos, coordPos);
+// }
 
 // Classes
 let MapLine = class {
@@ -131,12 +131,16 @@ let MapLine = class {
         context.moveTo(sp.p1.x, sp.p1.y);
         context.lineTo(sp.p2.x, sp.p2.y);
 
-        
         let selectedStyle;
-        if (this.disabled) {selectedStyle = this.styles.disabled}
-        else if (this.active) {selectedStyle = this.styles.active;}
-        else if (this.hover) {selectedStyle = this.styles.hover;}
-        else {selectedStyle = this.styles.normal;}
+        if (this.disabled) {
+            selectedStyle = this.styles.disabled;
+        } else if (this.active) {
+            selectedStyle = this.styles.active;
+        } else if (this.hover) {
+            selectedStyle = this.styles.hover;
+        } else {
+            selectedStyle = this.styles.normal;
+        }
 
         context.strokeStyle = selectedStyle.color;
         context.lineWidth = selectedStyle.width;
@@ -240,8 +244,13 @@ let MapLineList = class {
                     djq.addClass("active");
                 }
                 let p = document.createElement("p");
-                p.innerHTML = "(" + (i+1).toString() + ") d=" + l.getDistanceMetre().toFixed(2) + "m";
-                
+                p.innerHTML =
+                    "(" +
+                    (i + 1).toString() +
+                    ") d=" +
+                    l.getDistanceMetre().toFixed(2) +
+                    "m";
+
                 // Append to list node
                 d.appendChild(p);
                 this.node.appendChild(d);

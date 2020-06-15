@@ -16,8 +16,8 @@ let oneMetreInPx = 0;
 let slopeXDeg = x2Deg - x1Deg;
 let slopeYDeg = y2Deg - y1Deg;
 
-let mousePos = {x: -1, y: -1};
-let coordPos = {x: -1, y: -1};
+let mousePos = { x: -1, y: -1 };
+let coordPos = { x: -1, y: -1 };
 
 let canvas;
 
@@ -26,6 +26,9 @@ let mapLoader;
 let savedMapState;
 
 // Generic Point type
+/**
+ * Generic point class
+ */
 class p {
     constructor(x, y) {
         this.x = x;
@@ -35,7 +38,7 @@ class p {
     copy() {
         return {
             x: this.x,
-            y: this.y
+            y: this.y,
         };
     }
 
@@ -58,20 +61,27 @@ class p {
     }
 
     static Distance(p1, p2) {
-        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
+        return Math.sqrt(
+            (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y)
+        );
     }
 }
 
 // Navigation variables
-var translatePos = new p(500,500);
+var translatePos = new p(500, 500);
 
 // Canvas nav stuff
 var scale = 1.0;
 var scaleMultiplier = 0.8;
 
-
 // Canvas functions
 // Get mouse pos in canvas
+
+/**
+ * Gets the mouse position on the screen [px]
+ * @param {*} canvas
+ * @param {event} evt
+ */
 function getMousePos(canvas, evt) {
     var rect = canvas.getBoundingClientRect();
 
@@ -81,14 +91,24 @@ function getMousePos(canvas, evt) {
     return mousePos;
 }
 
+/**
+ * Gets the mouse position inside the zoomed canvas [px]
+ * To convert to coords, use this and pixelPointToMapPoint() or formattedPixelPointToMapPoint()
+ * @param {*} canvas
+ * @param {event} evt
+ */
 function getMousePosInMap(canvas, evt) {
     var mousePos = getMousePos(canvas, evt);
-    
+
     coordPos = screenToMapPos(mousePos);
 
     return coordPos;
 }
 
+/**
+ * Transforms a point on the screen to a point inside the canvas
+ * @param {p} pos
+ */
 function screenToMapPos(pos) {
     return new p(
         (pos.x - translatePos.x) / scale,
@@ -96,35 +116,54 @@ function screenToMapPos(pos) {
     );
 }
 
+/**
+ * Transforms inside the canvas to a point on the screen
+ * @param {p} pos
+ */
 function mapToScreenPos(pos) {
     return new p(
-        (scale * pos.x) + translatePos.x,
-        (scale * pos.y) + translatePos.y
+        scale * pos.x + translatePos.x,
+        scale * pos.y + translatePos.y
     );
 }
 
 // Zoom at x/y
+/**
+ * Changes translatePos and scale to a new value zoomed at screen position  (x, y)
+ * @param {p} x
+ * @param {p} y
+ * @param {*} newScale
+ */
 function zoomAtPosition(x, y, newScale) {
     translatePos.x = x - (newScale / scale) * (x - translatePos.x);
     translatePos.y = y - (newScale / scale) * (y - translatePos.y);
     scale = newScale;
 }
 
+/**
+ * Converts a canvas point [px] to its coordenate value [decimal]
+ * @param {p} point
+ */
 function pixelPointToMapPoint(point) {
     var xDeg = (slopeXDeg * (point.x - x1Px)) / xPxLength + x1Deg;
     var yDeg = (slopeYDeg * (point.y - y1Px)) / yPxLength + y1Deg;
-    return {x: xDeg, y: yDeg};
+    return { x: xDeg, y: yDeg };
 }
 
+/**
+ * Converts a canvas point [px] to its coordenate value [sexagecimal]
+ * @param {p} point
+ */
 function formattedPixelPointToMapPoint(point) {
     var p = pixelPointToMapPoint(point);
-    return {x: decimalToTime(p.x), y:decimalToTime(p.y)};
+    return { x: decimalToTime(p.x), y: decimalToTime(p.y) };
 }
 
-
 // Forms load/save
-
-// Convert decimal value to "time" value
+/**
+ * Convert decimal value to a sexagecimal string
+ * @param {*} time
+ */
 function decimalToTime(time) {
     let x = Math.abs(time);
     let sign = Math.sign(time);
@@ -145,7 +184,6 @@ function decimalToTime(time) {
     );
 }
 
-
 // Init
 $(document).ready(function () {
     mapMeta = new MapMeta();
@@ -159,7 +197,9 @@ $(document).ready(function () {
     let doLoad = savedMapState.getFromCookies();
     savedMapState.setToGlobal();
 
-    if (!doLoad) {mapLoader.setDefaultZoom();}
+    if (!doLoad) {
+        mapLoader.setDefaultZoom();
+    }
 
     $(window).resize(function () {
         draw();
