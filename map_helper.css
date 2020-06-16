@@ -126,7 +126,7 @@ body {
     min-height: 1.2rem;
     border-radius: 3px;
     margin       : 0px 0px 2px 0px;
-    color        : rgb(34, 34, 34);
+    color: rgba(0,0,0,50%);
     background   : rgb(207, 207, 207);
 }
 
@@ -188,7 +188,8 @@ body {
     margin: 0;
 }
 
-.lineList:hover {
+.lineList:hover,
+.lineList.hover {
     background-color: rgba(0, 0, 0, 30%);
 }
 

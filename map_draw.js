@@ -87,7 +87,7 @@ function drawMap(context) {
 // }
 
 // Classes
-let MapLine = class {
+class MapLine {
     hover = false;
     active = false;
     disabled = false;
@@ -114,8 +114,42 @@ let MapLine = class {
     constructor(p1, p2, normalStyle) {
         this.p1 = p1;
         this.p2 = p2;
-        this.styles.normal = normalStyle;
+        this.mapPointP1 = new MapPoint(this.p1,this.styles);
+        this.mapPointP2 = new MapPoint(this.p2,this.styles);
+        if (normalStyle) {this.styles.normal = normalStyle;}
     }
+
+    toJson() {
+        let o = {
+            hover: this.hover,
+            active: this.active,
+            disabled: this.disabled,
+
+            styles: this.styles,
+
+            p1: this.p1,
+            p2: this.p2
+        }
+        return JSON.stringify(o);
+    }
+
+    static fromJObject(o) {
+        let l = new MapLine(o.p1, o.p2);
+
+        if (o.styles) {l.styles = o.styles}
+        
+        l.hover = o.hover;
+        l.active = o.active;
+        l.disabled = o.disabled;
+
+        return l;
+    }
+
+    static fromJson(txt) {
+        let o = JSON.parse(txt);
+        return this.fromJObject(o);
+    }
+
 
     mapToScreenPos() {
         var p1 = mapToScreenPos(this.p1);
@@ -148,6 +182,18 @@ let MapLine = class {
         context.stroke();
 
         context.closePath();
+
+        // // draw associated map points
+        // let mapPointP1 = new MapPoint(this.p1);
+        // let mapPointP2 = new MapPoint(this.p2);
+
+        [this.mapPointP1, this.mapPointP2].forEach((e) => {
+            //e.styles = this.styles;
+            e.active = this.active;
+            e.hover = this.hover;
+            e.disabled = this.disabled;
+            e.draw(context);
+        });
     }
 
     draw(context) {
@@ -167,7 +213,7 @@ let MapLine = class {
         var bpB = new p(sp.p1.x - offsetX, sp.p1.y - offsetY);
         var bpD = new p(sp.p2.x + offsetX, sp.p2.y + offsetY);
 
-        var AM = p.Minus(mousePos, bpA);
+        var AM = p.Minus(point, bpA);
         var AB = p.Minus(bpB, bpA);
         var AD = p.Minus(bpD, bpA);
 
@@ -179,6 +225,17 @@ let MapLine = class {
         return 0 < AMxAB && AMxAB < ABxAB && 0 < AMxAD && AMxAD < ADxAD;
     }
 
+    getDistanceToScreenPoint(ps) {
+        let pl = this.mapToScreenPos();
+        let denominator = p.Distance(pl.p1, pl.p2);
+        let numerator = Math.abs(
+            (pl.p2.y - pl.p1.y) * ps.x 
+            -(pl.p2.x - pl.p1.x) * ps.y
+            + pl.p2.x * pl.p1.y
+            - pl.p2.y * pl.p1.x);
+        return numerator/denominator;
+    }
+
     getDistancePx() {
         return p.Distance(this.p1, this.p2);
     }
@@ -188,28 +245,30 @@ let MapLine = class {
     }
 };
 
-let MapLineList = class {
+class MapLineList {
     constructor() {
         this.list = [];
         this.node = null;
     }
 
     toJson() {
-        return JSON.stringify(this.list);
+        let l = this.list.map((e) => e.toJson());
+        return JSON.stringify(l);
     }
 
     parseJson(txt) {
         let json = JSON.parse(txt);
         let This = this;
         json.forEach(function (e) {
-            let a = new MapLine();
-            Object.assign(a, e);
+            let a = MapLine.fromJson(e);
             This.add(a);
         });
     }
 
     add(line) {
         this.list.push(line);
+        let i = this.list.length - 1;
+        this.list[i].index = i;
         this.updateNode();
     }
 
@@ -223,11 +282,31 @@ let MapLineList = class {
     deselectAll() {
         this.list.forEach((element) => (element.active = false));
         $(this.node).find(".active").removeClass("active");
+        //this.updateNode();
+        // draw();
     }
 
     deleteActive() {
         this.list = this.list.filter((e) => !e.active);
-        draw();
+        this.updateListIndexes();
+        // updateNode();
+        // draw();
+    }
+
+    getCloseToScreenPoint(point, distance) {
+        return this.list
+            .filter((e)=>e.isCloseToScreenPoint(point, distance))
+            .sort((a, b) => 
+                a.getDistanceToScreenPoint(point)
+                - b.getDistanceToScreenPoint(point));
+    }
+
+    updateListIndexes() {
+        let x = this.list;
+        let l = this.list.length;
+        for (let i = 0; i < l; i++) {
+            l[i].index = i;
+        }
     }
 
     updateNode() {
@@ -240,16 +319,10 @@ let MapLineList = class {
 
                 let d = document.createElement("div");
                 let djq = $(d);
-                if (l.active) {
-                    djq.addClass("active");
-                }
+                if (l.active) {djq.addClass("active")}
+                if (l.hover) {djq.addClass("hover")}
                 let p = document.createElement("p");
-                p.innerHTML =
-                    "(" +
-                    (i + 1).toString() +
-                    ") d=" +
-                    l.getDistanceMetre().toFixed(2) +
-                    "m";
+                p.innerHTML = `(${i+1}) d=${l.getDistanceMetre().toFixed(2)}m`;
 
                 // Append to list node
                 d.appendChild(p);
@@ -261,10 +334,11 @@ let MapLineList = class {
                     if (!modifier.shift) {
                         This.deselectAll();
                     }
-                    l.active = true;
+                    l.active = !l.active;
 
                     let t = $(this);
-                    t.addClass("active");
+                    if (l.active) {t.addClass("active")}
+                    else {t.removeClass("active")}
 
                     draw();
                 });
@@ -280,5 +354,94 @@ let MapLineList = class {
                 });
             }
         }
+    }
+};
+
+class MapPoint {
+    hover = false;
+    active = false;
+    disabled = false;
+
+    styles = {
+        normal: {
+            color: "red",
+            width: 3,
+        },
+        hover: {
+            color: "cyan",
+            width: 5,
+        },
+        active: {
+            color: "green",
+            width: 5,
+        },
+        disabled: {
+            color: "gray",
+            width: 1,
+        },
+    };
+
+    constructor(p1, normalStyle) {
+        this.p = p1;
+        if (normalStyle) {this.styles.normal = normalStyle;}
+    }
+
+    drawWithoutContextSave(context) {
+        var sp = mapToScreenPos(this.p)
+
+        context.beginPath();
+
+        let selectedStyle;
+        if (this.disabled) {
+            selectedStyle = this.styles.disabled;
+        } else if (this.active) {
+            selectedStyle = this.styles.active;
+        } else if (this.hover) {
+            selectedStyle = this.styles.hover;
+        } else {
+            selectedStyle = this.styles.normal;
+        }
+
+        context.arc(
+            sp.x,
+            sp.y,
+            selectedStyle.width,
+            0,
+            2 * Math.PI,
+            false
+        );
+
+        context.fillStyle = selectedStyle.color;
+        context.fill();
+        // context.strokeStyle = selectedStyle.color;
+        // context.lineWidth = selectedStyle.width;
+
+        // context.stroke();
+
+        context.closePath();
+    }
+
+    draw(context) {
+        context.save();
+        this.drawWithoutContextSave(context);
+        context.restore();
+    }
+
+    isCloseToScreenPoint(point, distance) {
+        var sp = mapToScreenPos(this.p);
+        
+        return p.Distance(sp, point) < distance;
+    }
+
+    getDistanceToScreenPoint(point) {
+        return this.getDistancePx(point);
+    }
+
+    getDistancePx(point) {
+        return p.Distance(this.p, point);
+    }
+
+    getDistanceMetre() {
+        return this.getDistancePx() / oneMetreInPx;
     }
 };

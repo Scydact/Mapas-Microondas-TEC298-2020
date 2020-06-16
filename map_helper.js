@@ -117,7 +117,7 @@ function screenToMapPos(pos) {
 }
 
 /**
- * Transforms inside the canvas to a point on the screen
+ * Transforms a point inside the canvas to a point on the screen
  * @param {p} pos
  */
 function mapToScreenPos(pos) {

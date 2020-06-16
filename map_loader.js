@@ -267,7 +267,7 @@ class MapState {
 
     // Current map
     map = "jarabacoa";
-    version = "1";
+    version = 1;
 
     DEBUG_EXIT_WITHOUT_SAVE = false;
 
@@ -337,7 +337,7 @@ class MapState {
         }
         
         let o = JSON.parse(c);
-        if (o.version == null) {
+        if (o.version == null || o.version === "1") {
             window.localStorage.clear();
             return false;
         } 
