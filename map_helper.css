@@ -94,6 +94,44 @@ body {
     background-color: rgb(113, 103, 253);
 }
 
+/* Tooltip */
+tooltip {
+    visibility: hidden;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 3px;
+
+    padding: 0.3rem;
+    position: absolute;
+    z-index: 1;
+    box-sizing: border-box;
+
+    /* bottom: 125%;
+    margin-left: -60px; */
+    left: calc(100% + 0.3rem);
+    
+    opacity: 0;
+    transition: opacity 0.3s;
+    transition-delay: 1.5s;
+}
+
+/* tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+} */
+
+div:hover > tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+  
 
 /* Button wrappers */
 .ButtonWrapper {
@@ -116,6 +154,7 @@ body {
 }
 
 .divBtn {
+    position: relative;
     display        : flex;
     align-items    : center;
     justify-content: center;
