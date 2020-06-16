@@ -77,10 +77,16 @@ let MapLoader = class {
         );
     }
 
-
-
+/**
+ * 
+ * @param {string} map 
+ * @param {boolean} doNotDoDefaultZoom 
+ */
     load(map, doNotDoDefaultZoom) {
         this.currentMap = map;
+        
+        $('#documentTitle')[0].innerHTML = `Mapa TEC298 — ${titleCase(map.replace('_',' '))}`;
+        
         mapMeta.loadFromJson(this.mapStruct[map].mapMetaStr);
         mapMeta.loadToGlobal();
         
