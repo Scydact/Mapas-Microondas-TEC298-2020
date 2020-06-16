@@ -116,6 +116,7 @@ let ClickMode = class {
 
     deselectUITools() {
         $('.toolBtn').removeClass('active');
+        $(canvas).removeClass('crosshair');
     }
 
     updateUITools(mode) {
@@ -124,6 +125,7 @@ let ClickMode = class {
             case 'setLinePoint1':
             case 'setLinePoint2':
                 $('#toolLine').addClass('active');
+                $(canvas).addClass('crosshair');
                 break;
 
             default:

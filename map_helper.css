@@ -25,7 +25,7 @@ body {
 
 #statusBarWrapper {
     position               : relative;
-    float: right;
+    float                  : right;
     background             : black;
     color                  : white;
     min-width              : 25vw;
@@ -122,11 +122,11 @@ body {
     flex-direction : column;
 
     padding      : 0.3rem;
-    min-width: 1.2rem;
-    min-height: 1.2rem;
+    min-width    : 1.2rem;
+    min-height   : 1.2rem;
     border-radius: 3px;
     margin       : 0px 0px 2px 0px;
-    color: rgba(0,0,0,50%);
+    color        : rgba(0, 0, 0, 70%);
     background   : rgb(207, 207, 207);
 }
 
@@ -170,7 +170,7 @@ body {
     right     : 0px;
     box-sizing: border-box;
     height    : 100%;
-    min-width: 16rem;
+    min-width : 16rem;
 
     padding         : 1rem 5rem 2rem 1.5rem;
     background-color: rgba(209, 209, 209, 0.7);
