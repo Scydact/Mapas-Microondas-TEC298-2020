@@ -89,36 +89,50 @@
             </div>
         </div>
 
+        <!-- Tool menus -->
         <div id=linesWrapper class='disabled pane'>
             <h1>Lineas</h1>
             <input type=button id=createLine value=+>
             <input type=button id=deleteLine value=->
-            <div id=lineListWrapper>
-
-            </div>
+            <div id=lineListWrapper></div>
         </div>
 
+        <div id=pointsWrapper class='disabled pane'>
+            <h1>Puntos</h1>
+            <input type=button id=createPoint value=+>
+            <input type=button id=deletePoint value=->
+            <div id=pointListWrapper></div>
+        </div>
+
+
+
+        <!-- Tool pane buttons -->
         <div id=dialogButtonWrapper class=ButtonWrapper>
             <div id=openSettings class=divBtn><i class="fas fa-cog"></i> Mapa</div>
             <div id=openLinePane class=divBtn><i class="fas fa-pencil-ruler"></i> Lineas</div>
+            <div id=openPointPane class=divBtn><i class="fas fa-map-marker-alt"></i> Puntos</div>
         </div>
 
+        <!-- Toolbox -->
+        <div id=toolBoxWrapper class=ButtonWrapper>
+            <div id=toolPointer class='divBtn toolBtn'><i class="fas fa-mouse-pointer"></i></div>
+            <div id=toolLine class='divBtn toolBtn'><i class="fas fa-pencil-ruler"></i></div>
+            <div id=toolPoint class='divBtn toolBtn'><i class="fas fa-map-marker-alt"></i></div>
+            <div id=toolPoly class='divBtn toolBtn disabled'><i class="fas fa-draw-polygon"></i></div>
+            
+        </div>
+
+
+
+
+        <!-- Zoom buttons -->
         <div id=zoomButtonWrapper class=ButtonWrapper>
             <div id=reset class=divBtn><i class="fas fa-compress"></i></div>
             <div id=plus class=divBtn><i class="fas fa-plus" style="font-size: 0.7em;"></i></div>
             <div id=minus class=divBtn><i class="fas fa-minus" style="font-size: 0.7em;"></i></div>
         </div>
 
-        <div id=statusBarWrapper class=disabled>
-            <p id=statusBar>OUTPUT TEST</p>
-        </div>
-
-        <div id=toolBoxWrapper class=ButtonWrapper>
-            <div id=toolPointer class='divBtn toolBtn'><i class="fas fa-mouse-pointer"></i></div>
-            <div id=toolLine class='divBtn toolBtn'><i class="fas fa-pencil-ruler"></i></div>
-            
-        </div>
-
+        <!-- Others -->
         <div id=msgWrapper class=disabled>
             <p>Prueba</p>
         </div>
@@ -130,20 +144,13 @@
             </div>
         </div>
 
+        <div id=statusBarWrapper class=disabled>
+            <p id=statusBar>OUTPUT TEST</p>
+        </div>
+
 
 
     </div>
-
-
-
-
-
-
-
-
-<!-- Scripts load -->
-
-
 </body>
 
 </html>

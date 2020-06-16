@@ -273,12 +273,14 @@ class MapState {
 
     // Current map
     map = "jarabacoa";
-    version = 1;
+    version = 2;
 
     DEBUG_EXIT_WITHOUT_SAVE = false;
+    DEBUG_CLEAR_COOKIES = false;
 
     // Current Linelist
     mapLineList = new MapLineList();
+    mapPointList = new MapPointList();
 
     getJsonString() {
         let o = {
@@ -286,9 +288,9 @@ class MapState {
             scale : this.scale,
             map : this.map,
             version : this.version,
-            
-            mapLineList : this.mapLineList.toJson()
         };
+        if (mapLineList.list.length) {o.mapLineList = this.mapLineList.toJson()}
+        if (mapPointList.list.length) {o.mapPointList = this.mapPointList.toJson()}
 
         return JSON.stringify(o);
     }
@@ -300,9 +302,14 @@ class MapState {
         this.map = o.map;
         this.version = o.version;
         
-        let m = new MapLineList();
-        m.parseJson(o.mapLineList);
-        this.mapLineList = m;
+        let mll = new MapLineList();
+        if (o.mapLineList) {mll.parseJson(o.mapLineList)}
+        this.mapLineList = mll;
+
+        let mpl = new MapPointList();
+        if (o.mapPointList) {mpl.parseJson(o.mapPointList)}
+        this.mapPointList = mpl;
+
         return true;
     }
 
@@ -311,6 +318,7 @@ class MapState {
         this.scale = scale;
         this.map = mapLoader.currentMap;
         this.mapLineList = mapLineList;
+        this.mapPointList = mapPointList;
 
         // easy deep clone
         let t = this.getJsonString();
@@ -321,14 +329,22 @@ class MapState {
         translatePos = this.translatePos;
         scale = this.scale;
         mapLoader.load(this.map, true);
+
         mapLineList = this.mapLineList;
         mapLineList.node = $("#lineListWrapper")[0];
         mapLineList.updateNode();
+
+        mapPointList = this.mapPointList;
+        mapPointList.node = $('#pointListWrapper')[0];
+        mapPointList.updateNode();
+
         return true;
     }
 
     setToCookies() {
-        if (this.DEBUG_EXIT_WITHOUT_SAVE) {
+        if (this.DEBUG_EXIT_WITHOUT_SAVE) {return false}
+        if (this.DEBUG_CLEAR_COOKIES) {
+            window.localStorage.removeItem(this.name);
             return false;
         }
         let value = this.getJsonString();

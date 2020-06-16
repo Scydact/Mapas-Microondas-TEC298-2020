@@ -1,12 +1,17 @@
 let settingsOpen = false;
 let linesPaneOpen = false;
+let pointsPaneOpen = false;
+
 let msgBar;
 let statusBar;
 let clickMode;
-let MouseBar;
+let mouseBar;
 
 let temp;
-let mapLineList = new MapLineList(); // only for IntelliSense, as this is be overriden later
+
+// only for IntelliSense, as this is be overriden later
+let mapLineList = new MapLineList();
+let mapPointList = new MapPointList();
 
 // Canvas nav stuff
 var startDragOffset = {};
@@ -128,6 +133,11 @@ let ClickMode = class {
                 $(canvas).addClass('crosshair');
                 break;
 
+            case 'setPointMarker':
+                $('#toolPoint').addClass('active');
+                $(canvas).addClass('crosshair');
+                break;
+
             default:
                 $('#toolPointer').addClass('active');
         }
@@ -158,19 +168,30 @@ function UIHandler_mousemove(evt) {
     getMousePos(canvas, evt);
     getMousePosInMap(canvas, evt);
 
-    // Determine line hover
-    let lines = mapLineList.getCloseToScreenPoint(mousePos, hoverDistance);
-    mapLineList.list.forEach((e) => e.hover = false);
-    if (lines.length > 0) {lines[0].hover = true}
-    mapLineList.updateNode();
+    // Determine lists hover
+    let mapLists = [mapLineList, mapPointList];
+    let outLists = [];
+    for (let i = mapLists.length; i--; ) {
+        let list = mapLists[i];
+        outLists[i] = list.getCloseToScreenPoint(mousePos, hoverDistance);
+        list.list.forEach((e) => e.hover = false);
+        if (outLists[i].length > 0) {outLists[i][0].hover = true}
+        list.updateNode();
+    }
 
 
     // Display tooltip
     var formattedPosition = formattedPixelPointToMapPoint(coordPos);
     var msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
     if (clickMode.mode == '') {
-        if (lines.length > 0) {
-            msg += `\nLinea #${lines[0].index + 1}: ${lines[0].getDistanceMetre().toFixed(2)}m`
+        if (outLists[0].length > 0) {
+            msg += `\nLinea #${outLists[0][0].index + 1}: ${outLists[0][0].getDistanceMetre().toFixed(2)}m`
+        }
+        if (outLists[1].length > 0) {
+            let puntoSel = outLists[1][0];
+            let name = (puntoSel.name) ? puntoSel.name : '#' + (puntoSel.index+1).toString();
+            let pos = formattedPixelPointToMapPoint(puntoSel.p);
+            msg += `\nPunto ${name} @(${pos.x}, ${pos.y})`;
         }
     }
     else if (clickMode.mode == 'setLinePoint2') {
@@ -192,6 +213,7 @@ function UIHandler_mouseup(evt) {
 
     if (!dragging) {
         switch (clickMode.mode) {
+            // debug stuff
             case 'setLeftUpPos':
                 $('#up-left-pos-x').val(Math.round(coordPos.x));
                 $('#up-left-pos-y').val(Math.round(coordPos.y));
@@ -202,24 +224,6 @@ function UIHandler_mouseup(evt) {
                 $('#down-right-pos-y').val(Math.round(coordPos.y));
                 clickMode.clear();
                 break;
-            case 'setLinePoint1':
-                temp.mapline.point1 = screenToMapPos(mousePos);
-                temp.mapline.templine.p1 = temp.mapline.point1;
-                clickMode.set('setLinePoint2');
-                msgBar.setText('Click en el 2do punto de la linea');
-                break;
-            case 'setLinePoint2':
-                var pos = screenToMapPos(mousePos);
-                mapLineList.add(
-                    new MapLine(temp.mapline.point1, pos, {
-                        color: '#f00',
-                        width: 2,
-                    })
-                );
-                clickMode.clear();
-                msgBar.clear();
-                break;
-
             case 'setMetreDefPoint1':
                 clickMode.set('setMetreDefPoint2');
                 msgBar.setText('Haga click en el 2do punto de la regla.');
@@ -241,14 +245,42 @@ function UIHandler_mouseup(evt) {
                 $('#one-metre-px').val(dist / i);
                 break;
 
+            // Tools
+            case 'setLinePoint1':
+                temp.mapline.point1 = coordPos;//screenToMapPos(mousePos);
+                temp.mapline.templine.p1 = temp.mapline.point1;
+                clickMode.set('setLinePoint2');
+                msgBar.setText('Click en el 2do punto de la linea');
+                break;
+            case 'setLinePoint2':
+                //var pos = screenToMapPos(mousePos);
+                mapLineList.add(
+                    new MapLine(temp.mapline.point1, coordPos, {
+                        color: '#f00',
+                        width: 2,
+                    })
+                );
+                clickMode.clear();
+                msgBar.clear();
+                break;
+            case 'setPointMarker':
+                mapPointList.add(new MapPoint(coordPos));
+                clickMode.clear();
+                msgBar.clear();
+                break;
 
             // With Pointer mode 
             default:
                 // mapLines selection
-                let lines = mapLineList.getCloseToScreenPoint(mousePos, hoverDistance);
-                if (!modifier.shift) {mapLineList.deselectAll()}
-                if (lines.length > 0) {lines[0].active = !lines[0].active}
-                mapLineList.updateNode();
+                let mapLists = [mapLineList, mapPointList];
+
+                for (i = mapLists.length; i--; ) { // sweet inverse loop i've found on the internet
+                    let list = mapLists[i];
+                    let elements = list.getCloseToScreenPoint(mousePos, hoverDistance);
+                    if (!modifier.shift) {list.deselectAll()}
+                    if (elements.length > 0) {elements[0].active = !elements[0].active}
+                    list.updateNode();
+                }
         }
     }
 
@@ -278,10 +310,6 @@ $(window).ready(function () {
         },
     };
 
-    // Toolbox buttons
-    $('#toolPointer').on('click', (e) => clickMode.clear());
-    $('#toolLine').on('click', createLineFun);
-
     // Keypress
     $(document).keyup(function (e) {
         switch (e.key) {
@@ -302,10 +330,21 @@ $(window).ready(function () {
             case 'Delete':
                 mapLineList.deleteActive();
                 mapLineList.updateNode();
+
+                mapPointList.deleteActive();
+                mapPointList.updateNode();
+
                 break;
+
+
             case 'L':
             case 'l':
                 createLineFun();
+                break;
+
+            case 'P':
+            case 'p':
+                createPointFun();
                 break;
 
         }
@@ -402,14 +441,24 @@ $(window).ready(function () {
         msgBar.setText('Haga click en el 1er punto de la regla.');
     });
 
+
+
+    // Toolbox buttons
+    $('#toolPointer').on('click', (e) => clickMode.clear());
+    $('#toolLine').on('click', createLineFun);
+    $('#toolPoint').on('click', createPointFun);
+
     // Lines
+    //$('#openLinePane').on('dblclick', createLineFun);
     function createLineFun() {
         clickMode.set('setLinePoint1');
         msgBar.setText('Click en el 1er punto de la linea');
     }
-    $('#openLinePane').on('dblclick', createLineFun);
-    $('#createLine').on('click', createLineFun);
-
+    function deleteLineFun() {
+        mapLineList.deleteActive();
+        mapLineList.updateNode();
+        draw();
+    }
     $('#openLinePane').on('click', function () {
         linesPaneOpen = !linesPaneOpen;
         if (linesPaneOpen) {
@@ -418,13 +467,36 @@ $(window).ready(function () {
             $('#linesWrapper').addClass('disabled');
         }
     });
+    $('#createLine').on('click', createLineFun);
+    $('#deleteLine').on('click', deleteLineFun);
 
-    function deleteLineFun() {
-        mapLineList.deleteActive();
-        mapLineList.updateNode();
+
+    // Point
+    function createPointFun() {
+        clickMode.set('setPointMarker');
+        msgBar.setText('Click en un punto');
+    }
+    function deletePointFun() {
+        mapPointList.deleteActive();
+        mapPointList.updateNode();
         draw();
     }
-    $('#deleteLine').on('click', deleteLineFun);
+    $('#toolPoint').on('click', createPointFun);
+    $('#openPointPane').on('click', function () {
+        pointsPaneOpen = !pointsPaneOpen;
+        if (pointsPaneOpen) {
+            $('#pointsWrapper').removeClass('disabled');
+        } else {
+            $('#pointsWrapper').addClass('disabled');
+        }
+    });
+    $('#createPoint').on('click', createPointFun);
+    $('#deletePoint').on('click', deletePointFun);
+
+
+
+
+
 
     // Redraw on resize
     $(window).resize(function () {

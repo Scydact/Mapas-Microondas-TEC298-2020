@@ -19,6 +19,9 @@ function draw() {
         temp.mapline.templine.draw(context);
     }
 
+    // Map points
+    mapPointList.draw(context);
+
     // Cursor overlay
     //drawCurrentPosition(context);
 }
@@ -305,7 +308,7 @@ class MapLineList {
         let x = this.list;
         let l = this.list.length;
         for (let i = 0; i < l; i++) {
-            l[i].index = i;
+            x[i].index = i;
         }
     }
 
@@ -361,6 +364,7 @@ class MapPoint {
     hover = false;
     active = false;
     disabled = false;
+    name = "";
 
     styles = {
         normal: {
@@ -381,9 +385,44 @@ class MapPoint {
         },
     };
 
-    constructor(p1, normalStyle) {
-        this.p = p1;
+    constructor(point, normalStyle) {
+        this.p = point;
         if (normalStyle) {this.styles.normal = normalStyle;}
+    }
+
+    toJson() {
+        let o = {
+            hover: this.hover,
+            active: this.active,
+            disabled: this.disabled,
+
+            styles: this.styles,
+
+            p: this.p,
+            name: this.name
+        }
+        return JSON.stringify(o);
+    }
+
+    static fromJObject(o) {
+        let l = new MapPoint(o.p);
+        l.name = o.name;
+        l.p = o.p;
+
+        // styles
+        if (o.styles) {l.styles = o.styles}
+        
+        // state
+        l.hover = o.hover;
+        l.active = o.active;
+        l.disabled = o.disabled;
+
+        return l;
+    }
+
+    static fromJson(txt) {
+        let o = JSON.parse(txt);
+        return this.fromJObject(o);
     }
 
     drawWithoutContextSave(context) {
@@ -441,7 +480,123 @@ class MapPoint {
         return p.Distance(this.p, point);
     }
 
-    getDistanceMetre() {
-        return this.getDistancePx() / oneMetreInPx;
+    getDistanceMetre(point) {
+        return this.getDistancePx(point) / oneMetreInPx;
+    }
+};
+
+
+
+class MapPointList {
+    constructor() {
+        this.list = [];
+        this.node = null;
+    }
+
+    toJson() {
+        let l = this.list.map((e) => e.toJson());
+        return JSON.stringify(l);
+    }
+
+    parseJson(txt) {
+        let json = JSON.parse(txt);
+        let This = this;
+        json.forEach(function (e) {
+            let a = MapPoint.fromJson(e);
+            This.add(a);
+        });
+    }
+
+    add(line) {
+        this.list.push(line);
+        let i = this.list.length - 1;
+        this.list[i].index = i;
+        this.updateNode();
+    }
+
+    draw(context) {
+        context.save();
+        this.list.forEach((element) => element.drawWithoutContextSave(context));
+        context.restore();
+    }
+
+    // Node stuff
+    deselectAll() {
+        this.list.forEach((element) => (element.active = false));
+        $(this.node).find(".active").removeClass("active");
+        //this.updateNode();
+        // draw();
+    }
+
+    deleteActive() {
+        this.list = this.list.filter((e) => !e.active);
+        this.updateListIndexes();
+        // updateNode();
+        // draw();
+    }
+
+    getCloseToScreenPoint(point, distance) {
+        return this.list
+            .filter((e)=>e.isCloseToScreenPoint(point, distance))
+            .sort((a, b) => 
+                a.getDistanceToScreenPoint(point)
+                - b.getDistanceToScreenPoint(point));
+    }
+
+    updateListIndexes() {
+        let x = this.list;
+        let l = this.list.length;
+        for (let i = 0; i < l; i++) {
+            x[i].index = i;
+        }
+    }
+
+    updateNode() {
+        if (this.node) {
+            this.node.innerHTML = "";
+            let This = this;
+
+            for (let i = 0; i < this.list.length; i++) {
+                let l = This.list[i];
+
+                let d = document.createElement("div");
+                let djq = $(d);
+                if (l.active) {djq.addClass("active")}
+                if (l.hover) {djq.addClass("hover")}
+                let p = document.createElement("p");
+                let name = (l.name) ? l.name : (i+1).toString();
+                let pos = formattedPixelPointToMapPoint(l.p);
+                p.innerHTML = `(${name}) @(${pos.x}, ${pos.y})`;
+
+                // Append to list node
+                d.appendChild(p);
+                this.node.appendChild(d);
+
+                // Events
+                djq.addClass("lineList");
+                djq.on("click", function () {
+                    if (!modifier.shift) {
+                        This.deselectAll();
+                    }
+                    l.active = !l.active;
+
+                    let t = $(this);
+                    if (l.active) {t.addClass("active")}
+                    else {t.removeClass("active")}
+
+                    draw();
+                });
+
+                djq.on("mouseover", function () {
+                    l.hover = true;
+                    draw();
+                });
+
+                djq.on("mouseout", function () {
+                    l.hover = false;
+                    draw();
+                });
+            }
+        }
     }
 };
