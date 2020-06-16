@@ -170,7 +170,7 @@ function UIHandler_mousemove(evt) {
     var msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
     if (clickMode.mode == '') {
         if (lines.length > 0) {
-            msg += `\nLinea #${lines[0].index + 1}: ${lines[0].getDistanceMetre()}m`
+            msg += `\nLinea #${lines[0].index + 1}: ${lines[0].getDistanceMetre().toFixed(2)}m`
         }
     }
     else if (clickMode.mode == 'setLinePoint2') {
