@@ -23,6 +23,11 @@ var modifier = {
     alt: false,
 };
 
+// Touch
+var touchZooming = 0;
+var touchZoomingDistance = 0;
+var touchScaleMultiplier = 1/100;
+
 // Other stuff
 var hoverDistance = 7;
 
@@ -147,14 +152,14 @@ let ClickMode = class {
 // UI Handlers
 /**
  * On mouse move
- * @param {event} evt
+ * @param {p} newPos
  */
-function UIHandler_mousemove(evt) {
+function UIHandler_mousemove(newPos) {
     // move by drag
     if (mouseDown) {
         dragging = true;
-        translatePos.x = evt.clientX - startDragOffset.x;
-        translatePos.y = evt.clientY - startDragOffset.y;
+        translatePos.x = newPos.x - startDragOffset.x;
+        translatePos.y = newPos.y - startDragOffset.y;
         draw(scale, translatePos);
     }
     // Set mouse pointer to 'move' if dragging
@@ -165,8 +170,8 @@ function UIHandler_mousemove(evt) {
     }
 
     // Update mousePos / coordPos global vars
-    getMousePos(canvas, evt);
-    getMousePosInMap(canvas, evt);
+    getMousePos(canvas, newPos);
+    getMousePosInMap(canvas, newPos);
 
     // Determine lists hover
     let mapLists = [mapLineList, mapPointList];
@@ -205,11 +210,16 @@ function UIHandler_mousemove(evt) {
 
 /**
  * On mouse up (equivalent to clicking)
- * @param {event} evt
+ * @param {event} newPos
  */
-function UIHandler_mouseup(evt) {
+function UIHandler_mouseup(newPos) {
     var canvas = document.getElementById('renderCanvas');
     var context = canvas.getContext('2d');
+    console.log('Click!');
+
+    // Update mousePos / coordPos global vars, for touch compat
+    getMousePos(canvas, newPos);
+    getMousePosInMap(canvas, newPos);
 
     if (!dragging) {
         switch (clickMode.mode) {
@@ -505,6 +515,10 @@ $(window).ready(function () {
 
     // Canvas functionality
     // Mouse down (click downstroke)
+    function mouseEvtToPos(evt) {
+        return new p(evt.clientX, evt.clientY);
+    }
+
     $(canvas).on('mousedown', function (evt) {
         mouseDown = true;
 
@@ -512,28 +526,113 @@ $(window).ready(function () {
         startDragOffset.y = evt.clientY - translatePos.y;
     });
 
-    // Mousemove
-    $(canvas).on('mousemove', UIHandler_mousemove);
-
-    // Eqv to Click
-    $(canvas).on('mouseup', UIHandler_mouseup);
+    $(canvas).on('mousemove', (e) => UIHandler_mousemove(mouseEvtToPos(e)));
+    $(canvas).on('mouseup', (e) => UIHandler_mouseup(mouseEvtToPos(e)));
 
     // Cancel mouse movements
     $(canvas).on('mouseover', function (evt) {
         mouseDown = false;
         dragging = false;
     });
-
     $(canvas).on('mouseout', function (evt) {
         mouseDown = false;
         dragging = false;
     });
 
+
+    // Touch support
+    function touchEvtToPos(evt) {
+        let x = evt.originalEvent.changedTouches[0];
+        return new p(x.clientX, x.clientY);
+    }
+    $(canvas).on('touchstart', function (e) {
+        e.preventDefault(); //sets preventDefault tag;
+        $(canvas).focus(); // Avoids very weird glitches related to random clicking 
+        let oe = e.originalEvent;
+
+        if (oe.touches.length == 1) {
+            mouseDown = true;
+            let newPos = touchEvtToPos(e);
+            getMousePosInMap(canvas, newPos); // Update mousepos
+    
+            startDragOffset.x = newPos.x - translatePos.x;
+            startDragOffset.y = newPos.y - translatePos.y;
+        }
+        else if (oe.touches.length == 2) {
+            touchZooming = 2;
+            mouseDown = false;
+            dragging = false;
+
+            let t1 = oe.touches[0];
+            let t2 = oe.touches[1];
+            let p1 = new p(t1.clientX, t1.clientY);
+            let p2 = new p(t2.clientX, t2.clientY);
+            touchZoomingDistance = p.Distance(p1, p2); 
+        }
+
+        draw();
+    });
+
+    $(canvas).on('touchmove', (e) => {
+        e.preventDefault(); //sets preventDefault tag;
+        let oe = e.originalEvent;
+
+        if (oe.touches.length == 1) {
+            UIHandler_mousemove(touchEvtToPos(e));
+        }
+        else if (oe.touches.length >= 2) {
+            let t1 = oe.touches[0];
+            let t2 = oe.touches[1];
+            let p1 = new p(t1.clientX, t1.clientY);
+            let p2 = new p(t2.clientX, t2.clientY);
+            let d = p.Distance(p1, p2);
+
+            let centerPoint = p.MidPoint(p1, p2);
+
+            let dx = d - touchZoomingDistance;
+            let scaleMult = 1;
+            let threshold = 2;
+            let scaledDx = Math.abs(dx*touchScaleMultiplier);
+            if (dx > 0) {
+                scaleMult = 1 + scaledDx;
+            }
+            else if (dx < 0) {
+                scaleMult = 1 / (1 + scaledDx);
+            }
+            // if (dx < -threshold) {
+            //     scaleMult = scaleMultiplier;
+            //     console.log(`Zooming out: ${d} : ${dx}`);
+            // }
+            // else if (dx > threshold) {
+            //     scaleMult = 1 / scaleMultiplier;
+            //     console.log(`Zooming in: ${d} : ${dx}`);
+            // }
+            // else {
+            //     console.log(`Not zooming`);
+            // }
+            zoomAtPosition(centerPoint.x, centerPoint.y, scale * scaleMult);
+            draw();
+
+            touchZoomingDistance = d; // save to previous state;
+        }
+    });
+    $(canvas).on('touchend', (e) => {//touchend is registered as a mouse up somewhere else????
+        e.preventDefault();
+        if (touchZooming) {
+            touchZooming--; 
+            return;
+        }
+        
+        UIHandler_mouseup(mousePos);
+    }); 
+
+    // Cancel mousedown
+
+
     // Wheel zooming
     canvas.addEventListener('wheel', function (e) {
         // jquery is broken with wheel?
         e.preventDefault();
-        let previousScale = scale;
 
         // calculate scale direction 6 new scale value
         let scaleMult = e.deltaY > 0 ? scaleMultiplier : 1 / scaleMultiplier;

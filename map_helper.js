@@ -25,11 +25,15 @@ let mapMeta;
 let mapLoader;
 let savedMapState;
 
-// Generic Point type
 /**
  * Generic point class
  */
 class p {
+    /**
+     * 
+     * @param {*} x Point x position
+     * @param {*} y Point y position
+     */
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -47,23 +51,30 @@ class p {
     }
 
     static Minus(p1, p2) {
-        return {
-            x: p1.x - p2.x,
-            y: p1.y - p2.y,
-        };
+        return new p(
+            p1.x - p2.x, 
+            p1.y - p2.y
+        );
     }
 
     static Plus(p1, p2) {
-        return {
-            x: p1.x + p2.x,
-            y: p1.y + p2.y,
-        };
+        return new p(
+            p1.x + p2.x,
+            p1.y + p2.y
+        );
     }
 
     static Distance(p1, p2) {
         return Math.sqrt(
             (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y)
         );
+    }
+
+    static MidPoint(p1, p2) {
+        return new p(
+            (p1.x + p2.x) / 2,
+            (p1.y + p2.y) / 2
+        )
     }
 }
 
@@ -80,13 +91,13 @@ var scaleMultiplier = 0.8;
 /**
  * Gets the mouse position on the screen [px]
  * @param {*} canvas
- * @param {event} evt
+ * @param {p} newPoint
  */
-function getMousePos(canvas, evt) {
+function getMousePos(canvas, newPoint) {
     var rect = canvas.getBoundingClientRect();
 
-    mousePos.x = evt.clientX - rect.left;
-    mousePos.y = evt.clientY - rect.top;
+    mousePos.x = newPoint.x - rect.left;
+    mousePos.y = newPoint.y - rect.top;
 
     return mousePos;
 }
@@ -95,10 +106,10 @@ function getMousePos(canvas, evt) {
  * Gets the mouse position inside the zoomed canvas [px]
  * To convert to coords, use this and pixelPointToMapPoint() or formattedPixelPointToMapPoint()
  * @param {*} canvas
- * @param {event} evt
+ * @param {p} newPoint
  */
-function getMousePosInMap(canvas, evt) {
-    var mousePos = getMousePos(canvas, evt);
+function getMousePosInMap(canvas, newPoint) {
+    var mousePos = getMousePos(canvas, newPoint);
 
     coordPos = screenToMapPos(mousePos);
 
