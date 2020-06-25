@@ -626,6 +626,8 @@ $(window).ready(function () {
         UIHandler_mouseup(mousePos);
     }); 
 
+    $('.toolBtn').on('touchend', (e) => $(canvas).focus());
+
     // Cancel mousedown
 
 
