@@ -1,7 +1,3 @@
-let settingsOpen = false;
-let linesPaneOpen = false;
-let pointsPaneOpen = false;
-
 let msgBar;
 let statusBar;
 let clickMode;
@@ -403,15 +399,27 @@ $(window).ready(function () {
     });
 
     // UI Buttons
+    // Panes
+    function closeAllPanes() {
+        $('#settingsWrapper').addClass('disabled');
+        $('#linesWrapper').addClass('disabled');
+        $('#pointsWrapper').addClass('disabled');
+    }
+    function togglePane(selector) {
+        let j = $(selector);
+        if (j.hasClass('disabled')) {
+            closeAllPanes();
+            j.removeClass('disabled');
+        }
+        else {
+            closeAllPanes();
+        }
+    }
+
     // Config
     $('#openSettings').on('click', function () {
-        settingsOpen = !settingsOpen;
-        if (settingsOpen) {
-            mapMeta.loadToSetup();
-            $('#settingsWrapper').removeClass('disabled');
-        } else {
-            $('#settingsWrapper').addClass('disabled');
-        }
+        mapMeta.loadToSetup();
+        togglePane('#settingsWrapper');
     });
 
     $('#map-select').on('change', function () {
@@ -433,12 +441,10 @@ $(window).ready(function () {
     $('#set-ok-btn').on('click', function () {
         mapMeta.loadFromSetup();
         mapMeta.loadToGlobal();
-        settingsOpen = false;
         $('#settingsWrapper').addClass('disabled');
     });
 
     $('#set-cancel-btn').on('click', function () {
-        settingsOpen = false;
         $('#settingsWrapper').addClass('disabled');
     });
 
@@ -470,12 +476,7 @@ $(window).ready(function () {
         draw();
     }
     $('#openLinePane').on('click', function () {
-        linesPaneOpen = !linesPaneOpen;
-        if (linesPaneOpen) {
-            $('#linesWrapper').removeClass('disabled');
-        } else {
-            $('#linesWrapper').addClass('disabled');
-        }
+        togglePane('#linesWrapper');
     });
     $('#createLine').on('click', createLineFun);
     $('#deleteLine').on('click', deleteLineFun);
@@ -493,12 +494,7 @@ $(window).ready(function () {
     }
     $('#toolPoint').on('click', createPointFun);
     $('#openPointPane').on('click', function () {
-        pointsPaneOpen = !pointsPaneOpen;
-        if (pointsPaneOpen) {
-            $('#pointsWrapper').removeClass('disabled');
-        } else {
-            $('#pointsWrapper').addClass('disabled');
-        }
+        togglePane('#pointsWrapper');
     });
     $('#createPoint').on('click', createPointFun);
     $('#deletePoint').on('click', deletePointFun);
