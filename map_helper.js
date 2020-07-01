@@ -46,10 +46,20 @@ class p {
         };
     }
 
+    /**
+     * Gives the dot product (x1*x2+y1*y2) of a point.
+     * @param {p} p1 
+     * @param {p} p2 
+     */
     static Dot(p1, p2) {
         return p1.x * p2.x + p1.y * p2.y;
     }
 
+    /**
+     * Returns the vector subtraction.
+     * @param {p} p1 
+     * @param {p} p2 
+     */
     static Minus(p1, p2) {
         return new p(
             p1.x - p2.x, 
@@ -57,6 +67,11 @@ class p {
         );
     }
 
+    /**
+     * Returns the vector sum.
+     * @param {*} p1 
+     * @param {*} p2 
+     */
     static Plus(p1, p2) {
         return new p(
             p1.x + p2.x,
@@ -64,12 +79,22 @@ class p {
         );
     }
 
+    /**
+     * Returns the distance between two points.
+     * @param {p} p1 
+     * @param {p} p2 
+     */
     static Distance(p1, p2) {
         return Math.sqrt(
             (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y)
         );
     }
 
+    /**
+     * Returns the midpoint between two points.
+     * @param {p} p1 
+     * @param {p} p2 
+     */
     static MidPoint(p1, p2) {
         return new p(
             (p1.x + p2.x) / 2,
