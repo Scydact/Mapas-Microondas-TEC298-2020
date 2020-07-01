@@ -2,10 +2,12 @@ let msgBar;
 let statusBar;
 let clickMode;
 let mouseBar;
+let editPane;
 
 let temp;
 
 // only for IntelliSense, as this is be overriden later
+// TODO: Do something with all these important global variables scrambled around. Put them all inside 1 unified object or something.
 let mapLineList = new MapLineList();
 let mapPointList = new MapPointList();
 
@@ -100,6 +102,38 @@ let MousePane = class {
     }
 };
 
+let EditPane = class {
+    // Order is the same as mapLists
+    // TODO: Unify mapList so it doesn't need to be rebuilt every single time it needs to be called.
+    active = []
+
+    constructor() {
+        this.wrapperNode = document.getElementById('editionWrapper');
+        this.contentNode = document.getElementById('editionContentWrapper');
+    }
+
+    clear() {this.contentNode.innerHTML = ''}
+
+    updateNode() {
+        /**
+         * Active order:
+         * 0. Lines
+         * 1. Points
+         */
+
+        this.clear()
+
+         // only lines
+        if (this.active[0].length && !this.active[1].length) {
+            this.active[0][0].updateEditNode(this.contentNode);
+        }
+        else if (this.active[1].length && !this.active[0].length) {
+            this.active[1][0].updateEditNode(this.contentNode);
+        }
+    }
+
+}
+
 let ClickMode = class {
     constructor() {
         this.mode = '';
@@ -171,6 +205,12 @@ function UIHandler_mousemove(newPos) {
 
     // Determine lists hover
     let mapLists = [mapLineList, mapPointList];
+
+    /**
+     * outList contents: 
+     * 0: mapLineList
+     * 1: mapPointList
+     */
     let outLists = [];
     for (let i = mapLists.length; i--; ) {
         let list = mapLists[i];
@@ -277,7 +317,7 @@ function UIHandler_mouseup(newPos) {
 
             // With Pointer mode 
             default:
-                // mapLines selection
+                // mapList selection
                 let mapLists = [mapLineList, mapPointList];
 
                 for (i = mapLists.length; i--; ) { // sweet inverse loop i've found on the internet
@@ -286,7 +326,13 @@ function UIHandler_mouseup(newPos) {
                     if (!modifier.shift) {list.deselectAll()}
                     if (elements.length > 0) {elements[0].active = !elements[0].active}
                     list.updateNode();
+
+                    // Update editpane inner list
+                    editPane.active[i] = list.getActive();
                 }
+
+                // Update editpane
+                editPane.updateNode();
         }
     }
 
@@ -302,6 +348,7 @@ $(window).ready(function () {
     statusBar = new StatusPane();
     clickMode = new ClickMode();
     mouseBar = new MousePane();
+    editPane = new EditPane();
 
     // This part is now managed by the savedMapState
     // mapLineList = new MapLineList();
@@ -399,11 +446,12 @@ $(window).ready(function () {
     });
 
     // UI Buttons
-    // Panes
+    // Generic Pane functions
     function closeAllPanes() {
         $('#settingsWrapper').addClass('disabled');
         $('#linesWrapper').addClass('disabled');
         $('#pointsWrapper').addClass('disabled');
+        $('#editionWrapper').addClass('disabled');
     }
     function togglePane(selector) {
         let j = $(selector);
@@ -456,6 +504,13 @@ $(window).ready(function () {
         clickMode.set('setMetreDefPoint1');
         msgBar.setText('Haga click en el 1er punto de la regla.');
     });
+
+
+    // Edit object pane
+    $('#openEditionPane').on('click', function () {
+        togglePane('#editionWrapper');
+    });
+
 
 
 

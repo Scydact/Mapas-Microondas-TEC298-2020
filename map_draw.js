@@ -95,6 +95,14 @@ class MapLine {
     active = false;
     disabled = false;
 
+    /**
+     * Divisions:
+     * - Disabled when 0.
+     * - Segmented in n parts when positive.
+     * - Segmented every n meters when negative.
+     */
+    divisions = 0;
+
     styles = {
         normal: {
             color: "red",
@@ -117,8 +125,8 @@ class MapLine {
     constructor(p1, p2, normalStyle) {
         this.p1 = p1;
         this.p2 = p2;
-        this.mapPointP1 = new MapPoint(this.p1,this.styles);
-        this.mapPointP2 = new MapPoint(this.p2,this.styles);
+        this.mapPointP1 = new MapPoint(this.p1,this.styles.normal);
+        this.mapPointP2 = new MapPoint(this.p2,this.styles.normal);
         if (normalStyle) {this.styles.normal = normalStyle;}
     }
 
@@ -191,7 +199,7 @@ class MapLine {
         // let mapPointP2 = new MapPoint(this.p2);
 
         [this.mapPointP1, this.mapPointP2].forEach((e) => {
-            //e.styles = this.styles;
+            e.styles = this.styles;
             e.active = this.active;
             e.hover = this.hover;
             e.disabled = this.disabled;
@@ -246,6 +254,28 @@ class MapLine {
     getDistanceMetre() {
         return this.getDistancePx() / oneMetreInPx;
     }
+
+    updateEditNode(editNode) {
+        let T = this;
+        
+        let l = document.createElement('label');
+        l.innerText = 'Anchura: ';
+        editNode.appendChild(l);
+
+        let i = document.createElement('input');
+        i.setAttribute('type','number');
+        i.setAttribute('min','0');
+        i.setAttribute('step','0.25');
+        i.setAttribute('value',T.styles.normal.width.toString());
+        $(i).change(function () {
+            T.styles.normal.width = parseFloat($(i).val());
+            T.styles.active.width = parseFloat($(i).val()) + 1;
+            T.styles.hover.width = parseFloat($(i).val()) + 1;
+            draw();
+        });
+        editNode.appendChild(i);
+    }
+
 };
 
 class MapLineList {
@@ -287,6 +317,10 @@ class MapLineList {
         $(this.node).find(".active").removeClass("active");
         //this.updateNode();
         // draw();
+    }
+
+    getActive() {
+        return this.list.filter((e) => e.active);
     }
 
     deleteActive() {
@@ -483,6 +517,28 @@ class MapPoint {
     getDistanceMetre(point) {
         return this.getDistancePx(point) / oneMetreInPx;
     }
+
+
+    updateEditNode(editNode) {
+        let T = this;
+        
+        let l = document.createElement('label');
+        l.innerText = 'Anchura: ';
+        editNode.appendChild(l);
+
+        let i = document.createElement('input');
+        i.setAttribute('type','number');
+        i.setAttribute('min','0');
+        i.setAttribute('step','0.25');
+        i.setAttribute('value',T.styles.normal.width.toString());
+        $(i).change(function () {
+            T.styles.normal.width = parseFloat($(i).val());
+            T.styles.active.width = parseFloat($(i).val()) + 2;
+            T.styles.hover.width = parseFloat($(i).val()) + 2;
+            draw();
+        });
+        editNode.appendChild(i);
+    }
 };
 
 
@@ -526,6 +582,10 @@ class MapPointList {
         $(this.node).find(".active").removeClass("active");
         //this.updateNode();
         // draw();
+    }
+
+    getActive() {
+        return this.list.filter((e) => e.active);
     }
 
     deleteActive() {
