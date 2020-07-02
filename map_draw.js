@@ -425,7 +425,13 @@ class MapLine {
             T.topographicPoints.downloadCsv();
         })
 
-        let topoDiv = document.createElement('topoPointsDiv');
+        let topoDiv = document.createElement('div');
+        topoDiv.id = 'topoPointsWrapper';
+        let j = $(topoDiv);
+        j.addClass('scroll');
+        j.addClass('listContainer');
+        j.css('max-height','50vh');
+
         editNode.appendChild(topoDiv);
         this.topographicPoints.node = topoDiv;
         this.topographicPoints.updateNode();
