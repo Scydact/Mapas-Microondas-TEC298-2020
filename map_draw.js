@@ -14,10 +14,16 @@ function draw() {
     // Map lines
     mapLineList.draw(context);
     if (clickMode.mode == "setLinePoint2") {
-        let pos = screenToMapPos(mousePos);
-        temp.mapline.templine.p2 = pos;
+        temp.mapline.templine.p2 = coordPos;
         temp.mapline.templine.draw(context);
     }
+
+    if (clickMode.mode == "setTopographicPoint") {
+        temp.mapline.templine.p1 = coordPos;
+        temp.mapline.templine.p2 = temp.topo.mapLine.getPointProjection(coordPos);
+        temp.mapline.templine.draw(context);
+    }
+
 
     // Map points
     mapPointList.draw(context);
@@ -133,6 +139,7 @@ class MapLine {
         this.p2 = p2;
         this.mapPointP1 = new MapPoint(this.p1);
         this.mapPointP2 = new MapPoint(this.p2);
+        this.topographicPoints = new TopographicProfilePointList(this);
         if (normalStyle) {this.styles.normal = normalStyle;}
     }
 
@@ -142,13 +149,13 @@ class MapLine {
             active: this.active,
             disabled: this.disabled,
 
-            divisions: this.divisions,
-
             styles: this.styles,
 
             p1: this.p1,
             p2: this.p2
         }
+        if (this.divisions) {o.divisions = this.divisions}
+        if (this.topographicPoints.list.length) {o.topographicPoints = this.topographicPoints.toJson()}
         return JSON.stringify(o);
     }
 
@@ -163,6 +170,8 @@ class MapLine {
 
         l.divisions = (o.divisions) ? o.divisions : 0;
 
+        if (o.topographicPoints) {l.topographicPoints.parseJson(o.topographicPoints)}
+
         return l;
     }
 
@@ -171,6 +180,13 @@ class MapLine {
         return this.fromJObject(o);
     }
 
+    reverse() {
+        let pTemp = this.p2;
+        this.p2 = this.p1;
+        this.p1 = pTemp;
+
+        this.topographicPoints.reverse();
+    }
 
     mapToScreenPos() {
         var p1 = mapToScreenPos(this.p1);
@@ -213,6 +229,9 @@ class MapLine {
             e.draw(context);
         });
 
+        // topograhpic points
+        this.topographicPoints.draw(context);
+
         // divisions
         if (this.divisions > 0) {
             let count = this.divisions; // amount of points to do.
@@ -248,8 +267,6 @@ class MapLine {
                 context.closePath();
                 count--;
             }
-
-
         }
 
     }
@@ -302,10 +319,33 @@ class MapLine {
         return this.getDistancePx() / oneMetreInPx;
     }
 
+    /**
+     * Gets the point that cuts this line orthogonally to another point.
+     * @param {p} point 
+     */
+    getPointProjection(point) {
+        // source: https://en.wikipedia.org/wiki/Vector_projection
+
+        let naturalB = p.Minus(this.p2, this.p1);
+        let naturalA = p.Minus(point, this.p1);
+
+        let mult = p.Dot(naturalA, naturalB) / p.Dot(naturalB, naturalB);
+        let naturalAPB = p.ScalarMult(naturalB, mult); 
+
+        return p.Plus(naturalAPB, this.p1);
+    }
+
     updateEditNode(editNode) {
         let T = this;
         let l;
         
+        l = document.createElement('label');
+        l.innerText = `Longitud de linea: ${T.getDistanceMetre().toFixed(2)} m`;
+        editNode.appendChild(l);
+
+        editNode.appendChild(document.createElement('br'));
+
+        // Width
         l = document.createElement('label');
         l.innerText = 'Anchura: ';
         editNode.appendChild(l);
@@ -325,6 +365,7 @@ class MapLine {
 
         editNode.appendChild(document.createElement('br'));
 
+        // Divisions
         l = document.createElement('label');
         l.innerText = 'Divisiones: ';
         editNode.appendChild(l);
@@ -339,6 +380,55 @@ class MapLine {
             draw();
         });
         editNode.appendChild(inputDivs);
+
+        editNode.appendChild(document.createElement('br'));
+
+        // Topographic
+        l = document.createElement('label');
+        l.innerText = 'Perfil topografico: ';
+        editNode.appendChild(l);
+
+        let bAdd = document.createElement('input');
+        bAdd.setAttribute('type','button');
+        bAdd.setAttribute('value','+');
+        editNode.appendChild(bAdd);
+        $(bAdd).on('click', function() {
+            temp.topo = T.topographicPoints;
+            clickMode.set('setTopographicPoint');
+            msgBar.setText('Click para marcar un perfil topografico.\nEscape para cancelar.');
+        })
+
+        let bDel = document.createElement('input');
+        bDel.setAttribute('type','button');
+        bDel.setAttribute('value','-');
+        editNode.appendChild(bDel);
+        $(bDel).on('click', function() {
+            T.topographicPoints.deleteActive();
+            T.topographicPoints.updateNode();
+            draw();
+        })
+
+        let bInvert = document.createElement('input');
+        bInvert.setAttribute('type','button');
+        bInvert.setAttribute('value','Reverse');
+        editNode.appendChild(bInvert);
+        $(bInvert).on('click', function() {
+            T.reverse();
+            draw();
+        })
+
+        let bCsvDownload = document.createElement('input');
+        bCsvDownload.setAttribute('type','button');
+        bCsvDownload.setAttribute('value','Download CSV');
+        editNode.appendChild(bCsvDownload);
+        $(bCsvDownload).on('click', function() {
+            T.topographicPoints.downloadCsv();
+        })
+
+        let topoDiv = document.createElement('topoPointsDiv');
+        editNode.appendChild(topoDiv);
+        this.topographicPoints.node = topoDiv;
+        this.topographicPoints.updateNode();
     }
 
 };
@@ -378,7 +468,10 @@ class MapLineList {
 
     // Node stuff
     deselectAll() {
-        this.list.forEach((element) => (element.active = false));
+        this.list.forEach(function (element) {
+            element.active = false; 
+            element.topographicPoints.deselectAll();
+        });
         $(this.node).find(".active").removeClass("active");
         //this.updateNode();
         // draw();
@@ -584,7 +677,6 @@ class MapPoint {
         return this.getDistancePx(point) / oneMetreInPx;
     }
 
-
     updateEditNode(editNode) {
         let T = this;
         
@@ -727,3 +819,235 @@ class MapPointList {
         }
     }
 };
+
+class TopographicProfilePoint extends MapPoint {
+    constructor(position, parentMapLine, height, normalStyle) {
+        super(new p(0, 0), normalStyle);
+        this.position = position;
+        this.height = height;
+        this.mapLine = parentMapLine;
+        this.updatePoint(parentMapLine.p1, parentMapLine.p2);
+    }
+
+    /**
+     * Creates a topographicProfilePoint from a coordPos 
+     * (doesn't need to be on the line, as this method will project it anyways)
+     * @param {p} point 
+     * @param {MapLine} parentMapLine 
+     * @param {*} height 
+     * @param {*} normalStyle 
+     */
+    static fromCoordPoint(point, parentMapLine, height, normalStyle) {
+        let projectedP = parentMapLine.getPointProjection(coordPos);
+        let dp = p.Distance(projectedP, parentMapLine.p1);
+        let dl = p.Distance(parentMapLine.p1, parentMapLine.p2);
+        let pos = dp/dl;
+
+        return new TopographicProfilePoint(pos, parentMapLine, height, normalStyle);
+    }
+
+    toJson() {
+        let o = {
+            position: this.position,
+            height: this.height,
+            styles: this.styles
+        }
+        return JSON.stringify(o);
+    }
+
+    static fromJObject(o, parentMapLine) {
+        let tpp = new TopographicProfilePoint(o.position, parentMapLine, o.height);
+        if (o.styles) {tpp.styles = o.styles};
+        return tpp;
+    }
+
+    static fromJson(txt, parentMapLine) {
+        return TopographicProfilePoint.fromJObject(JSON.parse(txt), parentMapLine);
+    }
+
+    updatePoint(p1, p2) {
+        let dp = p.Minus(p2, p1);
+        this.p.x = p1.x + this.position * dp.x;
+        this.p.y = p1.y + this.position * dp.y;
+    }
+
+    drawWithoutContextSave(context) {
+        var sp = mapToScreenPos(this.p)
+
+        context.beginPath();
+
+        let selectedStyle;
+        if (this.disabled) {
+            selectedStyle = this.styles.disabled;
+        } else if (this.active) {
+            selectedStyle = this.styles.active;
+        } else if (this.hover) {
+            selectedStyle = this.styles.hover;
+        } else {
+            selectedStyle = this.styles.normal;
+        }
+
+        context.arc(
+            sp.x,
+            sp.y,
+            selectedStyle.width,
+            0,
+            2 * Math.PI,
+            false
+        );
+
+        context.fillStyle = selectedStyle.color;
+        context.fill();
+        // context.strokeStyle = selectedStyle.color;
+        // context.lineWidth = selectedStyle.width;
+
+        // context.stroke();
+
+        context.closePath();
+    }
+}
+
+class TopographicProfilePointList extends MapPointList {
+    /**
+     * 
+     * @param {MapLine} parentMapLine 
+     */
+    constructor(parentMapLine) {
+        super();
+        this.mapLine = parentMapLine;
+    }
+
+    /**
+     * Adds a new TopographicProfilePoint from a mouseClick (coordPoint) and sets its height.
+     * @param {p} coordPoint 
+     * @param {*} height 
+     */
+    add(coordPoint, height) {
+        this.list.push(
+            TopographicProfilePoint.fromCoordPoint(
+                coordPoint,
+                this.mapLine,
+                height));
+        this.sortList();
+        this.updateNode();
+    }
+
+    addTopographicProfilePoint(topoPoint) {
+        this.list.push(topoPoint);
+        this.sortList();
+        this.updateNode();
+    }
+
+    reverse() {
+        this.list.forEach((e) => e.position = 1 - e.position);
+        this.sortList();
+        this.updateNode();
+    }
+
+    sortList() {
+        return this.list.sort((a, b) => a.position - b.position);
+    }
+
+    parseJson(txt) {
+        let json = JSON.parse(txt);
+        let This = this;
+        json.forEach(function (e) {
+            let a = TopographicProfilePoint.fromJson(e, This.mapLine);
+            This.addTopographicProfilePoint(a);
+        });
+    }
+
+    /**
+     * Creates an array (table) from this object.
+     * Rows:
+     *  - distance
+     *  - height
+     *  - lon
+     *  - lat
+     *  - pos (%)
+     */
+    toTableData() {
+        let rows = [];
+        let totalLength = this.mapLine.getDistanceMetre();
+        for(let i = this.list.length; i--; ) {
+            let currentPoint = this.list[i];
+            let d = currentPoint.position * totalLength;
+            let h = currentPoint.height;
+            let coords = formattedPixelPointToMapPoint(currentPoint.p);
+            rows.push([d,h,coords.x,coords.y,currentPoint.position]);
+        }
+        rows.push(['Distancia [m]','Altura [m]','Longitud', 'Latitud', 'Posicion [%]']);
+        return rows.reverse();
+    }
+    /**
+     * Creates a csv string from this object
+     */
+    toCsv() {
+        let data = this.toTableData();
+        return 'data:text/csv;charset=utf-8,\ufeff' 
+        + data.map(e => e.join(',')).join('\n');
+    }
+    /**
+     * Prompts download of a csv file containing this object's data.
+     */
+    downloadCsv() {
+        var encodedUri = encodeURI(this.toCsv());
+        var link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        var name = (this.mapLine.name) ? this.mapLine.name : this.mapLine.index;
+        link.setAttribute('download', `linea-${name}-${mapLoader.currentMap}.csv`);
+        //document.body.appendChild(link); // Required for FF
+
+        link.click();
+    }
+
+    updateNode() {
+        if (this.node) {
+            this.node.innerHTML = "";
+            let This = this;
+            let lineLength = this.mapLine.getDistanceMetre();
+
+            for (let i = 0; i < this.list.length; i++) {
+                let currentMapPoint = This.list[i];
+
+                let d = document.createElement("div");
+                let djq = $(d);
+                if (currentMapPoint.active) {djq.addClass("active")}
+                if (currentMapPoint.hover) {djq.addClass("hover")}
+                let p = document.createElement("p");
+                p.innerHTML = `d = ${(currentMapPoint.position * lineLength).toFixed(2)} m, h = ${currentMapPoint.height} m`;
+
+                // Append to list node
+                d.appendChild(p);
+                this.node.appendChild(d);
+
+                // Events
+                djq.addClass("lineList");
+                djq.on("click", function () {
+                    if (!modifier.shift) {
+                        This.deselectAll();
+                    }
+                    currentMapPoint.active = !currentMapPoint.active;
+
+                    let t = $(this);
+                    if (currentMapPoint.active) {t.addClass("active")}
+                    else {t.removeClass("active")}
+
+                    draw();
+                });
+
+                djq.on("mouseover", function () {
+                    currentMapPoint.hover = true;
+                    draw();
+                });
+
+                djq.on("mouseout", function () {
+                    currentMapPoint.hover = false;
+                    draw();
+                });
+            }
+        }
+    }
+
+
+}

@@ -80,6 +80,18 @@ class p {
     }
 
     /**
+     * Multiplies x & y by an scalar
+     * @param {p} p1 
+     * @param {*} mult 
+     */
+    static ScalarMult(p1, mult) {
+        return new p(
+            p1.x * mult,
+            p1.y * mult
+        );
+    }
+
+    /**
      * Returns the distance between two points.
      * @param {p} p1 
      * @param {p} p2 

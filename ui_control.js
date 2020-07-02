@@ -173,6 +173,7 @@ let ClickMode = class {
         switch (mode) {
             case 'setLinePoint1':
             case 'setLinePoint2':
+            case 'setTopographicPoint':
                 $('#toolLine').addClass('active');
                 $(canvas).addClass('crosshair');
                 break;
@@ -247,6 +248,14 @@ function UIHandler_mousemove(newPos) {
     else if (clickMode.mode == 'setLinePoint2') {
         msg += `\nDistancia: ${temp.mapline.templine.getDistanceMetre().toFixed(2)}m`
     }
+    else if (clickMode.mode == 'setTopographicPoint') {
+        let p1 = temp.topo.mapLine.p1;
+        let p2 = temp.topo.mapLine.getPointProjection(coordPos);
+        let d = p.Distance(p1, p2) / oneMetreInPx;
+
+        msg += `\n[Punto topografico] d = ${d.toFixed(2)} m`;
+    }
+
     mouseBar.setText(msg);
     mouseBar.setPosition(mousePos);
 
@@ -323,6 +332,14 @@ function UIHandler_mouseup(newPos) {
                 msgBar.clear();
                 break;
 
+            case 'setTopographicPoint':
+                var hTxt = prompt('Altura de punto: ', '');
+                if (hTxt) {
+                    var h = parseFloat(hTxt);
+                    temp.topo.add(coordPos, h);
+                }
+                break;
+
             // With Pointer mode 
             default:
                 // mapList selection
@@ -357,6 +374,8 @@ $(window).ready(function () {
     clickMode = new ClickMode();
     mouseBar = new MousePane();
     editPane = new EditPane();
+
+    editPane.updateActive();
 
     // This part is now managed by the savedMapState
     // mapLineList = new MapLineList();
