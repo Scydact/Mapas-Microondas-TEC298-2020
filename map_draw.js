@@ -122,11 +122,17 @@ class MapLine {
         },
     };
 
+    /**
+     * 
+     * @param {p} p1 
+     * @param {p} p2 
+     * @param {*} normalStyle 
+     */
     constructor(p1, p2, normalStyle) {
         this.p1 = p1;
         this.p2 = p2;
-        this.mapPointP1 = new MapPoint(this.p1,this.styles.normal);
-        this.mapPointP2 = new MapPoint(this.p2,this.styles.normal);
+        this.mapPointP1 = new MapPoint(this.p1);
+        this.mapPointP2 = new MapPoint(this.p2);
         if (normalStyle) {this.styles.normal = normalStyle;}
     }
 
@@ -135,6 +141,8 @@ class MapLine {
             hover: this.hover,
             active: this.active,
             disabled: this.disabled,
+
+            divisions: this.divisions,
 
             styles: this.styles,
 
@@ -152,6 +160,8 @@ class MapLine {
         l.hover = o.hover;
         l.active = o.active;
         l.disabled = o.disabled;
+
+        l.divisions = (o.divisions) ? o.divisions : 0;
 
         return l;
     }
@@ -194,10 +204,7 @@ class MapLine {
 
         context.closePath();
 
-        // // draw associated map points
-        // let mapPointP1 = new MapPoint(this.p1);
-        // let mapPointP2 = new MapPoint(this.p2);
-
+        // draw associated map points
         [this.mapPointP1, this.mapPointP2].forEach((e) => {
             e.styles = this.styles;
             e.active = this.active;
@@ -205,6 +212,46 @@ class MapLine {
             e.disabled = this.disabled;
             e.draw(context);
         });
+
+        // divisions
+        if (this.divisions > 0) {
+            let count = this.divisions; // amount of points to do.
+            let d = p.Minus(sp.p2, sp.p1); // dx & dy
+
+            let dx = d.x / (this.divisions + 1);
+            let dy = d.y / (this.divisions + 1);
+
+            let angle = Math.atan2(d.y, d.x) + Math.PI/2;
+            let lengthFromLine = selectedStyle.width + 10;
+            let ax = lengthFromLine*Math.cos(angle);
+            let ay = lengthFromLine*Math.sin(angle);
+
+            while (count) {
+                context.beginPath();
+                // context.arc(
+                //     ,
+                //     sp.p1.y + dy * count,
+                //     selectedStyle.width + 2,
+                //     0,
+                //     2 * Math.PI,
+                //     false
+                // );
+                // context.fillStyle = selectedStyle.color;
+                // context.fill();
+
+                // current x & y, and offsets
+                let cx = sp.p1.x + dx * count;
+                let cy = sp.p1.y + dy * count;
+                context.moveTo(cx - ax, cy - ay);
+                context.lineTo(cx + ax, cy + ay);
+                context.stroke();
+                context.closePath();
+                count--;
+            }
+
+
+        }
+
     }
 
     draw(context) {
@@ -257,23 +304,41 @@ class MapLine {
 
     updateEditNode(editNode) {
         let T = this;
+        let l;
         
-        let l = document.createElement('label');
+        l = document.createElement('label');
         l.innerText = 'Anchura: ';
         editNode.appendChild(l);
 
-        let i = document.createElement('input');
-        i.setAttribute('type','number');
-        i.setAttribute('min','0');
-        i.setAttribute('step','0.25');
-        i.setAttribute('value',T.styles.normal.width.toString());
-        $(i).change(function () {
-            T.styles.normal.width = parseFloat($(i).val());
-            T.styles.active.width = parseFloat($(i).val()) + 1;
-            T.styles.hover.width = parseFloat($(i).val()) + 1;
+        let inputWidth = document.createElement('input');
+        inputWidth.setAttribute('type','number');
+        inputWidth.setAttribute('min','0');
+        inputWidth.setAttribute('step','0.25');
+        inputWidth.setAttribute('value',T.styles.normal.width.toString());
+        $(inputWidth).change(function () {
+            T.styles.normal.width = parseFloat($(inputWidth).val());
+            T.styles.active.width = parseFloat($(inputWidth).val()) + 1;
+            T.styles.hover.width = parseFloat($(inputWidth).val()) + 1;
             draw();
         });
-        editNode.appendChild(i);
+        editNode.appendChild(inputWidth);
+
+        editNode.appendChild(document.createElement('br'));
+
+        l = document.createElement('label');
+        l.innerText = 'Divisiones: ';
+        editNode.appendChild(l);
+
+        let inputDivs = document.createElement('input');
+        inputDivs.setAttribute('type','number');
+        inputDivs.setAttribute('min','0');
+        inputDivs.setAttribute('step','1');
+        inputDivs.setAttribute('value',T.divisions);
+        $(inputDivs).change(function () {
+            T.divisions = parseFloat($(inputDivs).val());
+            draw();
+        });
+        editNode.appendChild(inputDivs);
     }
 
 };
