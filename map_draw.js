@@ -95,6 +95,33 @@ function drawMap(context) {
 //     drawPosition(context, mousePos, coordPos);
 // }
 
+// Some helper functions
+function createButton(parentNode, text, callback, tooltip) {
+    let b = document.createElement('input');
+    b.setAttribute('type','button');
+    b.setAttribute('value',text);
+    if (tooltip) {b.setAttribute('title',tooltip)}
+    parentNode.appendChild(b);
+    $(b).on('click', callback);
+    return b;
+}
+
+function createLabel(parentNode, text, tooltip) {
+    let l = document.createElement('label');
+    l.innerText = text;
+    parentNode.appendChild(l);
+    return l;
+}
+
+function lineBreak(parentNode) {
+    let b = document.createElement('br');
+    parentNode.appendChild(b);
+    return b;
+}
+
+
+
+
 // Classes
 class MapLine {
     hover = false;
@@ -268,7 +295,6 @@ class MapLine {
                 count--;
             }
         }
-
     }
 
     draw(context) {
@@ -337,18 +363,12 @@ class MapLine {
 
     updateEditNode(editNode) {
         let T = this;
-        let l;
-        
-        l = document.createElement('label');
-        l.innerText = `Longitud de linea: ${T.getDistanceMetre().toFixed(2)} m`;
-        editNode.appendChild(l);
 
-        editNode.appendChild(document.createElement('br'));
+        createLabel(editNode, `Longitud de linea: ${T.getDistanceMetre().toFixed(2)} m`)
+        lineBreak(editNode);
 
         // Width
-        l = document.createElement('label');
-        l.innerText = 'Anchura: ';
-        editNode.appendChild(l);
+        createLabel(editNode, 'Anchura: ');
 
         let inputWidth = document.createElement('input');
         inputWidth.setAttribute('type','number');
@@ -363,12 +383,10 @@ class MapLine {
         });
         editNode.appendChild(inputWidth);
 
-        editNode.appendChild(document.createElement('br'));
+        lineBreak(editNode);
 
         // Divisions
-        l = document.createElement('label');
-        l.innerText = 'Divisiones: ';
-        editNode.appendChild(l);
+        createLabel(editNode, 'Divisiones: ')
 
         let inputDivs = document.createElement('input');
         inputDivs.setAttribute('type','number');
@@ -381,49 +399,55 @@ class MapLine {
         });
         editNode.appendChild(inputDivs);
 
-        editNode.appendChild(document.createElement('br'));
+        lineBreak(editNode);
+        lineBreak(editNode);
 
         // Topographic
-        l = document.createElement('label');
-        l.innerText = 'Perfil topografico: ';
-        editNode.appendChild(l);
+        createLabel(editNode, 'Perfil topografico: ');
+        lineBreak(editNode);
 
-        let bAdd = document.createElement('input');
-        bAdd.setAttribute('type','button');
-        bAdd.setAttribute('value','+');
-        editNode.appendChild(bAdd);
-        $(bAdd).on('click', function() {
+        createButton(editNode, '+', function() {
             temp.topo = T.topographicPoints;
             clickMode.set('setTopographicPoint');
             msgBar.setText('Click para marcar un perfil topografico.\nEscape para cancelar.');
-        })
+        }, 'Agregar puntos topograficos.');
 
-        let bDel = document.createElement('input');
-        bDel.setAttribute('type','button');
-        bDel.setAttribute('value','-');
-        editNode.appendChild(bDel);
-        $(bDel).on('click', function() {
+        createButton(editNode, '-', function() {
             T.topographicPoints.deleteActive();
             T.topographicPoints.updateNode();
             draw();
-        })
+        }, 'Eliminar puntos topograficos seleccionados.');
 
-        let bInvert = document.createElement('input');
-        bInvert.setAttribute('type','button');
-        bInvert.setAttribute('value','Reverse');
-        editNode.appendChild(bInvert);
-        $(bInvert).on('click', function() {
+        createButton(editNode, 'Todos', function() {
+            let tpl = T.topographicPoints.list;
+            let tpActive = tpl.filter((e) => e.active);
+            if (tpActive.length == tpl.length) { // Deselect all if everything is already selected
+                tpl.forEach((e) => e.active = false);
+            }
+            else {
+                tpl.forEach((e) => e.active = true);
+            }
+            T.topographicPoints.updateNode();
+            draw();
+        }, 'Selecciona todos los puntos topograficos.');
+
+        createButton(editNode, 'Invertir', function() {
+            T.topographicPoints.list.forEach((e) => e.active = !e.active);
+            T.topographicPoints.updateNode();
+            draw();
+        }, 'Invierte la seleccion.');
+
+        lineBreak(editNode);
+
+        createButton(editNode, 'Reverse', function() {
             T.reverse();
             draw();
-        })
+        }, 'Invertir el orden de los puntos. Ej. en vez de A a B, sera de B a A.');
 
-        let bCsvDownload = document.createElement('input');
-        bCsvDownload.setAttribute('type','button');
-        bCsvDownload.setAttribute('value','Download CSV');
-        editNode.appendChild(bCsvDownload);
-        $(bCsvDownload).on('click', function() {
+        createButton(editNode, 'Descargar', function() {
             T.topographicPoints.downloadCsv();
-        })
+        }, 'Descargar la lista de puntos topograficos de esta linea en formato .csv');
+
 
         let topoDiv = document.createElement('div');
         topoDiv.id = 'topoPointsWrapper';
@@ -443,6 +467,7 @@ class MapLineList {
     constructor() {
         this.list = [];
         this.node = null;
+        this.toolNode = null;
     }
 
     toJson() {
@@ -511,13 +536,57 @@ class MapLineList {
         }
     }
 
+    toolBox = {
+        T: this,
+        createElement: function () {
+            clickMode.set('setLinePoint1');
+            msgBar.setText('Click en el 1er punto de la linea');
+        },
+        deleteElement: function () {
+            this.T.deleteActive();
+            this.T.updateNode();
+            draw();
+        }
+    }
+
+    updateToolNode(toolNode) {
+        if (toolNode) {this.toolNode = toolNode}
+        if (this.toolNode) {
+            let T = this;
+            let TN = this.toolNode;
+            TN.innerHTML = '';
+
+            createButton(TN, '+', () => T.toolBox.createElement(), 'Crear una nueva linea.');
+            createButton(TN, '-', () => T.toolBox.deleteElement(), 'Eliminar las lineas seleccionadas.');
+
+            createButton(TN, 'Todos', function() {
+                let elements = T.list;
+                let activeElements = elements.filter((e) => e.active);
+                if (activeElements.length == elements.length) { // Deselect all if everything is already selected
+                    elements.forEach((e) => e.active = false);
+                }
+                else {
+                    elements.forEach((e) => e.active = true);
+                }
+                T.updateNode();
+                draw();
+            }, 'Selecciona/deselecciona todas las lineas.');
+    
+            createButton(TN, 'Invertir', function() {
+                T.list.forEach((e) => e.active = !e.active);
+                T.updateNode();
+                draw();
+            }, 'Invierte la seleccion.');
+        }
+    }
+
     updateNode() {
         if (this.node) {
             this.node.innerHTML = "";
-            let This = this;
+            let T = this;
 
             for (let i = 0; i < this.list.length; i++) {
-                let l = This.list[i];
+                let l = T.list[i];
 
                 let d = document.createElement("div");
                 let djq = $(d);
@@ -534,7 +603,7 @@ class MapLineList {
                 djq.addClass("lineList");
                 djq.on("click", function () {
                     if (!modifier.shift) {
-                        This.deselectAll();
+                        T.deselectAll();
                     }
                     l.active = !l.active;
 
@@ -773,6 +842,50 @@ class MapPointList {
         let l = this.list.length;
         for (let i = 0; i < l; i++) {
             x[i].index = i;
+        }
+    }
+
+    toolBox = {
+        T: this,
+        createElement: function () {
+            clickMode.set('setPointMarker');
+            msgBar.setText('Click en un punto');
+        },
+        deleteElement: function () {
+            this.T.deleteActive();
+            this.T.updateNode();
+            draw();
+        }
+    }
+
+    updateToolNode(toolNode) {
+        if (toolNode) {this.toolNode = toolNode}
+        if (this.toolNode) {
+            let T = this;
+            let TN = this.toolNode;
+            TN.innerHTML = '';
+
+            createButton(TN, '+', () => T.toolBox.createElement(), 'Crear un nuevo punto.');
+            createButton(TN, '-', () => T.toolBox.deleteElement(), 'Eliminar los puntos seleccionados.');
+            
+            createButton(TN, 'Todos', function() {
+                let elements = T.list;
+                let activeElements = elements.filter((e) => e.active);
+                if (activeElements.length == elements.length) { // Deselect all if everything is already selected
+                    elements.forEach((e) => e.active = false);
+                }
+                else {
+                    elements.forEach((e) => e.active = true);
+                }
+                T.updateNode();
+                draw();
+            }, 'Selecciona/deselecciona todos los puntos.');
+    
+            createButton(TN, 'Invertir', function() {
+                T.list.forEach((e) => e.active = !e.active);
+                T.updateNode();
+                draw();
+            }, 'Invierte la seleccion.');
         }
     }
 

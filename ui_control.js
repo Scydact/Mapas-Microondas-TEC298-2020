@@ -543,45 +543,22 @@ $(window).ready(function () {
 
     // Toolbox buttons
     $('#toolPointer').on('click', (e) => clickMode.clear());
-    $('#toolLine').on('click', createLineFun);
-    $('#toolPoint').on('click', createPointFun);
+    $('#toolLine').on('click', () => mapLineList.toolBox.createElement());
+    $('#toolPoint').on('click', () => mapPointList.toolBox.createElement());
+
 
     // Lines
     //$('#openLinePane').on('dblclick', createLineFun);
-    function createLineFun() {
-        clickMode.set('setLinePoint1');
-        msgBar.setText('Click en el 1er punto de la linea');
-    }
-    function deleteLineFun() {
-        mapLineList.deleteActive();
-        mapLineList.updateNode();
-        draw();
-    }
     $('#openLinePane').on('click', function () {
         togglePane('#linesWrapper');
     });
-    $('#createLine').on('click', createLineFun);
-    $('#deleteLine').on('click', deleteLineFun);
-
+    mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
 
     // Point
-    function createPointFun() {
-        clickMode.set('setPointMarker');
-        msgBar.setText('Click en un punto');
-    }
-    function deletePointFun() {
-        mapPointList.deleteActive();
-        mapPointList.updateNode();
-        draw();
-    }
-    $('#toolPoint').on('click', createPointFun);
     $('#openPointPane').on('click', function () {
         togglePane('#pointsWrapper');
     });
-    $('#createPoint').on('click', createPointFun);
-    $('#deletePoint').on('click', deletePointFun);
-
-
+    mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
 
 
 
