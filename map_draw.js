@@ -391,6 +391,7 @@ class MapLineList {
     deleteActive() {
         this.list = this.list.filter((e) => !e.active);
         this.updateListIndexes();
+        editPane.updateActive();
         // updateNode();
         // draw();
     }
@@ -656,6 +657,7 @@ class MapPointList {
     deleteActive() {
         this.list = this.list.filter((e) => !e.active);
         this.updateListIndexes();
+        editPane.updateActive();
         // updateNode();
         // draw();
     }

@@ -114,6 +114,15 @@ let EditPane = class {
 
     clear() {this.contentNode.innerHTML = ''}
 
+    updateActive() {
+        let mapLists = [mapLineList, mapPointList];
+        for (let i = mapLists.length; i--; ) {
+            let list = mapLists[i];
+            editPane.active[i] = list.getActive();
+        }
+        editPane.updateNode();
+    }
+
     updateNode() {
         /**
          * Active order:
@@ -251,7 +260,6 @@ function UIHandler_mousemove(newPos) {
 function UIHandler_mouseup(newPos) {
     var canvas = document.getElementById('renderCanvas');
     var context = canvas.getContext('2d');
-    console.log('Click!');
 
     // Update mousePos / coordPos global vars, for touch compat
     getMousePos(canvas, newPos);
