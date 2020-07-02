@@ -270,10 +270,14 @@ class MapState {
     // Current zoom/scale
     translatePos = new p(0,0);
     scale = 1;
+    colorFilter = {
+        color: 'rgba(255,0,0,0)',
+        mode: 'multiply'
+    };
 
     // Current map
     map = "jarabacoa";
-    version = 2;
+    version = 3;
 
     DEBUG_EXIT_WITHOUT_SAVE = false;
     DEBUG_CLEAR_COOKIES = false;
@@ -288,6 +292,7 @@ class MapState {
             scale : this.scale,
             map : this.map,
             version : this.version,
+            colorFilter : this.colorFilter
         };
         if (mapLineList.list.length) {o.mapLineList = this.mapLineList.toJson()}
         if (mapPointList.list.length) {o.mapPointList = this.mapPointList.toJson()}
@@ -310,6 +315,8 @@ class MapState {
         if (o.mapPointList) {mpl.parseJson(o.mapPointList)}
         this.mapPointList = mpl;
 
+        if (o.colorFilter) {this.colorFilter = o.colorFilter;}
+
         return true;
     }
 
@@ -319,6 +326,9 @@ class MapState {
         this.map = mapLoader.currentMap;
         this.mapLineList = mapLineList;
         this.mapPointList = mapPointList;
+
+        this.colorFilter.color = filterColorPicker.toRGBAString();
+        this.colorFilter.mode = document.querySelector('#colorFilter').style.mixBlendMode;
 
         // easy deep clone
         let t = this.getJsonString();
@@ -337,6 +347,13 @@ class MapState {
         mapPointList = this.mapPointList;
         mapPointList.node = $('#pointListWrapper')[0];
         mapPointList.updateNode();
+
+        filterColorPicker.fromString(this.colorFilter.color);
+        //document.querySelector('#colorFilter').style.mixBlendMode = this.colorFilter.mode;
+        $('#filterMode').val(this.colorFilter.mode);
+        updateFilterMode();
+        
+        //updateFilterMode();
 
         return true;
     }

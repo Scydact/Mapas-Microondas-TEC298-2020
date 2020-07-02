@@ -24,6 +24,7 @@ let canvas;
 let mapMeta;
 let mapLoader;
 let savedMapState;
+let filterColorPicker;
 
 /**
  * Generic point class
@@ -232,12 +233,39 @@ function decimalToTime(time) {
     );
 }
 
+
+
+// Filter stuff
+function updateFilterColor() {
+    document.querySelector('#colorFilter').style.background = filterColorPicker.toRGBAString();
+}
+function updateFilterMode() {
+    document.querySelector('#colorFilter').style.mixBlendMode = $('#filterMode').val();
+}
+
+
+
 // Init
 $(document).ready(function () {
     mapMeta = new MapMeta();
     mapLoader = new MapLoader();
     savedMapState = new MapState();
 
+    // Color 
+    filterColorPicker = new JSColor('#filterColor', {
+        preset: 'large',
+        position: 'right',
+        // previewPosition: 'right',
+        onInput: "updateFilterColor()",
+        value: 'rgba(255,0,0,0)'
+    });
+    // triggers 'onInput' and 'onChange' on all color pickers when they are ready
+    jscolor.trigger('input change');
+
+    $('#filterMode').on('change', updateFilterMode);
+    updateFilterMode();
+
+    // Canvas setup
     canvas = document.getElementById("renderCanvas");
 
     // Setup
