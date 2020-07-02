@@ -96,23 +96,23 @@ body {
 
 /* Tooltip */
 tooltip {
-    visibility: hidden;
+    visibility      : hidden;
     background-color: #555;
-    color: #fff;
-    text-align: center;
-    border-radius: 3px;
+    color           : #fff;
+    text-align      : center;
+    border-radius   : 3px;
 
-    padding: 0.3rem;
-    position: absolute;
-    z-index: 1;
+    padding   : 0.3rem;
+    position  : absolute;
+    z-index   : 1;
     box-sizing: border-box;
 
     /* bottom: 125%;
     margin-left: -60px; */
     left: calc(100% + 0.3rem);
-    
-    opacity: 0;
-    transition: opacity 0.3s;
+
+    opacity         : 0;
+    transition      : opacity 0.3s;
     transition-delay: 1.5s;
 }
 
@@ -127,11 +127,11 @@ tooltip {
     border-color: #555 transparent transparent transparent;
 } */
 
-div:hover > tooltip {
+div:hover>tooltip {
     visibility: visible;
-    opacity: 1;
+    opacity   : 1;
 }
-  
+
 
 /* Button wrappers */
 .ButtonWrapper {
@@ -154,7 +154,7 @@ div:hover > tooltip {
 }
 
 .divBtn {
-    position: relative;
+    position       : relative;
     display        : flex;
     align-items    : center;
     justify-content: center;
@@ -193,25 +193,26 @@ div:hover > tooltip {
 
 #editionContentWrapper:empty {
     text-align: center;
-    color: rgba(0, 0, 0, 50%);
+    color     : rgba(0, 0, 0, 50%);
     font-style: italic;
 
-    padding: 1rem;
-    background: rgba(0, 0, 0, 20%);
+    padding      : 1rem;
+    background   : rgba(0, 0, 0, 20%);
     border-radius: 5px;
 }
+
 #editionContentWrapper:empty::before {
     content: 'Seleccione un objeto.';
 }
 
 
 #colorFilter {
-    position: absolute;
+    position      : absolute;
     pointer-events: none;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: 100vw;
+    top           : 0;
+    left          : 0;
+    height        : 100vh;
+    width         : 100vw;
 }
 
 
@@ -261,7 +262,7 @@ div:hover > tooltip {
 }
 
 .listContainer {
-    background: rgba(0, 0, 0, 10%);
+    background   : rgba(0, 0, 0, 10%);
     border-radius: 7px;
-    padding: 1rem 0.5rem;
+    padding      : 1rem 0.5rem;
 }
