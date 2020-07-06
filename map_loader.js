@@ -317,7 +317,7 @@ class MapState {
         this.mapPointList = mpl;
 
         if (o.colorFilter) {this.colorFilter = o.colorFilter;}
-        if (o.snapEnabled) {this.snapEnabled = o.snapEnabled;}
+        if (o.snapEnabled !== undefined) {this.snapEnabled = o.snapEnabled;}
 
         return true;
     }
