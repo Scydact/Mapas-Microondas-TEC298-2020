@@ -16,8 +16,9 @@ let oneMetreInPx = 0;
 let slopeXDeg = x2Deg - x1Deg;
 let slopeYDeg = y2Deg - y1Deg;
 
-let mousePos = { x: -1, y: -1 };
-let coordPos = { x: -1, y: -1 };
+let mousePos;
+let coordPos;
+let snapPos;
 
 let canvas;
 
@@ -247,6 +248,10 @@ function updateFilterMode() {
 
 // Init
 $(document).ready(function () {
+    mousePos = new p(-1, -1);
+    coordPos = new p(-1, -1);
+    snapPos = new p(-1, -1);
+
     mapMeta = new MapMeta();
     mapLoader = new MapLoader();
     savedMapState = new MapState();

@@ -33,16 +33,18 @@
             <h1>Configuracion</h1>
             <p style="font-size: small;">v1.1</p>
             <div>
-                <h2>Mapa</h2>
+                <div name=mapa>
+                    <h2>Mapa</h2>
 
-                <label for=map-select>Mapa: </label>
-                <select id="map-select">
-                    <option value="azua">Azua</option>
-                    <option value="constanza">Constanza</option>
-                    <option value="hato_mayor">Hato Mayor</option>
-                    <option value="jarabacoa">Jarabacoa</option>
-                    <option value="puerto_plata">Puerto Plata</option>
-                </select>
+                    <label for=map-select>Mapa: </label>
+                    <select id="map-select">
+                        <option value="azua">Azua</option>
+                        <option value="constanza">Constanza</option>
+                        <option value="hato_mayor">Hato Mayor</option>
+                        <option value="jarabacoa">Jarabacoa</option>
+                        <option value="puerto_plata">Puerto Plata</option>
+                    </select>
+                </div>
 
                 <div name=debug class=disabled>
                     <br>
@@ -91,7 +93,13 @@
                     <input type=button id=dev-json-vals value=Json>
                 </div>
 
-                <div>
+                <div name=snap>
+                    <h2>Snap</h2>
+                    <label for=snapCheckbox>Snap: </label>
+                    <input id=snapCheckbox type=checkbox checked=true>
+                </div>
+
+                <div name=filtro>
                     <h2>Filtro</h2>
                     <label for=filterColor>Color: </label>
                     <input id=filterColor>

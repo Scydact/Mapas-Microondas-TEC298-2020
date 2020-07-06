@@ -274,10 +274,11 @@ class MapState {
         color: 'rgba(255,0,0,0)',
         mode: 'multiply'
     };
+    snapEnabled = true;
 
     // Current map
     map = "jarabacoa";
-    version = 3;
+    version = 3.1;
 
     DEBUG_EXIT_WITHOUT_SAVE = false;
     DEBUG_CLEAR_COOKIES = false;
@@ -292,7 +293,8 @@ class MapState {
             scale : this.scale,
             map : this.map,
             version : this.version,
-            colorFilter : this.colorFilter
+            colorFilter : this.colorFilter,
+            snapEnabled : this.snapEnabled
         };
         if (mapLineList.list.length) {o.mapLineList = this.mapLineList.toJson()}
         if (mapPointList.list.length) {o.mapPointList = this.mapPointList.toJson()}
@@ -301,7 +303,6 @@ class MapState {
     }
 
     setFromObject(o) {
-
         this.translatePos = new p(o.translatePos.x, o.translatePos.y);
         this.scale = o.scale;
         this.map = o.map;
@@ -316,6 +317,7 @@ class MapState {
         this.mapPointList = mpl;
 
         if (o.colorFilter) {this.colorFilter = o.colorFilter;}
+        if (o.snapEnabled) {this.snapEnabled = o.snapEnabled;}
 
         return true;
     }
@@ -326,6 +328,7 @@ class MapState {
         this.map = mapLoader.currentMap;
         this.mapLineList = mapLineList;
         this.mapPointList = mapPointList;
+        this.snapEnabled = snapEnabled;
 
         this.colorFilter.color = filterColorPicker.toRGBAString();
         this.colorFilter.mode = document.querySelector('#colorFilter').style.mixBlendMode;
@@ -348,9 +351,12 @@ class MapState {
         mapPointList.node = $('#pointListWrapper')[0];
         mapPointList.updateNode();
 
+        snapEnabled = this.snapEnabled;
+
         filterColorPicker.fromString(this.colorFilter.color);
         //document.querySelector('#colorFilter').style.mixBlendMode = this.colorFilter.mode;
         $('#filterMode').val(this.colorFilter.mode);
+        $('#snapCheckbox').prop('checked', snapEnabled);
         updateFilterMode();
         
         //updateFilterMode();

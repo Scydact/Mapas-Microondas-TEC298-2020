@@ -28,6 +28,7 @@ var touchScaleMultiplier = 1/100;
 
 // Other stuff
 var hoverDistance = 7;
+var snapEnabled = true;
 
 let MessagePane = class {
     constructor() {
@@ -239,9 +240,9 @@ function UIHandler_mousemove(newPos) {
             msg += `\nLinea #${outLists[0][0].index + 1}: ${outLists[0][0].getDistanceMetre().toFixed(2)}m`
         }
         if (outLists[1].length > 0) {
-            let puntoSel = outLists[1][0];
-            let name = (puntoSel.name) ? puntoSel.name : '#' + (puntoSel.index+1).toString();
-            let pos = formattedPixelPointToMapPoint(puntoSel.p);
+            let currPoint = outLists[1][0];
+            let name = (currPoint.name) ? currPoint.name : '#' + (currPoint.index+1).toString();
+            let pos = formattedPixelPointToMapPoint(currPoint.p);
             msg += `\nPunto ${name} @(${pos.x}, ${pos.y})`;
         }
     }
@@ -254,6 +255,27 @@ function UIHandler_mousemove(newPos) {
         let d = p.Distance(p1, p2) / oneMetreInPx;
 
         msg += `\n[Punto topografico] d = ${d.toFixed(2)} m`;
+    }
+
+    if (clickMode.mode != '') {
+        // Set snapPos (priority => point, line)
+        if (snapEnabled) {
+            if (outLists[1].length > 0) {
+                let currPoint = outLists[1][0];
+                snapPos = mapToScreenPos(currPoint.p);
+                msg += `\n[Snap] punto`;
+            }
+            else if (outLists[0].length > 0) {
+                let currLine = outLists[0][0];
+                let mapPoint = currLine.getPointProjection(coordPos);
+                snapPos = mapToScreenPos(mapPoint);
+                msg += `\n[Snap] linea`;
+            } else {
+                snapPos = mousePos;
+            }
+        } else {
+            snapPos = mousePos;
+        }
     }
 
     mouseBar.setText(msg);
@@ -291,10 +313,10 @@ function UIHandler_mouseup(newPos) {
                 clickMode.set('setMetreDefPoint2');
                 msgBar.setText('Haga click en el 2do punto de la regla.');
 
-                temp.mapline.point1 = screenToMapPos(mousePos);
+                temp.mapline.point1 = screenToMapPos(snapPos);
                 break;
             case 'setMetreDefPoint2':
-                var pos = screenToMapPos(mousePos);
+                var pos = screenToMapPos(snapPos);
                 var dist = Math.sqrt(
                     (pos.x - temp.mapline.point1.x) ** 2 +
                         (pos.y - temp.mapline.point1.y) ** 2
@@ -310,15 +332,14 @@ function UIHandler_mouseup(newPos) {
 
             // Tools
             case 'setLinePoint1':
-                temp.mapline.point1 = coordPos;//screenToMapPos(mousePos);
+                temp.mapline.point1 = screenToMapPos(snapPos);
                 temp.mapline.templine.p1 = temp.mapline.point1;
                 clickMode.set('setLinePoint2');
                 msgBar.setText('Click en el 2do punto de la linea');
                 break;
             case 'setLinePoint2':
-                //var pos = screenToMapPos(mousePos);
                 mapLineList.add(
-                    new MapLine(temp.mapline.point1, coordPos, {
+                    new MapLine(temp.mapline.point1, screenToMapPos(snapPos), {
                         color: '#f00',
                         width: 2,
                     })
@@ -327,7 +348,7 @@ function UIHandler_mouseup(newPos) {
                 msgBar.clear();
                 break;
             case 'setPointMarker':
-                mapPointList.add(new MapPoint(coordPos));
+                mapPointList.add(new MapPoint(screenToMapPos(snapPos)));
                 clickMode.clear();
                 msgBar.clear();
                 break;
@@ -336,7 +357,7 @@ function UIHandler_mouseup(newPos) {
                 var hTxt = prompt('Altura de punto: ', '');
                 if (hTxt) {
                     var h = parseFloat(hTxt);
-                    temp.topo.add(coordPos, h);
+                    temp.topo.add(screenToMapPos(snapPos), h);
                 }
                 break;
 
@@ -392,22 +413,22 @@ $(window).ready(function () {
 
     // Keypress
     $(document).keyup(function (e) {
-        switch (e.key) {
-            case 'Shift':
+        switch (e.key.toUpperCase()) {
+            case 'SHIFT':
                 modifier.shift = false;
                 break;
-            case 'Control':
+            case 'CONTROL':
                 modifier.ctrl = false;
                 break;
-            case 'Alt':
+            case 'ALT':
                 modifier.alt = false;
                 break;
 
             // Other shortcuts
-            case 'Escape':
+            case 'ESCAPE':
                 clickMode.clear();
                 break;
-            case 'Delete':
+            case 'DELETE':
                 mapLineList.deleteActive();
                 mapLineList.updateNode();
 
@@ -418,12 +439,11 @@ $(window).ready(function () {
 
 
             case 'L':
-            case 'l':
-                createLineFun();
+                mapLineList.toolBox.createElement();
                 break;
 
             case 'P':
-            case 'p':
+                mapPointList.toolBox.createElement();
                 createPointFun();
                 break;
 
@@ -494,13 +514,18 @@ $(window).ready(function () {
     // Config
     $('#openSettings').on('click', function () {
         mapMeta.loadToSetup();
+        $('#snapCheckbox').prop('checked', snapEnabled);
         togglePane('#settingsWrapper');
     });
 
     $('#map-select').on('change', function () {
-        let m = $('#map-select').val();
+        let m = this.value;
         mapLoader.load(m);
         draw();
+    });
+
+    $('#snapCheckbox').on('change', function() {
+        snapEnabled = this.checked;
     });
 
     $('#up-left-set-btn').on('click', function () {
