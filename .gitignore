@@ -1,3 +1,5 @@
 
-.vscode/launch.json
+.vscode/*
+node_modules/*
 jscolor-examples.html
+package-lock.json
