@@ -58,13 +58,13 @@ export function titleCase(string: string) {
   * @param callback Function to call when clicked.
   * @param tooltip (optional) Tooltip to show when hovering the button.
   */
- export function createButton(parentNode: HTMLElement, text: string, callback, tooltip) {
+ export function createButton(parentNode: HTMLElement, text: string, callback?, tooltip?: string) {
     let b = document.createElement('input');
     b.setAttribute('type','button');
     b.setAttribute('value',text);
     if (tooltip) {b.setAttribute('title',tooltip)}
+    if (callback) {$(b).on('click', callback)}
     parentNode.appendChild(b);
-    $(b).on('click', callback);
     return b;
 }
 
@@ -74,10 +74,10 @@ export function titleCase(string: string) {
   * @param text Text to display on the label
   * @param tooltip (optional) Tooltip to show when hovering the button.
   */
-export function createLabel(parentNode: HTMLElement, text: string, tooltip) {
+export function createLabel(parentNode: HTMLElement, text: string, tooltip?: string) {
     let l = document.createElement('label');
     l.innerText = text;
-    if (tooltip) {l.setAttribute('title',tooltip)}
+    if (tooltip) {l.setAttribute('title', tooltip)}
     parentNode.appendChild(l);
     return l;
 }
@@ -90,4 +90,36 @@ export function lineBreak(parentNode: HTMLElement) {
     let b = document.createElement('br');
     parentNode.appendChild(b);
     return b;
+}
+
+/**
+ * Creates a new <select> element and its corresponding options. Does not set the default option. 
+ * @param parentNode The node to append the <select> to.
+ * @param optionList The values of the options.
+ * @param optionValueList (optional) The display values of the options.
+ * @param tooltip (optional) Tooltip to show when hovering the button.
+ */
+export function createSelect(parentNode: HTMLElement, optionList: string[], optionValueList?: string[], tooltip?: string) {
+    let l = document.createElement('select');
+    if (tooltip) {l.setAttribute('title', tooltip)}
+    parentNode.appendChild(l);
+
+    let displayNames = (optionValueList) ? optionValueList : optionList;
+
+    for (let i = 0; i < displayNames.length; i++) {
+        let o = document.createElement('option');
+        let jo = $(o);
+        jo.val(optionList[i]);
+        jo.html(displayNames[i]);
+        l.appendChild(o);
+    }
+
+    return l;
+}
+
+export function createElement(parentNode: HTMLElement, tagName: string, innerHtml?: string) {
+    let e = document.createElement(tagName);
+    parentNode.appendChild(e);
+    if (innerHtml) {e.innerHTML = innerHtml}
+    return e;
 }

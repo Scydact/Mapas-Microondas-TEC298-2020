@@ -1,14 +1,21 @@
 import { MapMeta } from "./MapMeta.js";
 import type { MapPosState } from "./MapPosState.js";
-import { Point } from "./Point.js";
-import { titleCase } from "./Utils.js";
 
-interface mapData {
+/**
+ * Interface for basic map data structure, including section size, grid size, and its Metadata (default points and coords)
+ */
+export interface mapData {
     elementSize: {w: number, h: number},
     gridSize: {w: number, h:number},
     mapMeta: MapMeta;
 }
 
+type MapChangeHandler = (changedMap?: string) => any;
+
+
+/**
+ * Contains methods to load and draw the actual map on a canvas.
+ */
 export class MapLoader {
     mapStruct: {[name: string]: mapData} = {
         azua: {
@@ -48,6 +55,16 @@ export class MapLoader {
     currentLoadedImages = -1;
     totalImages = -1;
 
+    // Used for the event
+    eventHandlerList_MapChanged: MapChangeHandler[] = [];
+
+    mapChangedEventRun(map: string) {
+        this.eventHandlerList_MapChanged.forEach((e) => e(map));
+    }  
+
+    /**
+     * Returns the (assembled, not grid) size of the selected map.
+     */
     get imageSize() {
         let cs = this.mapStruct[this.currentMap];
         return {
@@ -56,6 +73,9 @@ export class MapLoader {
         };
     }
 
+    /**
+     * Updates the #loadingBarMsg and #loadingBarPercent according to the amount of images that have been loaded to the DOM.
+     */
     updateLoadingBar() {
         let loadBarMsg = document.getElementById("loadingBarMsg");
         loadBarMsg.innerHTML =
@@ -67,6 +87,10 @@ export class MapLoader {
             loadBar.style.width = w.toString() + "%";
     };
 
+    /**
+     * Centers the map on the screen.
+     * @param mapPosStateObject Translate and Scale to modify
+     */
     setDefaultZoom(mapPosStateObject: MapPosState) {
         // Focus entire map on screen
         
@@ -91,7 +115,11 @@ export class MapLoader {
      * @param globalDraw Draw function to call when loading the map
      */
     load(mapMeta: MapMeta, map: string, mapPosStateObject: MapPosState, globalDraw: Function) {
+        if (this.currentMap === map) {return false}
+        
         this.currentMap = map;
+        this.mapChangedEventRun(map);
+
         mapMeta.set(this.mapStruct[map].mapMeta);
         //document.title = `Mapa TEC298 — ${titleCase(map.replace('_',' '))}`;
         document.title = `Mapa TEC298 — ${mapMeta.name}`;
@@ -136,6 +164,8 @@ export class MapLoader {
                 });
             }
         }
+        globalDraw();
+        return true;
     }
 
     /**

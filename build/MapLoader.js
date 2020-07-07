@@ -1,4 +1,7 @@
 import { MapMeta } from "./MapMeta.js";
+/**
+ * Contains methods to load and draw the actual map on a canvas.
+ */
 export class MapLoader {
     constructor() {
         this.mapStruct = {
@@ -33,7 +36,15 @@ export class MapLoader {
         this.loadingMap = false;
         this.currentLoadedImages = -1;
         this.totalImages = -1;
+        // Used for the event
+        this.eventHandlerList_MapChanged = [];
     }
+    mapChangedEventRun(map) {
+        this.eventHandlerList_MapChanged.forEach((e) => e(map));
+    }
+    /**
+     * Returns the (assembled, not grid) size of the selected map.
+     */
     get imageSize() {
         let cs = this.mapStruct[this.currentMap];
         return {
@@ -41,6 +52,9 @@ export class MapLoader {
             h: cs.elementSize.h * cs.gridSize.h,
         };
     }
+    /**
+     * Updates the #loadingBarMsg and #loadingBarPercent according to the amount of images that have been loaded to the DOM.
+     */
     updateLoadingBar() {
         let loadBarMsg = document.getElementById("loadingBarMsg");
         loadBarMsg.innerHTML =
@@ -50,6 +64,10 @@ export class MapLoader {
         loadBar.style.width = w.toString() + "%";
     }
     ;
+    /**
+     * Centers the map on the screen.
+     * @param mapPosStateObject Translate and Scale to modify
+     */
     setDefaultZoom(mapPosStateObject) {
         // Focus entire map on screen
         mapPosStateObject.translate.x = -(this.imageSize.w - innerWidth) / 2;
@@ -68,7 +86,11 @@ export class MapLoader {
      * @param globalDraw Draw function to call when loading the map
      */
     load(mapMeta, map, mapPosStateObject, globalDraw) {
+        if (this.currentMap === map) {
+            return false;
+        }
         this.currentMap = map;
+        this.mapChangedEventRun(map);
         mapMeta.set(this.mapStruct[map].mapMeta);
         //document.title = `Mapa TEC298 — ${titleCase(map.replace('_',' '))}`;
         document.title = `Mapa TEC298 — ${mapMeta.name}`;
@@ -103,6 +125,8 @@ export class MapLoader {
                 });
             }
         }
+        globalDraw();
+        return true;
     }
     /**
      * Draws the selected map on the given canvas context, at a given position and scale.

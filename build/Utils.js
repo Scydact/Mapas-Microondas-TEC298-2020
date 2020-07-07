@@ -56,8 +56,10 @@ export function createButton(parentNode, text, callback, tooltip) {
     if (tooltip) {
         b.setAttribute('title', tooltip);
     }
+    if (callback) {
+        $(b).on('click', callback);
+    }
     parentNode.appendChild(b);
-    $(b).on('click', callback);
     return b;
 }
 /**
@@ -83,5 +85,36 @@ export function lineBreak(parentNode) {
     let b = document.createElement('br');
     parentNode.appendChild(b);
     return b;
+}
+/**
+ * Creates a new <select> element and its corresponding options. Does not set the default option.
+ * @param parentNode The node to append the <select> to.
+ * @param optionList The values of the options.
+ * @param optionValueList (optional) The display values of the options.
+ * @param tooltip (optional) Tooltip to show when hovering the button.
+ */
+export function createSelect(parentNode, optionList, optionValueList, tooltip) {
+    let l = document.createElement('select');
+    if (tooltip) {
+        l.setAttribute('title', tooltip);
+    }
+    parentNode.appendChild(l);
+    let displayNames = (optionValueList) ? optionValueList : optionList;
+    for (let i = 0; i < displayNames.length; i++) {
+        let o = document.createElement('option');
+        let jo = $(o);
+        jo.val(optionList[i]);
+        jo.html(displayNames[i]);
+        l.appendChild(o);
+    }
+    return l;
+}
+export function createElement(parentNode, tagName, innerHtml) {
+    let e = document.createElement(tagName);
+    parentNode.appendChild(e);
+    if (innerHtml) {
+        e.innerHTML = innerHtml;
+    }
+    return e;
 }
 //# sourceMappingURL=Utils.js.map

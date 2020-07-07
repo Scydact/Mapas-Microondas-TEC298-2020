@@ -2,23 +2,59 @@ import { Point } from './Point.js';
 import { MapPosState } from './MapPosState.js';
 import { MapMeta } from './MapMeta.js';
 import { MapLoader } from './MapLoader.js';
+import { InteractivityManager } from './UIControl.js';
+import { Settings } from './Settings.js';
 
-class App {
+/**
+ * Main class of this map application. Should be loaded once. 
+ * (Though nothing stops you from creating more than one.)
+ * 
+ * - To add new settings, refer to Settings.ts
+ * - To add new interactivity, refer to UiControl.ts
+ * - Any loose pure functions should go on Utils.ts
+ */
+export class App {
     
+    /**
+     * Contains all points related to the mouse
+     * - screen: Position on the user screen.
+     * - canvas: Position inside the zoomed and translated canvas.
+     * - screenSnap: Used by tools when snap is enabled.
+     */
     mouse = {
         screen: new Point(-1, -1),
         canvas: new Point(-1, -1),
         screenSnap: new Point(-1, -1),
     }
 
+    /**
+     * Contains the transforms applied to the map 
+     * - translate
+     * - scale
+     */
     posState = new MapPosState();
+
+    /**
+     * Contains information about a map's fixed points (coordinates)
+     */
     mapMeta = new MapMeta();
     mapLoader = new MapLoader();
+    settings = new Settings();
 
     canvas: HTMLCanvasElement;
 
+    /**
+     * Initializes the canvas to #renderCanvas
+     */
     constructor() {
         this.canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
+        this.settings.updateSettingsNode(
+            document.querySelector('#settings'), 
+            this.mapLoader);
+        this.settings.eventHandlerList_PropertyChanged.push( 
+            (property, val) => {
+                if (property == 'map') {this.load(val)};
+            });
     }
 
     /**
@@ -29,11 +65,14 @@ class App {
         this.mapLoader.load(this.mapMeta, map, this.posState, () => (this.draw()));
     }
 
+    saveToCookies(identifier: string) {
+
+    }
+
     /**
      * Draws on the associated canvas
      */
     draw() {
-        console.log('DRAW');
         let canvas = this.canvas;
         let context = canvas.getContext('2d');
 
@@ -63,10 +102,17 @@ class App {
         // Map points
         // mapPointList.draw(context);
     }
+
+
 }
 
 $(document).ready(function() {
     let mapApp = new App();
     (<any>window).mapApp = mapApp;
-    mapApp.load('jarabacoa');
+    mapApp.load(mapApp.settings.map);
+
+    let interman = new InteractivityManager(mapApp);
+    (<any>window).interman = interman;
+
+    $(window).ready(() => interman.onWindowReady());
 })

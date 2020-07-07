@@ -1,6 +1,12 @@
 /**
  * Generic point (x, y)
  */
+
+ /**
+  * Functions that require two numbers (operation, and output another number)
+  */
+type BinaryOperator = (a: number, b: number) => number;
+
 export class Point {
     x: number;
     y: number;
@@ -45,23 +51,30 @@ export class Point {
     }
 
     /**
+     * Performs a function (operation) on both 'x' and 'y' axis of given points.
+     * @param p1 First point
+     * @param p2 Second point
+     * @param operation Binary operation to perform
+     */
+    static BinaryOperation(p1: Point, p2: Point, operation: BinaryOperator) {
+        return new Point(
+            operation(p1.x, p2.x),
+            operation(p1.y, p2.y)
+        )
+    }
+
+    /**
      * Returns the vector subtraction.
      */
     static Minus(p1: Point, p2: Point) {
-        return new Point(
-            p1.x - p2.x, 
-            p1.y - p2.y
-        );
+        return Point.BinaryOperation(p1, p2, (a,b) => a-b)
     }
 
     /**
      * Returns the vector sum.
      */
     static Plus(p1: Point, p2: Point) {
-        return new Point(
-            p1.x + p2.x,
-            p1.y + p2.y
-        );
+        return Point.BinaryOperation(p1, p2, (a,b) => a+b)
     }
 
     /**
@@ -87,9 +100,6 @@ export class Point {
      * Returns the midpoint between two points.
      */
     static MidPoint(p1: Point, p2: Point) {
-        return new Point(
-            (p1.x + p2.x) / 2,
-            (p1.y + p2.y) / 2
-        )
+        return Point.BinaryOperation(p1, p2, (a,b) => (a+b)/2);
     }
 }

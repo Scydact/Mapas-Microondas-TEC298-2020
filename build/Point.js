@@ -36,16 +36,25 @@ export class Point {
         return p1.x * p2.x + p1.y * p2.y;
     }
     /**
+     * Performs a function (operation) on both 'x' and 'y' axis of given points.
+     * @param p1 First point
+     * @param p2 Second point
+     * @param operation Binary operation to perform
+     */
+    static BinaryOperation(p1, p2, operation) {
+        return new Point(operation(p1.x, p2.x), operation(p1.y, p2.y));
+    }
+    /**
      * Returns the vector subtraction.
      */
     static Minus(p1, p2) {
-        return new Point(p1.x - p2.x, p1.y - p2.y);
+        return Point.BinaryOperation(p1, p2, (a, b) => a - b);
     }
     /**
      * Returns the vector sum.
      */
     static Plus(p1, p2) {
-        return new Point(p1.x + p2.x, p1.y + p2.y);
+        return Point.BinaryOperation(p1, p2, (a, b) => a + b);
     }
     /**
      * Multiplies x & y by an scalar
@@ -63,7 +72,7 @@ export class Point {
      * Returns the midpoint between two points.
      */
     static MidPoint(p1, p2) {
-        return new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+        return Point.BinaryOperation(p1, p2, (a, b) => (a + b) / 2);
     }
 }
 //# sourceMappingURL=Point.js.map
