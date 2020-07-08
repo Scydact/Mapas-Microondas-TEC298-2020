@@ -1,6 +1,7 @@
 import { Point } from './Point.js';
-import { TopStatusMessageDisplay, StatusBarMessageDisplay, MouseMessageDisplay } from './Panes.js';
+import { TopStatusMessageDisplay, StatusBarMessageDisplay, MouseMessageDisplay, } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
+import { MapLine } from './MapObject.js';
 /**
  * * Main auxiliary class of this map application. Should be loaded once.
  * (Though nothing stops you from creating more than one.)
@@ -22,20 +23,32 @@ export class InteractivityManager {
         this.touchScaleMultiplier = 1 / 100;
         this.startDragOffset = new Point(0, 0);
         this.hoverDistance = 7; // TODO: Move to settings
+        this.temp = {
+            lineTool: {
+                draftLine: new MapLine(this.app),
+                p1: Point.ZERO(),
+            },
+        };
         this.out = {
             topMsgBar: new TopStatusMessageDisplay(),
             statusBar: new StatusBarMessageDisplay(),
             mouseBar: new MouseMessageDisplay(),
         };
+        // Pane functionality, as methods in case any other thing wants to use it.
+        this.PaneIdList = [
+            '#settingsWrapper',
+            '#linesWrapper',
+            '#pointsWrapper',
+            '#editionWrapper',
+        ];
         this.app = app;
-        this.clickMode = new ClickMode(this.app.canvas, this.out.topMsgBar);
+        this.clickMode = new ClickMode(this.app);
     }
     /**
      *
      * @param newPoint New mouse position
      */
     handlerScreenPointMove(newPoint) {
-        console.log('mousemove');
         if (this.clicking) {
             this.dragging = true;
             let translate = this.app.posState.translate;
@@ -49,12 +62,57 @@ export class InteractivityManager {
             $(this.app.canvas).removeClass('move');
         }
         // Update mousePos / coordPos global vars
-        // getMousePos(canvas, newPos);
-        // getMousePosInMap(canvas, newPos);
+        this.updateAllMousePoints(newPoint);
+        // Update hover status
+        let lineList = this.app.objectList.line;
+        lineList.setState('hover', false);
+        lineList
+            .getCloseToScreenPoint(newPoint, this.hoverDistance)
+            .forEach((e) => (e.state.hover = true));
         // Final draw
         this.app.draw();
     }
+    updateAllMousePoints(newPoint) {
+        let pointList = this.app.mouse;
+        // Screen point
+        pointList.screen.assign(newPoint);
+        // Canvas point
+        let canvasPoint = this.app.screenPointToCanvasPoint(newPoint);
+        pointList.canvas.assign(canvasPoint);
+        // Snap point
+        let snapPoint = newPoint;
+        pointList.screenSnap.assign(snapPoint);
+    }
     handlerScreenPointClick(newPoint) {
+        this.updateAllMousePoints(newPoint);
+        let mouse = this.app.mouse;
+        if (!this.dragging) {
+            switch (this.clickMode.mode) {
+                case 'setLinePoint1':
+                    this.temp.lineTool.p1 = this.app.screenPointToCanvasPoint(mouse.screenSnap);
+                    this.clickMode.set('setLinePoint2');
+                    this.out.topMsgBar.set('Click en el 2do punto de la linea');
+                    break;
+                case 'setLinePoint2':
+                    let p1 = this.temp.lineTool.p1.copy();
+                    let p2 = mouse.canvas.copy();
+                    let m = MapLine.fromPoints(p1, p2, this.app);
+                    m.state.active = true;
+                    this.app.objectList.line.add(m);
+                    this.clickMode.clear();
+                    break;
+                default:
+                    let lineList = this.app.objectList.line;
+                    if (!this.modifier.shift) {
+                        lineList.setState('active', false);
+                    }
+                    lineList
+                        .getCloseToScreenPoint(newPoint, this.hoverDistance)
+                        .forEach((e) => (e.state.active = true));
+                    break;
+            }
+        }
+        // Clear clicking (this is a mouse up) and dragging tags
         this.clicking = false;
         this.dragging = false;
         // Final draw
@@ -76,6 +134,22 @@ export class InteractivityManager {
                 break;
             case 'ALT':
                 modifier.alt = false;
+                break;
+            case 'ESCAPE':
+                this.clickMode.clear();
+                break;
+            case 'DELETE':
+                // mapLineList.deleteActive();
+                // mapLineList.updateNode();
+                // mapPointList.deleteActive();
+                // mapPointList.updateNode();
+                break;
+            case 'L':
+                this.app.objectList.line.toolbox.createElement();
+                break;
+            case 'P':
+                //mapPointList.toolBox.createElement();
+                //createPointFun();
                 break;
         }
         // Final draw
@@ -101,6 +175,26 @@ export class InteractivityManager {
     static TouchEvtToPos(evt) {
         let x = evt.originalEvent.changedTouches[0];
         return new Point(x.clientX, x.clientY);
+    }
+    /**
+     * Close all panes on PaneIdList
+     */
+    paneCloseAll() {
+        this.PaneIdList.forEach((e) => $(e).addClass('disabled'));
+    }
+    /**
+     * Toggles an specific pane
+     * @param selector Selector of the pane to close
+     */
+    togglePane(selector) {
+        let j = $(selector);
+        if (j.hasClass('disabled')) {
+            this.paneCloseAll();
+            j.removeClass('disabled');
+        }
+        else {
+            this.paneCloseAll();
+        }
     }
     onWindowReady() {
         let app = this.app;
@@ -132,50 +226,48 @@ export class InteractivityManager {
             app.draw();
         });
         //#endregion
+        //#region Zoom buttons
+        $('#zoomPlus').on('click', () => {
+            let centerP = new Point(canvas.width / 2, canvas.height / 2);
+            let newScale = this.app.posState.scale / this.scaleMultiplier;
+            this.app.posState.zoomAtPosition(centerP, newScale);
+            this.app.draw();
+        });
+        $('#zoomMinus').on('click', () => {
+            let centerP = new Point(canvas.width / 2, canvas.height / 2);
+            let newScale = this.app.posState.scale * this.scaleMultiplier;
+            this.app.posState.zoomAtPosition(centerP, newScale);
+            this.app.draw();
+        });
+        $('#zoomReset').on('click', () => {
+            //scale *= scaleMultiplier;
+            this.app.mapLoader.setDefaultZoom(this.app.posState);
+            this.app.draw();
+        });
+        //#endregion
         //#region Side panes
-        let PaneIdList = [
-            '#settingsWrapper',
-            '#linesWrapper',
-            '#pointsWrapper',
-            '#editionWrapper',
-        ];
-        /**
-         * Close all panes on PaneIdList
-         */
-        function paneCloseAll() {
-            PaneIdList.forEach((e) => $(e).addClass('disabled'));
-        }
-        /**
-         * Toggles an specific pane
-         * @param selector Selector of the pane to close
-         */
-        function togglePane(selector) {
-            let j = $(selector);
-            if (j.hasClass('disabled')) {
-                paneCloseAll();
-                j.removeClass('disabled');
-            }
-            else {
-                paneCloseAll();
-            }
-        }
         $('#openSettings').on('click', function () {
             // These things should be managed by Settings.ts
             //mapMeta.loadToSetup();
             //$('#snapCheckbox').prop('checked', snapEnabled);
-            togglePane('#settingsWrapper');
+            T.togglePane('#settingsWrapper');
         });
         $('#openLinePane').on('click', function () {
-            togglePane('#linesWrapper');
+            T.togglePane('#linesWrapper');
         });
         //mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
         $('#openPointPane').on('click', function () {
-            togglePane('#pointsWrapper');
+            T.togglePane('#pointsWrapper');
         });
         //mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
         $('#openEditionPane').on('click', function () {
-            togglePane('#editionWrapper');
+            T.togglePane('#editionWrapper');
         });
+        //#endregion
+        //#region Tool buttons
+        $('#toolPointer').on('click', (e) => this.clickMode.clear());
+        $('#toolLine').on('click', () => this.app.objectList.line.toolbox.createElement());
+        $('#toolPoint').on('click', () => this.clickMode.set('setPointMarker'));
         //#endregion
     }
 }

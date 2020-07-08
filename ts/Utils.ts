@@ -123,3 +123,17 @@ export function createElement(parentNode: HTMLElement, tagName: string, innerHtm
     if (innerHtml) {e.innerHTML = innerHtml}
     return e;
 }
+
+/**
+ * Interface for objects that can produce and accept a generic object for saving purposes.
+ * 
+ * NOTE: Also create an static method called 'fromJObject(o)' with description:  
+ * Creates a new object and assigns its values.
+ */
+export interface Restorable {
+    /** Creates a generic object that can be saved and loaded from JSON using .assign(o). */
+    toJObject(): object;
+
+    /** Assigns the values of the given object to this object. */
+    assign(o): boolean;
+}

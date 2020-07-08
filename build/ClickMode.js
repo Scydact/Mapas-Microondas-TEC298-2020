@@ -9,31 +9,35 @@ export class ClickMode {
      * @param canvas Canvas element. Used to update the cursor
      * @param msgBar Top message output. ClickMode will clear it when no tool is selected.
      */
-    constructor(canvas, msgBar) {
+    constructor(app) {
         this.mode = null;
         this.oldMode = null;
-        this.canvas = canvas;
-        this.msgBar = msgBar;
+        this.app = app;
         this.updateUITools();
     }
+    /** Sets the current tool to pointer, and clears topMsgBar() */
     clear() {
         this.oldMode = this.mode;
         this.mode = null;
-        this.msgBar.clear();
+        this.app.interman.out.topMsgBar.clear();
         this.updateUITools();
     }
+    /** Sets the corresponding tool button ON. */
     set(mode) {
         this.oldMode = this.mode;
         this.mode = mode;
         this.updateUITools();
     }
+    /** Removes the .active tag from all the tool buttons. */
     deselectUITools() {
         $('.toolBtn').removeClass('active');
-        $(this.canvas).removeClass('crosshair');
+        $(this.app.canvas).removeClass('crosshair');
     }
+    /** Updates the canvas cursor and tool button according to the selected click mode. */
     updateUITools() {
         let mode = this.mode;
-        let canvas = this.canvas;
+        let canvas = this.app.canvas;
+        let interman = this.app.interman;
         this.deselectUITools();
         switch (mode) {
             case 'setLinePoint1':

@@ -55,6 +55,7 @@ export class Settings {
      */
     assign(object) {
         Settings.dataProperties.forEach((e) => ObjectAssignProperty(this, object, e));
+        return true;
     }
     /**
      * Returns a new Settings object from a given JSON string.

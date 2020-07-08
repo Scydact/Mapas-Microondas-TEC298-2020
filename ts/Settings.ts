@@ -1,4 +1,4 @@
-import { ObjectAssignProperty, createElement, createLabel, titleCase, createSelect } from "./Utils.js";
+import { ObjectAssignProperty, createElement, createLabel, titleCase, createSelect, Restorable } from "./Utils.js";
 import { MapLoader } from "./MapLoader.js";
 
 type PropertyChangeHandler = (changedValue?: string, newValue?: any, oldValue?: any) => any;
@@ -6,7 +6,7 @@ type PropertyChangeHandler = (changedValue?: string, newValue?: any, oldValue?: 
 /**
  * Constains simple settings, and methods to load them to the forms
  */
-export class Settings {
+export class Settings implements Restorable {
     static dataProperties = [
         'version',
         'map',
@@ -70,6 +70,7 @@ export class Settings {
      */
     assign(object) {
         Settings.dataProperties.forEach((e) => ObjectAssignProperty(this, object, e));
+        return true;
     }
 
     /**
