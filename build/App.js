@@ -4,7 +4,8 @@ import { MapMeta } from './MapMeta.js';
 import { MapLoader } from './MapLoader.js';
 import { InteractivityManager } from './UIControl.js';
 import { Settings } from './Settings.js';
-import { MapLineList } from './MapObject.js';
+import { MapLineList, MapPointList } from './MapObject.js';
+import { UndoRedoManager } from './UndoRedoManager.js';
 /**
  * Main class of this map application. Should be loaded once.
  * (Though nothing stops you from creating more than one.)
@@ -23,9 +24,10 @@ export class App {
          * - screenSnap: Used by tools when snap is enabled.
          */
         this.mouse = {
-            screen: new Point(-1, -1),
-            canvas: new Point(-1, -1),
-            screenSnap: new Point(-1, -1),
+            screen: Point.ZERO(),
+            canvas: Point.ZERO(),
+            screenSnap: Point.ZERO(),
+            canvasSnap: Point.ZERO(),
         };
         /**
          * Contains the transforms applied to the map:
@@ -42,7 +44,12 @@ export class App {
         /** Contains all the object lists of this app. */
         this.objectList = {
             line: new MapLineList(this),
+            point: new MapPointList(this),
         };
+        this.objectListList = [
+            this.objectList.line,
+            this.objectList.point,
+        ];
         // DEBUG
         this.DEBUG_RESET_SAVE = false;
         this.canvas = document.getElementById('renderCanvas');
@@ -51,12 +58,13 @@ export class App {
             if (property == 'map') {
                 this.load(val);
             }
-            ;
         });
-        //this.objectList.line = new MapLineList(this);
         this.objectList.line.node = $('#lineListWrapper')[0];
         this.objectList.line.updateNode();
         this.objectList.line.updateNodeButtons($('#lineListButtonWrapper')[0]);
+        this.objectList.point.node = $('#pointListWrapper')[0];
+        this.objectList.point.updateNode();
+        this.objectList.point.updateNodeButtons($('#pointListButtonWrapper')[0]);
     }
     /** Calls this.settings.updateSettingsNode(ARGS) to update the settings node */
     updateSettingsNode() {
@@ -67,7 +75,7 @@ export class App {
      * @param map Map ID to load.
      */
     load(map) {
-        this.mapLoader.load(this.mapMeta, map, this.posState, () => (this.draw()));
+        this.mapLoader.load(this.mapMeta, map, this.posState, () => this.draw());
     }
     /** Converts a screen point to a canvas point. */
     screenPointToCanvasPoint(p) {
@@ -84,6 +92,7 @@ export class App {
             posState: this.posState.toJObject(),
             settings: this.settings.toJObject(),
             lines: this.objectList.line.toJObject(),
+            points: this.objectList.point.toJObject(),
         };
         return o;
     }
@@ -106,6 +115,11 @@ export class App {
                 this.objectList.line.node = $('#lineListWrapper')[0];
                 this.objectList.line.updateNode();
                 this.objectList.line.updateNodeButtons($('#lineListButtonWrapper')[0]);
+            }
+            if (tryAssign(this.objectList.point, o, 'points')) {
+                this.objectList.point.node = $('#pointListWrapper')[0];
+                this.objectList.point.updateNode();
+                this.objectList.point.updateNodeButtons($('#pointListButtonWrapper')[0]);
             }
             return true;
         }
@@ -138,6 +152,7 @@ export class App {
         this.assignSaveObject(saveObject);
         return true;
     }
+    /** Clears the saved settings (if any) from localStorage */
     clearLocalStorage(identifier) {
         localStorage.removeItem(identifier);
         console.log(`Removed '${identifier} from localStorage'`);
@@ -146,6 +161,7 @@ export class App {
     draw() {
         let canvas = this.canvas;
         let context = canvas.getContext('2d');
+        let clickMode = (this.interman) ? this.interman.clickMode : { mode: null };
         // Update width/height of canvas
         canvas.width = innerWidth;
         canvas.height = innerHeight;
@@ -156,17 +172,14 @@ export class App {
         // Map lines
         // mapLineList.draw(context);
         this.objectList.line.draw(context);
-        // if (clickMode.mode == "setLinePoint2") {
-        //     temp.mapline.templine.p2 = coordPos;
-        //     temp.mapline.templine.draw(context);
-        // }
-        // if (clickMode.mode == "setTopographicPoint") {
-        //     temp.mapline.templine.p1 = coordPos;
-        //     temp.mapline.templine.p2 = temp.topo.mapLine.getPointProjection(coordPos);
-        //     temp.mapline.templine.draw(context);
-        // }
+        if (clickMode.mode == 'setLinePoint2') {
+            this.interman.temp.lineTool.draftLine.draw(context);
+        }
+        if (clickMode.mode == "setTopographicPoint") {
+            this.interman.temp.topoPointTool.draftLine.draw(context);
+        }
         // Map points
-        // mapPointList.draw(context);
+        this.objectList.point.draw(context);
     }
 }
 let saveString = 'saved_data_test';
@@ -180,6 +193,7 @@ $(document).ready(function () {
     }
     mapApp.load(mapApp.settings.map);
     mapApp.interman = new InteractivityManager(mapApp);
+    mapApp.undoman = new UndoRedoManager(mapApp);
     $(window).ready(() => mapApp.interman.onWindowReady());
 });
 window.onbeforeunload = function (event) {

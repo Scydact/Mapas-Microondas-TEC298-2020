@@ -126,4 +126,18 @@ export class Line {
         let pProjection = Line.PointProjectionAsInfiniteLine(L, p);
         return Point.Distance(p, pProjection);
     }
+
+    /** Returns the scalar projection of the point to the line, but normalized so that the line has lenght of 1. */
+    static NormalizedScalarPointProjection(L: Line, p: Point) {
+        // Direct copy of .PointProjection()
+        let a = Point.Minus(p, L.p1);
+        let b = Point.Minus(L.p2, L.p1);
+
+        let length_sqr = Point.AbsSquared(b);
+        let a_dot_b = Point.Dot(a, b);
+
+        // Scalar projection of p on the line, normalized so that 1 = 100% of the line.
+        // Set value to -1 if length = 0 (avoid division by zero)
+        return (length_sqr) ? (a_dot_b / length_sqr) : -1;
+    }
 }

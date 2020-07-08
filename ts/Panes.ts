@@ -1,4 +1,5 @@
 import { Point } from "./Point.js";
+import { MapObject, MapObjectList } from "./MapObject.js";
 
 interface MessageDisplay {
     /**
@@ -33,7 +34,7 @@ class GenericMessageDisplay implements MessageDisplay {
         this.node.classList.add('disabled');
         return true;
     }
-    set(txt: any): boolean {
+    set(txt: any): boolean {// TODO: single \n adds <br>, double \n\n adds new <p>
         let splitList = txt.split("\n");
         let T = this;
 

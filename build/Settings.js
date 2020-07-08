@@ -4,13 +4,43 @@ import { ObjectAssignProperty, createElement, createLabel, titleCase, createSele
  */
 export class Settings {
     constructor() {
-        this.version = 1.0;
+        this.version = 1.1;
         this.map = 'hato_mayor';
         this.snap = true;
+        this.openPanes = {
+            config: false,
+            line: false,
+            point: false,
+            edit: false,
+        };
         /**
          * List of all the functions that will be notified when a property changes via .prop()
          */
         this.eventHandlerList_PropertyChanged = [];
+    }
+    /** Gets the state of the panes and saves them */
+    getOpenPanes() {
+        let op = this.openPanes;
+        op.config = !$('#settingsWrapper').hasClass('disabled');
+        op.line = !$('#linesWrapper').hasClass('disabled');
+        op.point = !$('#pointsWrapper').hasClass('disabled');
+        op.edit = !$('#editionWrapper').hasClass('disabled');
+        return op;
+    }
+    /** Sets the state of the panes to HTML */
+    setOpenPanes() {
+        [
+            '#settingsWrapper',
+            '#linesWrapper',
+            '#pointsWrapper',
+            '#editionWrapper',
+        ].forEach((e) => $(e).addClass('disabled'));
+        let op = this.openPanes;
+        $('#settingsWrapper').toggleClass('disabled', !op.config);
+        $('#linesWrapper').toggleClass('disabled', !op.line);
+        $('#pointsWrapper').toggleClass('disabled', !op.point);
+        $('#editionWrapper').toggleClass('disabled', !op.edit);
+        return true;
     }
     /**
      * Calls every handler inside .eventHandlerList_PropertyChanged
@@ -37,8 +67,10 @@ export class Settings {
      * Creates a generic object with this object's properties.
      */
     toJObject() {
+        this.getOpenPanes();
         let o = {};
         Settings.dataProperties.forEach((e) => o[e] = this[e]);
+        o['version'] = this.version;
         return o;
     }
     /**
@@ -55,6 +87,7 @@ export class Settings {
      */
     assign(object) {
         Settings.dataProperties.forEach((e) => ObjectAssignProperty(this, object, e));
+        this.setOpenPanes();
         return true;
     }
     /**
@@ -112,8 +145,8 @@ export class Settings {
     }
 }
 Settings.dataProperties = [
-    'version',
     'map',
-    'snap'
+    'snap',
+    'openPanes'
 ];
 //# sourceMappingURL=Settings.js.map

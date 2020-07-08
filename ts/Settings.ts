@@ -1,5 +1,6 @@
 import { ObjectAssignProperty, createElement, createLabel, titleCase, createSelect, Restorable } from "./Utils.js";
 import { MapLoader } from "./MapLoader.js";
+import { timers } from "jquery";
 
 type PropertyChangeHandler = (changedValue?: string, newValue?: any, oldValue?: any) => any;
 
@@ -8,14 +9,49 @@ type PropertyChangeHandler = (changedValue?: string, newValue?: any, oldValue?: 
  */
 export class Settings implements Restorable {
     static dataProperties = [
-        'version',
         'map',
-        'snap'
+        'snap',
+        'openPanes'
     ];
 
-    version = 1.0;
+    version = 1.1;
     map = 'hato_mayor';
     snap = true;
+
+
+    openPanes = {
+        config: false,
+        line: false,
+        point: false,
+        edit: false,
+    }
+
+    /** Gets the state of the panes and saves them */
+    getOpenPanes() {
+        let op = this.openPanes;
+        op.config = !$('#settingsWrapper').hasClass('disabled');
+        op.line = !$('#linesWrapper').hasClass('disabled');
+        op.point = !$('#pointsWrapper').hasClass('disabled');
+        op.edit = !$('#editionWrapper').hasClass('disabled');
+        return op;
+    }
+
+    /** Sets the state of the panes to HTML */
+    setOpenPanes() {
+        [
+            '#settingsWrapper',
+            '#linesWrapper',
+            '#pointsWrapper',
+            '#editionWrapper',
+        ].forEach((e) => $(e).addClass('disabled'));
+
+        let op = this.openPanes;
+        $('#settingsWrapper').toggleClass('disabled', !op.config);
+        $('#linesWrapper').toggleClass('disabled', !op.line);
+        $('#pointsWrapper').toggleClass('disabled', !op.point);
+        $('#editionWrapper').toggleClass('disabled', !op.edit);
+        return true;
+    }
 
     /**
      * Calls every handler inside .eventHandlerList_PropertyChanged
@@ -50,8 +86,10 @@ export class Settings implements Restorable {
      * Creates a generic object with this object's properties.
      */
     toJObject() {
+        this.getOpenPanes();
         let o = {};
         Settings.dataProperties.forEach((e) => o[e] = this[e]);
+        o['version'] = this.version;
         return o;
     }
 
@@ -70,6 +108,7 @@ export class Settings implements Restorable {
      */
     assign(object) {
         Settings.dataProperties.forEach((e) => ObjectAssignProperty(this, object, e));
+        this.setOpenPanes();
         return true;
     }
 

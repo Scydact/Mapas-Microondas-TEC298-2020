@@ -1,5 +1,5 @@
 import { Point } from './Point.js';
-import { ObjectAssignProperty } from './Utils.js';
+import { ObjectAssignProperty, decimalToSexagecimal } from './Utils.js';
 /**
  * Collection of a map's fixed data points.
  */
@@ -66,6 +66,22 @@ export class MapMeta {
         this.oneMetreInPx = mapMeta.oneMetreInPx;
         this.deg = mapMeta.deg;
         this.px = mapMeta.px;
+    }
+    /** Returns a canvas point as an actual coordinate for the map. */
+    canvasPointToCoordPoint(point) {
+        // xdeg = (slopeXDeg * (point.x - x1Px)) / xPxLength + x1Deg;
+        let slope_deg_px = Point.BinaryDivision(this.deg.length(), this.px.length());
+        let xDeg = (slope_deg_px.x * (point.x - this.px.p1.x)) + this.deg.p1.x;
+        let yDeg = (slope_deg_px.y * (point.y - this.px.p1.y)) + this.deg.p1.x;
+        return new Point(xDeg, yDeg);
+    }
+    /** Returns a canvas point as an actual sexagecimal coordinate for the map. */
+    sexagecimalCanvasPointToCoordPoint(point) {
+        let decVal = this.canvasPointToCoordPoint(point);
+        return {
+            x: decimalToSexagecimal(decVal.x),
+            y: decimalToSexagecimal(decVal.y)
+        };
     }
 }
 //# sourceMappingURL=MapMeta.js.map

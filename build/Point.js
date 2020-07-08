@@ -50,6 +50,22 @@ export class Point {
     static BinaryOperation(p1, p2, operation) {
         return new Point(operation(p1.x, p2.x), operation(p1.y, p2.y));
     }
+    /** Returns the direct product of each vector's element */
+    static BinaryProduct(p1, p2) {
+        return Point.BinaryOperation(p1, p2, (a, b) => a * b);
+    }
+    /**
+     * Returns the direct division of each vector's element (x1/x2)
+     * @param p1 Numerator
+     * @param p2 Denominator
+     */
+    static BinaryDivision(p1, p2) {
+        return Point.BinaryOperation(p1, p2, (a, b) => a / b);
+    }
+    /** Returns a new point with reciprocal elements. (x, y) => (1/x, 1/y) */
+    static Reciprocal(p) {
+        return Point.UnaryOperation(p, (a) => 1 / a);
+    }
     /** Returns the vector subtraction. */
     static Minus(p1, p2) {
         return Point.BinaryOperation(p1, p2, (a, b) => a - b);
@@ -59,7 +75,7 @@ export class Point {
         return Point.BinaryOperation(p1, p2, (a, b) => a + b);
     }
     /** Multiplies x & y by an scalar */
-    static ScalarMult(p1, mult) {
+    static ScalarProduct(p1, mult) {
         return new Point(p1.x * mult, p1.y * mult);
     }
     /** Returns x^2 + y^2; */
@@ -76,12 +92,12 @@ export class Point {
     }
     /** Normalizes the vector */
     static Normalize(a) {
-        return Point.ScalarMult(a, 1 / Point.Abs(a));
+        return Point.ScalarProduct(a, 1 / Point.Abs(a));
     }
     /** Returns the scalar projection of a on b */
     static VectorProjection(a, b) {
         let scale = Point.Dot(a, b) / Point.Abs(b);
-        return Point.ScalarMult(b, scale);
+        return Point.ScalarProduct(b, scale);
     }
     //#endregion
     //#region Misc Operations
@@ -100,7 +116,7 @@ export class Point {
      * @param z1 First complex number.
      * @param z2 Second complex number.
      */
-    static ComplexMult(z1, z2) {
+    static ComplexProduct(z1, z2) {
         // src: https://www2.clarku.edu/faculty/djoyce/complex/mult.html
         return new Point(z1.x * z2.x - z1.y * z2.y, z1.x * z2.y + z1.y * z2.x);
     }
@@ -111,7 +127,7 @@ export class Point {
      */
     static ComplexDivision(z1, z2) {
         // src: https://www2.clarku.edu/faculty/djoyce/complex/div.html
-        return Point.ComplexMult(z1, Point.ComplexConjugate(z2));
+        return Point.ComplexProduct(z1, Point.ComplexConjugate(z2));
     }
     /** Returns the conjugate of Z=a+bi, Z*=a-bi */
     static ComplexConjugate(z) {
@@ -122,7 +138,7 @@ export class Point {
         // src: https://www2.clarku.edu/faculty/djoyce/complex/div.html
         let rec = Point.ComplexReciprocal(z);
         let abs2 = Point.AbsSquared(z);
-        return Point.ScalarMult(rec, 1 / abs2);
+        return Point.ScalarProduct(rec, 1 / abs2);
     }
 }
 //# sourceMappingURL=Point.js.map

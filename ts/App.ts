@@ -4,19 +4,20 @@ import { MapMeta } from './MapMeta.js';
 import { MapLoader } from './MapLoader.js';
 import { InteractivityManager } from './UIControl.js';
 import { Settings } from './Settings.js';
-import { MapLineList } from './MapObject.js';
+import { MapLineList, MapPointList } from './MapObject.js';
 import { Restorable } from './Utils.js';
+import { UndoRedoManager } from './UndoRedoManager.js';
+import { map } from 'jquery';
 
 /**
- * Main class of this map application. Should be loaded once. 
+ * Main class of this map application. Should be loaded once.
  * (Though nothing stops you from creating more than one.)
- * 
+ *
  * - To add new settings, refer to Settings.ts
  * - To add new interactivity, refer to UiControl.ts
  * - Any loose pure functions should go on Utils.ts
  */
 export class App {
-    
     /**
      * Contains all points related to the mouse:
      * - screen: Position on the user screen.
@@ -24,10 +25,11 @@ export class App {
      * - screenSnap: Used by tools when snap is enabled.
      */
     mouse = {
-        screen: new Point(-1, -1),
-        canvas: new Point(-1, -1),
-        screenSnap: new Point(-1, -1),
-    }
+        screen: Point.ZERO(),
+        canvas: Point.ZERO(),
+        screenSnap: Point.ZERO(),
+        canvasSnap: Point.ZERO(),
+    };
 
     /**
      * Contains the transforms applied to the map:
@@ -51,34 +53,51 @@ export class App {
     /** Interactivity manager: handles user input, shortcuts, and some DOM changes. */
     interman: InteractivityManager;
 
+    /** Manages doing/undoing actions via Ctrl+Z / Ctrl+Y */
+    undoman: UndoRedoManager;
+
     /** Contains all the object lists of this app. */
     objectList = {
         line: new MapLineList(this),
-    }
+        point: new MapPointList(this),
+    };
+
+    objectListList = [
+        this.objectList.line,
+        this.objectList.point,
+    ];
 
     // DEBUG
     DEBUG_RESET_SAVE = false;
 
     /** Initializes the canvas to #renderCanvas */
     constructor() {
-        this.canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
+        this.canvas = document.getElementById(
+            'renderCanvas'
+        ) as HTMLCanvasElement;
         this.updateSettingsNode();
-        this.settings.eventHandlerList_PropertyChanged.push( 
-            (property, val) => {
-                if (property == 'map') {this.load(val)};
-            });
+        this.settings.eventHandlerList_PropertyChanged.push((property, val) => {
+            if (property == 'map') {
+                this.load(val);
+            }
+        });
 
-        //this.objectList.line = new MapLineList(this);
         this.objectList.line.node = $('#lineListWrapper')[0];
         this.objectList.line.updateNode();
         this.objectList.line.updateNodeButtons($('#lineListButtonWrapper')[0]);
+    
+        this.objectList.point.node = $('#pointListWrapper')[0];
+        this.objectList.point.updateNode();
+        this.objectList.point.updateNodeButtons($('#pointListButtonWrapper')[0]);
+    
     }
 
     /** Calls this.settings.updateSettingsNode(ARGS) to update the settings node */
     updateSettingsNode() {
         this.settings.updateSettingsNode(
-            document.querySelector('#settings'), 
-            this.mapLoader);
+            document.querySelector('#settings'),
+            this.mapLoader
+        );
     }
 
     /**
@@ -86,24 +105,30 @@ export class App {
      * @param map Map ID to load.
      */
     load(map: string) {
-        this.mapLoader.load(this.mapMeta, map, this.posState, () => (this.draw()));
+        this.mapLoader.load(this.mapMeta, map, this.posState, () =>
+            this.draw()
+        );
     }
 
     /** Converts a screen point to a canvas point. */
     screenPointToCanvasPoint(p: Point) {
         return Point.BinaryOperation(
-            p, 
-            this.posState.translate, 
-            (pos, translate) =>  (pos - translate) / this.posState.scale);
+            p,
+            this.posState.translate,
+            (pos, translate) => (pos - translate) / this.posState.scale
+        );
     }
 
     /** Converts a canvas point to a screen point. */
     canvasPointToScreenPoint(p: Point) {
         return Point.BinaryOperation(
-            p, 
-            this.posState.translate, 
-            (pos, translate) => this.posState.scale * pos + translate);
-    } 
+            p,
+            this.posState.translate,
+            (pos, translate) => this.posState.scale * pos + translate
+        );
+    }
+
+
 
     /** Returns an object that can be saved to JSON and loaded via assignSaveObject() */
     toSaveObject() {
@@ -113,7 +138,8 @@ export class App {
             settings: this.settings.toJObject(),
 
             lines: this.objectList.line.toJObject(),
-        }
+            points: this.objectList.point.toJObject(),
+        };
 
         return o;
     }
@@ -130,17 +156,29 @@ export class App {
         try {
             this.load(o.map);
             tryAssign(this.posState, o, 'posState');
-            if (tryAssign(this.settings, o, 'settings')) {this.updateSettingsNode()}
-            
+            if (tryAssign(this.settings, o, 'settings')) {
+                this.updateSettingsNode();
+            }
+
             if (tryAssign(this.objectList.line, o, 'lines')) {
                 this.objectList.line.node = $('#lineListWrapper')[0];
                 this.objectList.line.updateNode();
-                this.objectList.line.updateNodeButtons($('#lineListButtonWrapper')[0]);
+                this.objectList.line.updateNodeButtons(
+                    $('#lineListButtonWrapper')[0]
+                );
+            }
+
+            if (tryAssign(this.objectList.point, o, 'points')) {
+                this.objectList.point.node = $('#pointListWrapper')[0];
+                this.objectList.point.updateNode();
+                this.objectList.point.updateNodeButtons(
+                    $('#pointListButtonWrapper')[0]
+                );
             }
 
             return true;
         } catch (error) {
-            console.warn('Could not restore App object:')
+            console.warn('Could not restore App object:');
             console.warn(error);
             return false;
         }
@@ -155,7 +193,7 @@ export class App {
             window.localStorage.setItem(identifier, jstring);
             return true;
         } catch (error) {
-            console.warn(`Could not save '${identifier}' to localStorage.`)
+            console.warn(`Could not save '${identifier}' to localStorage.`);
             console.warn(error);
             return false;
         }
@@ -170,6 +208,7 @@ export class App {
         return true;
     }
 
+    /** Clears the saved settings (if any) from localStorage */
     clearLocalStorage(identifier: string) {
         localStorage.removeItem(identifier);
         console.log(`Removed '${identifier} from localStorage'`);
@@ -179,6 +218,7 @@ export class App {
     draw() {
         let canvas = this.canvas;
         let context = canvas.getContext('2d');
+        let clickMode = (this.interman) ? this.interman.clickMode : {mode: null}
 
         // Update width/height of canvas
         canvas.width = innerWidth;
@@ -193,38 +233,35 @@ export class App {
         // Map lines
         // mapLineList.draw(context);
         this.objectList.line.draw(context);
-        // if (clickMode.mode == "setLinePoint2") {
-        //     temp.mapline.templine.p2 = coordPos;
-        //     temp.mapline.templine.draw(context);
-        // }
-
-        // if (clickMode.mode == "setTopographicPoint") {
-        //     temp.mapline.templine.p1 = coordPos;
-        //     temp.mapline.templine.p2 = temp.topo.mapLine.getPointProjection(coordPos);
-        //     temp.mapline.templine.draw(context);
-        // }
+        if (clickMode.mode == 'setLinePoint2') {
+            this.interman.temp.lineTool.draftLine.draw(context);
+        }
+        if (clickMode.mode == "setTopographicPoint") {
+            this.interman.temp.topoPointTool.draftLine.draw(context);
+        }
 
         // Map points
-        // mapPointList.draw(context);
+        this.objectList.point.draw(context);
     }
-
-
 }
 
 let saveString = 'saved_data_test';
 
-$(document).ready(function() {
+$(document).ready(function () {
     let mapApp = new App();
     (<any>window).mapApp = mapApp;
 
     // TODO: Change to save_data_default when done testing.
     let hasSavedData = mapApp.loadFromLocalStorage(saveString);
-    if (!hasSavedData) {console.log('First run detected!')}
+    if (!hasSavedData) {
+        console.log('First run detected!');
+    }
     mapApp.load(mapApp.settings.map);
     mapApp.interman = new InteractivityManager(mapApp);
+    mapApp.undoman = new UndoRedoManager(mapApp);
 
     $(window).ready(() => mapApp.interman.onWindowReady());
-})
+});
 
 window.onbeforeunload = function (event) {
     //form saving request

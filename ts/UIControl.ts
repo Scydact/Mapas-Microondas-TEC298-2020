@@ -6,7 +6,10 @@ import {
     MouseMessageDisplay,
 } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
-import { MapLine } from './MapObject.js';
+import { MapLine, MapPoint, TopographicProfilePoint } from './MapObject.js';
+import { EditPane } from './EditPane.js';
+import { timers } from 'jquery';
+import { Line } from './Line.js';
 
 /**
  * * Main auxiliary class of this map application. Should be loaded once.
@@ -17,6 +20,7 @@ import { MapLine } from './MapObject.js';
 export class InteractivityManager {
     app: App;
     clickMode: ClickMode;
+    editPane: EditPane;
 
     clicking = false;
     dragging = false;
@@ -40,6 +44,10 @@ export class InteractivityManager {
             draftLine: new MapLine(this.app),
             p1: Point.ZERO(),
         },
+        topoPointTool: {
+            draftLine: new MapLine(this.app),
+            sourceLine: new MapLine(this.app),
+        }
     };
 
     out = {
@@ -50,7 +58,8 @@ export class InteractivityManager {
 
     constructor(app: App) {
         this.app = app;
-        this.clickMode = new ClickMode(this.app);
+        this.clickMode = new ClickMode(app);
+        this.editPane = new EditPane(app);
     }
 
     /**
@@ -65,11 +74,7 @@ export class InteractivityManager {
         }
 
         // Set mouse pointer to 'move' if dragging
-        if (this.dragging) {
-            $(this.app.canvas).addClass('move');
-        } else {
-            $(this.app.canvas).removeClass('move');
-        }
+        $(this.app.canvas).toggleClass('move', this.dragging);
 
         // Update mousePos / coordPos global vars
         this.updateAllMousePoints(newPoint);
@@ -80,6 +85,28 @@ export class InteractivityManager {
         lineList
             .getCloseToScreenPoint(newPoint, this.hoverDistance)
             .forEach((e) => (e.state.hover = true));
+        lineList.updateNode();
+
+        let pointList = this.app.objectList.point;
+        pointList.setState('hover', false);
+        pointList
+            .getCloseToScreenPoint(newPoint, this.hoverDistance)
+            .forEach((e) => (e.state.hover = true));
+        pointList.updateNode();
+
+        switch (this.clickMode.mode) {
+            case 'setLinePoint1':
+                break;
+            case 'setLinePoint2':
+                break;
+            case 'setPointMarker':
+                break;
+            case 'setTopographicPoint': {
+                let tpt = this.temp.topoPointTool;
+                tpt.draftLine.l.p2 = 
+                    Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
+            }
+        }
 
         // Final draw
         this.app.draw();
@@ -97,7 +124,10 @@ export class InteractivityManager {
 
         // Snap point
         let snapPoint = newPoint;
+        // TODO: find snap conditions and place them here
         pointList.screenSnap.assign(snapPoint);
+        let canvasSnap = this.app.screenPointToCanvasPoint(snapPoint);
+        pointList.canvasSnap.assign(canvasSnap);
     }
 
     handlerScreenPointClick(newPoint: Point) {
@@ -106,30 +136,71 @@ export class InteractivityManager {
 
         if (!this.dragging) {
             switch (this.clickMode.mode) {
-                case 'setLinePoint1':
-                    this.temp.lineTool.p1 = this.app.screenPointToCanvasPoint(
-                        mouse.screenSnap
-                    );
+                case 'setLinePoint1': {
+                    this.temp.lineTool.p1 = mouse.canvasSnap.copy();
+                    this.temp.lineTool.draftLine.app = this.app;
+                    this.temp.lineTool.draftLine.l.p1 = this.temp.lineTool.p1;
+                    this.temp.lineTool.draftLine.l.p2 = mouse.canvasSnap;
                     this.clickMode.set('setLinePoint2');
                     this.out.topMsgBar.set('Click en el 2do punto de la linea');
                     break;
-                case 'setLinePoint2':
+                }
+                case 'setLinePoint2': {
                     let p1 = this.temp.lineTool.p1.copy();
-                    let p2 = mouse.canvas.copy();
+                    let p2 = mouse.canvasSnap.copy();
                     let m = MapLine.fromPoints(p1, p2, this.app);
                     m.state.active = true;
                     this.app.objectList.line.add(m);
                     this.clickMode.clear();
                     break;
-
-                default:
-                    let lineList = this.app.objectList.line;
-                    if (!this.modifier.shift) {lineList.setState('active', false)}
-                    lineList
-                        .getCloseToScreenPoint(newPoint, this.hoverDistance)
-                        .forEach((e) => (e.state.active = true));
+                }
+                case 'setPointMarker': {
+                    let m = MapPoint.fromPoint(
+                        mouse.canvasSnap.copy(),
+                        this.app
+                    );
+                    m.state.active = true;
+                    this.app.objectList.point.add(m);
+                    this.clickMode.clear;
                     break;
+                }
+                case 'setTopographicPoint': {
+                    let hTxt = prompt('Altura de punto: ', '');
+                    if (hTxt) {
+                        let h = parseFloat(hTxt);
+                        let targetLine = this.temp.topoPointTool.sourceLine;
+
+                        targetLine.topoPoints.add(
+                            TopographicProfilePoint.fromCanvasPoint(
+                                targetLine,
+                                mouse.canvasSnap.copy(),
+                                h
+                            )
+                        )
+                        // TODO: Remove these comments
+                        // let tpt = this.temp.topoPointTool;
+                        // tpt.draftLine.l.p2 = 
+                        //     Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
+                        //temp.topo.add(screenToMapPos(snapPos), h);
+                    }
+                    break;
+                }
+
+                default: {
+                    this.app.objectListList.forEach((e) => {
+                        if (!this.modifier.shift) {
+                            e.setState('active', false);
+                        }
+                        e
+                            .getCloseToScreenPoint(newPoint, this.hoverDistance)
+                            .forEach((e) => (e.state.active = true));
+                            
+                        e.updateNode();
+                    });
+                    break;
+                }
             }
+            this.editPane.selfUpdate();
         }
 
         // Clear clicking (this is a mouse up) and dragging tags
@@ -166,11 +237,9 @@ export class InteractivityManager {
                 break;
 
             case 'DELETE':
-                // mapLineList.deleteActive();
-                // mapLineList.updateNode();
-
-                // mapPointList.deleteActive();
-                // mapPointList.updateNode();
+                this.app.objectList.line.toolbox.deleteElement(true);
+                this.app.objectList.point.toolbox.deleteElement(true);
+                this.editPane.selfUpdate();
                 break;
 
             case 'L':
@@ -178,8 +247,7 @@ export class InteractivityManager {
                 break;
 
             case 'P':
-                //mapPointList.toolBox.createElement();
-                //createPointFun();
+                this.app.objectList.point.toolbox.createElement();
                 break;
         }
 
@@ -341,7 +409,9 @@ export class InteractivityManager {
         $('#toolLine').on('click', () =>
             this.app.objectList.line.toolbox.createElement()
         );
-        $('#toolPoint').on('click', () => this.clickMode.set('setPointMarker'));
+        $('#toolPoint').on('click', () =>
+            this.app.objectList.point.toolbox.createElement()
+        );
 
         //#endregion
     }
