@@ -1,0 +1,11 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "ES6",
+        "outDir": "./build",
+        "sourceMap": true,
+        "module": "ESNext",
+        "lib": ["dom", "es2017"]
+    }
+    
+}

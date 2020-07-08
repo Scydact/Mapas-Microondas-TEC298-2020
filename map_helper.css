@@ -236,23 +236,23 @@ div:hover>tooltip {
     backdrop-filter : blur(7px);
 }
 
-.lineList {
+.objectList {
     background-color: rgba(0, 0, 0, 20%);
     border-radius   : 3px;
     padding         : 0.5em;
     margin-top      : 0.5em;
 }
 
-.lineList p {
+.objectList p {
     margin: 0;
 }
 
-.lineList:hover,
-.lineList.hover {
+.objectList:hover,
+.objectList.hover {
     background-color: rgba(0, 0, 0, 30%);
 }
 
-.lineList.active {
+.objectList.active {
     background-color: rgba(17, 3, 143, 0.3);
 }
 
