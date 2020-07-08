@@ -182,7 +182,7 @@ export class App {
         this.objectList.point.draw(context);
     }
 }
-let saveString = 'saved_data_test';
+let saveString = 'saved_data_default';
 $(document).ready(function () {
     let mapApp = new App();
     window.mapApp = mapApp;

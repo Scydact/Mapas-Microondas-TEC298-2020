@@ -245,7 +245,7 @@ export class App {
     }
 }
 
-let saveString = 'saved_data_test';
+let saveString = 'saved_data_default';
 
 $(document).ready(function () {
     let mapApp = new App();
