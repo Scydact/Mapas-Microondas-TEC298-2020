@@ -340,8 +340,8 @@ body {
 .pane {
     background: white;
     padding: var(--padding-pane);
-    min-width: 15rem;
     display: none;
+    min-width: 25rem;
     box-shadow: var(--shadow);
 }
 
