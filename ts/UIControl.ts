@@ -348,25 +348,25 @@ export class InteractivityManager {
         '#editionWrapper',
     ];
 
-    /**
-     * Close all panes on PaneIdList
-     */
-    paneCloseAll() {
-        this.PaneIdList.forEach((e) => $(e).addClass('disabled'));
-    }
-    /**
-     * Toggles an specific pane
-     * @param selector Selector of the pane to close
-     */
-    togglePane(selector: string) {
-        let j = $(selector);
-        if (j.hasClass('disabled')) {
-            this.paneCloseAll();
-            j.removeClass('disabled');
-        } else {
-            this.paneCloseAll();
-        }
-    }
+    // /**
+    //  * Close all panes on PaneIdList
+    //  */
+    // paneCloseAll() {
+    //     this.PaneIdList.forEach((e) => $(e).addClass('disabled'));
+    // }
+    // /**
+    //  * Toggles an specific pane
+    //  * @param selector Selector of the pane to close
+    //  */
+    // togglePane(selector: string) {
+    //     let j = $(selector);
+    //     if (j.hasClass('disabled')) {
+    //         this.paneCloseAll();
+    //         j.removeClass('disabled');
+    //     } else {
+    //         this.paneCloseAll();
+    //     }
+    // }
 
     onWindowReady() {
         let app = this.app;
@@ -441,26 +441,39 @@ export class InteractivityManager {
 
         //#region Side panes
 
-        $('#openSettings').on('click', function () {
-            // These things should be managed by Settings.ts
-            //mapMeta.loadToSetup();
-            //$('#snapCheckbox').prop('checked', snapEnabled);
-            T.togglePane('#settingsWrapper');
-        });
+        // $('#openSettings').on('click', function () {
+        //     // These things should be managed by Settings.ts
+        //     //mapMeta.loadToSetup();
+        //     //$('#snapCheckbox').prop('checked', snapEnabled);
+        //     $('#settingsWrapper').toggleClass('disabled');
+        //     $('#openSettings').toggleClass('active', !$('#settingsWrapper').hasClass('disabled'));
+        // });
 
-        $('#openLinePane').on('click', function () {
-            T.togglePane('#linesWrapper');
-        });
-        //mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
+        // $('#openEditionPane').on('click', function () {
+        //     $('#editionWrapper').toggleClass('disabled');
+        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
+        // });
 
-        $('#openPointPane').on('click', function () {
-            T.togglePane('#pointsWrapper');
-        });
-        //mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
+        // $('#openElementsPane').on('click', function() {
+        //     $('#editionWrapper').toggleClass('disabled');
+        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
+        // })
 
-        $('#openEditionPane').on('click', function () {
-            T.togglePane('#editionWrapper');
-        });
+        // //#endregion
+
+        // //#region Object list panes
+        
+        // $('#openLinePane').on('click', function () {
+        //     $('#linesWrapper').toggleClass('disabled');
+        //     $('#openLinePane').toggleClass('active', !$('#linesWrapper').hasClass('disabled'));
+        // });
+        // //mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
+
+        // $('#openPointPane').on('click', function () {
+        //     $('#pointsWrapper').toggleClass('disabled');
+        //     $('#openPointPane').toggleClass('active', !$('#pointsWrapper').hasClass('disabled'));
+        // });
+        // //mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
 
         //#endregion
 

@@ -121,6 +121,7 @@ export class InteractivityManager {
         pointList.canvas.assign(canvasPoint);
         // Snap point
         let snapPoint = newPoint;
+        let snapEnabled = this.app.settings.snap;
         var outObject = { snapObject: null, snapMessage: null, snapObjectType: null };
         let hoverList = this._getCurrentHover();
         /**
@@ -131,7 +132,8 @@ export class InteractivityManager {
         let snapObject = null;
         if (hoverList.point.length) {
             let tempP = hoverList.point[0].p;
-            snapPoint = this.app.canvasPointToScreenPoint(tempP);
+            if (snapEnabled)
+                snapPoint = this.app.canvasPointToScreenPoint(tempP);
             outObject.snapMessage = '[Snap a punto]';
             outObject.snapObject = hoverList.point[0];
             outObject.snapObjectType = 'point';
@@ -139,7 +141,8 @@ export class InteractivityManager {
         else if (hoverList.line.length) {
             let tempL = hoverList.line[0].l;
             let tempP = Line.PointProjection(tempL, canvasPoint);
-            snapPoint = this.app.canvasPointToScreenPoint(tempP);
+            if (snapEnabled)
+                snapPoint = this.app.canvasPointToScreenPoint(tempP);
             outObject.snapMessage = '[Snap a linea]';
             outObject.snapObject = hoverList.line[0];
             outObject.snapObjectType = 'line';
@@ -187,11 +190,6 @@ export class InteractivityManager {
                         let h = parseFloat(hTxt);
                         let targetLine = this.temp.topoPointTool.sourceLine;
                         targetLine.topoPoints.add(TopographicProfilePoint.fromCanvasPoint(targetLine, mouse.canvasSnap.copy(), h));
-                        // TODO: Remove these comments
-                        // let tpt = this.temp.topoPointTool;
-                        // tpt.draftLine.l.p2 = 
-                        //     Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
-                        //temp.topo.add(screenToMapPos(snapPos), h);
                     }
                     break;
                 }
@@ -284,26 +282,25 @@ export class InteractivityManager {
         let x = evt.originalEvent.changedTouches[0];
         return new Point(x.clientX, x.clientY);
     }
-    /**
-     * Close all panes on PaneIdList
-     */
-    paneCloseAll() {
-        this.PaneIdList.forEach((e) => $(e).addClass('disabled'));
-    }
-    /**
-     * Toggles an specific pane
-     * @param selector Selector of the pane to close
-     */
-    togglePane(selector) {
-        let j = $(selector);
-        if (j.hasClass('disabled')) {
-            this.paneCloseAll();
-            j.removeClass('disabled');
-        }
-        else {
-            this.paneCloseAll();
-        }
-    }
+    // /**
+    //  * Close all panes on PaneIdList
+    //  */
+    // paneCloseAll() {
+    //     this.PaneIdList.forEach((e) => $(e).addClass('disabled'));
+    // }
+    // /**
+    //  * Toggles an specific pane
+    //  * @param selector Selector of the pane to close
+    //  */
+    // togglePane(selector: string) {
+    //     let j = $(selector);
+    //     if (j.hasClass('disabled')) {
+    //         this.paneCloseAll();
+    //         j.removeClass('disabled');
+    //     } else {
+    //         this.paneCloseAll();
+    //     }
+    // }
     onWindowReady() {
         let app = this.app;
         let canvas = this.app.canvas;
@@ -354,23 +351,33 @@ export class InteractivityManager {
         });
         //#endregion
         //#region Side panes
-        $('#openSettings').on('click', function () {
-            // These things should be managed by Settings.ts
-            //mapMeta.loadToSetup();
-            //$('#snapCheckbox').prop('checked', snapEnabled);
-            T.togglePane('#settingsWrapper');
-        });
-        $('#openLinePane').on('click', function () {
-            T.togglePane('#linesWrapper');
-        });
-        //mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
-        $('#openPointPane').on('click', function () {
-            T.togglePane('#pointsWrapper');
-        });
-        //mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
-        $('#openEditionPane').on('click', function () {
-            T.togglePane('#editionWrapper');
-        });
+        // $('#openSettings').on('click', function () {
+        //     // These things should be managed by Settings.ts
+        //     //mapMeta.loadToSetup();
+        //     //$('#snapCheckbox').prop('checked', snapEnabled);
+        //     $('#settingsWrapper').toggleClass('disabled');
+        //     $('#openSettings').toggleClass('active', !$('#settingsWrapper').hasClass('disabled'));
+        // });
+        // $('#openEditionPane').on('click', function () {
+        //     $('#editionWrapper').toggleClass('disabled');
+        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
+        // });
+        // $('#openElementsPane').on('click', function() {
+        //     $('#editionWrapper').toggleClass('disabled');
+        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
+        // })
+        // //#endregion
+        // //#region Object list panes
+        // $('#openLinePane').on('click', function () {
+        //     $('#linesWrapper').toggleClass('disabled');
+        //     $('#openLinePane').toggleClass('active', !$('#linesWrapper').hasClass('disabled'));
+        // });
+        // //mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
+        // $('#openPointPane').on('click', function () {
+        //     $('#pointsWrapper').toggleClass('disabled');
+        //     $('#openPointPane').toggleClass('active', !$('#pointsWrapper').hasClass('disabled'));
+        // });
+        // //mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
         //#endregion
         //#region Tool buttons
         $('#toolPointer').on('click', (e) => this.clickMode.clear());

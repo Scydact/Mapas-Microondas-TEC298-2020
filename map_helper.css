@@ -1,7 +1,41 @@
+:root {
+    font-family: 'Open Sans' ,'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: medium;
+
+    --text-primary: #333;
+    --text-secondary: #555;
+    --bg-primary: #fff;
+    --bg-secondary: #ddd;
+
+    --bg-toolbox: #222;
+    --text-toolbox: #eee;
+    --bg-toolbox-hover: #444;
+
+    --bg-active: rgb(53, 103, 240);
+    --text-active: white;
+
+    --border-radius-toolbox: 1.35rem;
+    --width-toolbox: 2.7rem; 
+    --shadow: 0 0 .5rem rgba(0,0,0,70%);
+
+    --bg-rightpane: #222;
+    --text-rightpane: #eee;
+    --bg-rightpane-hover: #444;
+    --padding-pane: 1.2rem;
+
+    --border-radius-tab: .5rem;
+    --bg-tab-inactive: rgba(0,0,0,10%);
+    --bg-tab-hover: rgba(0,0,0,15%);
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
+    color: black;
     padding    : 0;
     margin     : 0;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     user-select: none;
 }
 
@@ -12,15 +46,6 @@ body {
     left    : 0;
     width   : 100%;
     height  : 100%;
-}
-
-#baseImage {
-    display: none;
-}
-
-#image_canvas {
-    width : 100%;
-    height: 100%;
 }
 
 #statusBarWrapper {
@@ -94,63 +119,97 @@ body {
     background-color: rgb(113, 103, 253);
 }
 
-/* Tooltip */
-tooltip {
-    visibility      : hidden;
-    background-color: #555;
-    color           : #fff;
-    text-align      : center;
-    border-radius   : 3px;
-
-    padding   : 0.3rem;
-    position  : absolute;
-    z-index   : 1;
-    box-sizing: border-box;
-
-    /* bottom: 125%;
-    margin-left: -60px; */
-    left: calc(100% + 0.3rem);
-
-    opacity         : 0;
-    transition      : opacity 0.3s;
-    transition-delay: 1.5s;
-}
-
-/* tooltip::after {
-    content: "";
+/* Tools */
+.floatingButtonWrapper {
     position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: #555 transparent transparent transparent;
-} */
-
-div:hover>tooltip {
-    visibility: visible;
-    opacity   : 1;
+    padding: 0;
+    margin: var(--border-radius-toolbox);
+    min-width: var(--width-toolbox);
+    transition: width 200ms ease;
+    box-shadow: var(--shadow);
+    border-radius: var(--border-radius-toolbox);
 }
 
-
-/* Button wrappers */
-.ButtonWrapper {
-    position: absolute;
+.floatingButton {
+    color: var(--text-toolbox);
+    background: var(--bg-toolbox);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--width-toolbox);
+    width: 100%;
 }
 
-#zoomButtonWrapper {
-    bottom: 2px;
-    right : 2px;
+.floatingButton:first-child {
+    border-top-left-radius: var(--border-radius-toolbox);
+    border-top-right-radius: var(--border-radius-toolbox);
+}
+.floatingButton:last-child {
+    border-bottom-left-radius: var(--border-radius-toolbox);
+    border-bottom-right-radius: var(--border-radius-toolbox);
 }
 
-#dialogButtonWrapper {
-    top  : 2px;
-    right: 2px;
+.floatingButton:hover {
+    background-color: var(--bg-toolbox-hover);
+}
+
+.floatingButton:active,
+.floatingButton.active {
+    color: var(--text-active);
+    background-color: var(--bg-active);
 }
 
 #toolBoxWrapper {
-    top : 5px;
-    left: 5px;
+    top: 0;
+    left: 0;
+    width: var(--width-toolbox);
+}
+
+.toolBtn {
+    display: grid;
+    grid-template-columns: var(--width-toolbox) auto;
+    grid-template-rows: 100%;
+    align-items: center;
+    justify-content: left;
+
+    height: var(--width-toolbox);
+    padding: 0;
+    margin: 0;
+
+}
+
+.toolBtn i {
+
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: center;
+}
+
+.toolbox-text {
+    display: none;
+    padding-right: 1.5rem;
+    grid-row: 1;
+    grid-column: 2;
+}
+
+/* On toolbar hover, expand and show tools */
+#toolBoxWrapper:hover {
+    width: 7.5rem;
+}
+
+#toolBoxWrapper:hover .toolbox-text {
+    display: block;
+}
+
+#zoomButtonWrapper {
+    bottom: 0;
+    left : 0;
+}
+
+/* #dialogButtonWrapper {
+    top  : 2px;
+    right: 2px;
 }
 
 .divBtn {
@@ -175,21 +234,225 @@ div:hover>tooltip {
 
 .divBtn.active {
     background: rgb(182, 177, 255);
+} 
+
+.pane {
+    position  : absolute;
+    top       : 0px;
+    right     : 0px;
+    box-sizing: border-box;
+    height    : 100vh;
+    min-width : 25rem;
+    overflow-y: auto;
+
+    padding         : 1rem 5rem 2rem 1.5rem;
+    background-color: rgba(238, 238, 238, 0.8);
+    backdrop-filter : blur(7px);
+}
+*/
+/* Panes */
+.rightPaneWrapper {
+    position: fixed;
+    top: 0;
+    right: 0;
+
+    height: 100vh;
+
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto;
 }
 
+.rightPaneNav {
+    height: 100%;
+    width: var(--width-toolbox);
+    color: var(--text-rightpane);
+    background: var(--bg-rightpane);
+    box-shadow: var(--shadow);
 
+    grid-column: 2;
+    grid-row: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: width 200ms ease;
+}
+
+.rightPaneNav i {
+    font-size: 1.25rem;
+    justify-self: center;
+    grid-column: 2;
+}
+
+.rightPaneItem {
+    width: 100%;
+    height: 5rem;
+    display: grid;
+    grid-template-columns: auto var(--width-toolbox);
+    align-items: center;
+    justify-content: end;
+    overflow: hidden;
+}
+
+.rightPaneItem:hover {
+    background-color: var(--bg-rightpane-hover);
+}
+
+.rightPaneItem:active,
+.rightPaneItem.active {
+    color: var(--text-active);
+    background-color: var(--bg-active);
+}
+
+.rightPaneItem:last-child {
+    margin-top: auto;
+}
+
+/* .rightPaneItem>span {
+    display: none;
+} */
+
+.rightPaneNav:hover {
+    width: 10rem;
+}
+
+.rightPaneNav:hover .rightPaneItem>span {
+    display: block;
+    text-align: right;
+}
+
+/* Right menu panes */
+.rightPaneContent {
+    height: 100%;
+
+    grid-column: 1;
+    grid-row: 1;
+
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+
+    display: grid;
+
+}
+
+/* Actual panes */
+.pane {
+    background: white;
+    padding: var(--padding-pane);
+    min-width: 15rem;
+    display: none;
+    box-shadow: var(--shadow);
+}
+
+.pane.active {
+    display: block;
+}
+
+/* Tabs */
+.tabcontainer {
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+}
+.tabcontainer.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.tabcontent {
+    flex-grow: 1;
+}
+
+.tabcontainer > .tabcontent,
+.tabcontainer > .tablinkContainer {
+    width: 100%;
+}
+
+.tabcontainer  > h1, 
+.tabcontent {
+    padding: 0 var(--padding-pane) var(--padding-pane) var(--padding-pane);
+}
+
+.tablinkContainer {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-rows: 1fr;
+    grid-auto-flow: column;
+    position: relative;
+}
+.tablinkContainer::after {
+    position: absolute;
+    content: '';
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--bg-tab-inactive);
+}
+
+.tablink {
+    justify-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: .7rem 0 0.3rem 0;
+    
+    border: 1px solid var(--bg-tab-inactive);
+    border-bottom: none;
+
+    border-top-left-radius: var(--border-radius-tab);
+    border-top-right-radius: var(--border-radius-tab);
+}
+.tablink:first-child {
+    border-top-left-radius: 0;
+}
+.tablink:last-child {
+    border-top-right-radius: 0;
+}
+
+.tablink.active {
+    border-bottom: 1px solid var(--bg-primary);
+    z-index: 2;
+}
+.tablink:not(.active) {
+    background-color: var(--bg-tab-inactive);
+    z-index: 0;
+}
+.tablink:not(.active):hover {
+    background-color: var(--bg-tab-hover);
+}
+
+.tabcontent {
+    display: none;
+}
+.tabcontent.active {
+    display: flex;
+    flex-direction: column;
+    align-content: stretch;
+    }
+
+
+
+
+
+
+/* Msg boxes and app content */
 #mouseMsg {
     position      : absolute;
     pointer-events: none;
     background    : white;
-    border-radius : 3px;
+    border-radius : 1rem;
+    padding: .25rem;
+    min-height: 1rem;
     transform     : translate(3px, 3px);
+    box-shadow: var(--shadow);
 }
 
 #mouseMsg>p {
     margin: 0.25em 0.5em;
 }
-
 
 #editionContentWrapper:empty {
     text-align: center;
@@ -217,23 +480,9 @@ div:hover>tooltip {
 
 
 
-
+/* Used by the app */
 .disabled {
     display: none !important;
-}
-
-.pane {
-    position  : absolute;
-    top       : 0px;
-    right     : 0px;
-    box-sizing: border-box;
-    height    : 100vh;
-    min-width : 25rem;
-    overflow-y: auto;
-
-    padding         : 1rem 5rem 2rem 1.5rem;
-    background-color: rgba(238, 238, 238, 0.8);
-    backdrop-filter : blur(7px);
 }
 
 .objectList {

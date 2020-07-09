@@ -5,19 +5,20 @@
     <meta name=viewport content="width=device-width, user-scalable=no" , initial-scale=1.0>
     <meta charset=UTF-8>
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital@0;1&display=swap" rel="stylesheet">
     <link rel=stylesheet href=map_helper.css>
     <link rel=stylesheet href=cursor_modes.css>
 
     <script src=https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js></script>
     <script src="https://kit.fontawesome.com/636bd4a313.js" crossorigin="anonymous"></script>
     <script src="jscolor.js"></script>
-<!-- 
+    <!-- 
     <script src=map_helper.js></script>
     <script src=map_loader.js></script>
     <script src=map_draw.js></script>
     <script src=ui_control.js></script>
      -->
-     <script type="module" src=./build/App.js></script>
+    <script type="module" src=./build/App.js></script>
 </head>
 
 <body>
@@ -31,153 +32,87 @@
         <div id=colorFilter></div>
         <div id=mouseMsg></div>
 
-        <div id=settingsWrapper class='disabled pane'>
-            <h1>Configuracion</h1>
-            <p id=versionDisplay style="font-size: small;">v0.0</p>
-            <div id=settings>
-                <div name=mapa>
-                    <h2>Mapa</h2>
+        <div class='rightPaneWrapper'>
 
-                    <label for=map-select>Mapa: </label>
-                    <select id="map-select">
-                        <option value="azua">Azua</option>
-                        <option value="constanza">Constanza</option>
-                        <option value="hato_mayor">Hato Mayor</option>
-                        <option value="jarabacoa">Jarabacoa</option>
-                        <option value="puerto_plata">Puerto Plata</option>
-                    </select>
+            <div class=rightPaneContent>
+
+                <!-- Edition menu -->
+                <div id=editionWrapper class='pane'>
+                    <h1>Edicion (Propiedades)</h1>
+                    <div id=editionContentWrapper class=scroll></div>
                 </div>
 
-                <div name=debug class=disabled>
-                    <br>
-                    <label>1m(px): </label>
-                    <input type="number" id=one-metre-px step=any>
-                    <input type=button id=one-metre-px-def value=Pick>
-
-                    <br>
-
-                    <div>
-                        <h2>Punto arriba-izquierda</h2>
-                        <label>Punto:</label>
-                        <input type=number id=up-left-pos-x>
-                        <input type=number id=up-left-pos-y>
-                        <input type=button id=up-left-set-btn value=Pick>
-                        <br>
-
-                        <label for=up-left-long>Longitud:</label>
-                        <input type=number step=any id=up-left-long>
-                        <br>
-
-                        <label for=up-left-lat>Latitud:</label>
-                        <input type=number step=any id=up-left-lat>
-                        <br>
+                <!-- Tool menus -->
+                <div id=elementsWrapper class='pane tabcontainer'>
+                    <h1>Lista de objectos</h1>
+                    <div class="tablinkContainer">
+                        <div id=openLinePane class=tablink openElement="linesWrapper">
+                            <i class="fas fa-pencil-ruler"></i>
+                            <span> Lineas</span>
+                        </div>
+                        <div id=openPointPane class=tablink openElement="pointsWrapper">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span> Puntos</span>
+                        </div>
                     </div>
 
-                    <div>
-                        <h2>Punto abajo-derecha</h2>
-                        <label>Punto:</label>
-                        <input type=number id=down-right-pos-x>
-                        <input type=number id=down-right-pos-y>
-                        <input type=button id=down-right-set-btn value=Pick>
-                        <br>
-
-                        <label for=down-right-long>Longitud:</label>
-                        <input type=number step=any id=down-right-long>
-                        <br>
-
-                        <label for=down-right-lat>Latitud:</label>
-                        <input type=number step=any id=down-right-lat>
-                        <br>
+                    <div id=linesWrapper class='tabcontent'>
+                        <h2>Lineas</h2>
+                        <div id=lineListButtonWrapper></div>
+                        <div id=lineListWrapper class='listContainer scroll'></div>
                     </div>
-                    <br>
-                    <input type=button id=set-ok-btn value=Ok>
-                    <input type=button id=set-cancel-btn value=Cancel>
-                    <input type=button id=dev-json-vals value=Json>
+
+                    <div id=pointsWrapper class='tabcontent'>
+                        <h2>Puntos</h2>
+                        <div id=pointListButtonWrapper></div>
+                        <div id=pointListWrapper class='listContainer scroll'></div>
+                    </div>
                 </div>
 
-                <div name=snap>
-                    <h2>Snap</h2>
-                    <label for=snapCheckbox>Snap: </label>
-                    <input id=snapCheckbox type=checkbox checked=true>
+                <!-- Config menu -->
+                <div id=settingsWrapper class='pane'>
+                    <h1>Configuración</h1>
+                    <p id=versionDisplay style="font-size: small;">v0.0</p>
+                    <div id=settings></div>
                 </div>
 
-                <div name=filtro>
-                    <h2>Filtro</h2>
-                    <label for=filterColor>Color: </label>
-                    <input id=filterColor>
-
-                    <br>
-
-                    <label for=filterMode>Blend: </label>
-                    <select id="filterMode" value=multiply>
-                        <option value="multiply">multiply</option>
-                        <option value="normal">normal</option>
-                        <option value="screen">screen</option>
-                        <option value="overlay">overlay</option>
-                        <option value="darken">darken</option>
-                        <option value="lighten">lighten</option>
-                        <option value="color-dodge">color-dodge</option>
-                        <option value="color-burn">color-burn</option>
-                        <option value="hard-light">hard-light</option>
-                        <option value="soft-light">soft-light</option>
-                        <option value="difference">difference</option>
-                        <option value="exclusion">exclusion</option>
-                        <option value="hue">hue</option>
-                        <option value="saturation">saturation</option>
-                        <option value="color">color</option>
-                        <option value="luminosity">luminosity</option>
-                    </select>
-
-                </div>
             </div>
-        </div>
 
-        <!-- Tool menus -->
-        <div id=linesWrapper class='disabled pane'>
-            <h1>Lineas</h1>
-            <div id=lineListButtonWrapper></div>
-            <div id=lineListWrapper class='listContainer scroll'></div>
-        </div>
-
-        <div id=pointsWrapper class='disabled pane'>
-            <h1>Puntos</h1>
-            <div id=pointListButtonWrapper></div>
-            <div id=pointListWrapper class='listContainer scroll'></div>
-        </div>
-
-        <div id=editionWrapper class='disabled pane'>
-            <h1>Edicion (Propiedades)</h1>
-            <div id=editionContentWrapper class=scroll></div>
-        </div>
-
-
-
-        <!-- Tool pane buttons -->
-        <div id=dialogButtonWrapper class=ButtonWrapper>
-            <div id=openSettings class=divBtn><i class="fas fa-cog"></i>Mapa</div>
-            <div id=openLinePane class=divBtn><i class="fas fa-pencil-ruler"></i>Lineas</div>
-            <div id=openPointPane class=divBtn><i class="fas fa-map-marker-alt"></i>Puntos</div>
-            <div id=openEditionPane class=divBtn><i class="fas fa-edit"></i>Editar</div>
+            <!-- Tool pane buttons -->
+            <div class=rightPaneNav>
+                <div id=openEditionPane class=rightPaneItem><span>Propiedades</span><i class="fas fa-edit"></i></div>
+                <div id=openElementsPane class=rightPaneItem><span>Elementos</span><i class="fas fa-list-ul"></i></div>
+                <div id=openSettingsPane class=rightPaneItem><span>Configuración</span><i class="fas fa-cog"></i></div>
+            </div>
         </div>
 
         <!-- Toolbox -->
-        <div id=toolBoxWrapper class=ButtonWrapper>
-            <div id=toolPointer class='divBtn toolBtn'>
+        <div id=toolBoxWrapper class='floatingButtonWrapper'>
+            <div id=toolPointer class='toolBtn floatingButton'>
                 <i class="fas fa-mouse-pointer"></i>
-                <tooltip>Cursor</tooltip>
+                <span class=toolbox-text>Cursor</span>
             </div>
-            <div id=toolLine class='divBtn toolBtn'>
+            <div id=toolLine class='toolBtn floatingButton'>
                 <i class="fas fa-pencil-ruler"></i>
-                <tooltip>Linea</tooltip>
+                <span class=toolbox-text>Linea</span>
             </div>
-            <div id=toolPoint class='divBtn toolBtn'>
+            <div id=toolPoint class='toolBtn floatingButton'>
                 <i class="fas fa-map-marker-alt"></i>
-                <tooltip>Punto</tooltip>
+                <span class=toolbox-text>Punto</span>
             </div>
-            <div id=toolPoly class='divBtn toolBtn disabled'>
-                <i class="fas fa-draw-polygon"></i>
-                <tooltip>Poly</tooltip>
-            </div>
+
+
+            <!-- <li class=toolbox-item>
+                    <div id=toolPoly class='toolBtn floatingButton disabled'>
+                        <i class="fas fa-draw-polygon"></i>
+                        <span class=toolbox-text>Poly</span>
+                    </div>
+                </li> -->
+
+
+
+
+
 
         </div>
 
@@ -185,10 +120,10 @@
 
 
         <!-- Zoom buttons -->
-        <div id=zoomButtonWrapper class=ButtonWrapper>
-            <div id=zoomReset class=divBtn><i class="fas fa-compress"></i></div>
-            <div id=zoomPlus class=divBtn><i class="fas fa-plus" style="font-size: 0.7em;"></i></div>
-            <div id=zoomMinus class=divBtn><i class="fas fa-minus" style="font-size: 0.7em;"></i></div>
+        <div id=zoomButtonWrapper class=floatingButtonWrapper>
+            <div id=zoomReset class='floatingButton'><i class="fas fa-compress"></i></div>
+            <div id=zoomPlus class='floatingButton'><i class="fas fa-plus" style="font-size: 0.75em;"></i></div>
+            <div id=zoomMinus class='floatingButton'><i class="fas fa-minus" style="font-size: 0.75em;"></i></div>
         </div>
 
         <!-- Others -->

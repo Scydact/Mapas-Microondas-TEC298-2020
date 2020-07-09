@@ -4,42 +4,51 @@ import { ObjectAssignProperty, createElement, createLabel, titleCase, createSele
  */
 export class Settings {
     constructor() {
-        this.version = 1.1;
+        this.version = 1.2;
         this.map = 'hato_mayor';
         this.snap = true;
-        this.openPanes = {
+        this.paneState = {
             config: false,
-            line: false,
-            point: false,
+            elements: false,
+            selectedElement: 0,
             edit: false,
         };
+        //#region Pane managers
+        this.panes = {
+            config: new PaneButtonPair($('#settingsWrapper')[0], $('#openSettingsPane')[0]),
+            elements: new PaneButtonPair($('#elementsWrapper')[0], $('#openElementsPane')[0]),
+            edit: new PaneButtonPair($('#editionWrapper')[0], $('#openEditionPane')[0]),
+        };
+        this.elementTabs = new TabCollection([
+            new PaneButtonPair($('#linesWrapper')[0], $('#openLinePane')[0]),
+            new PaneButtonPair($('#pointsWrapper')[0], $('#openPointPane')[0]),
+        ]);
         /**
          * List of all the functions that will be notified when a property changes via .prop()
          */
         this.eventHandlerList_PropertyChanged = [];
     }
+    //#endregion
     /** Gets the state of the panes and saves them */
     getOpenPanes() {
-        let op = this.openPanes;
-        op.config = !$('#settingsWrapper').hasClass('disabled');
-        op.line = !$('#linesWrapper').hasClass('disabled');
-        op.point = !$('#pointsWrapper').hasClass('disabled');
-        op.edit = !$('#editionWrapper').hasClass('disabled');
+        let op = this.paneState;
+        let p = this.panes;
+        let et = this.elementTabs;
+        op.config = p.config.get();
+        op.elements = p.elements.get();
+        op.selectedElement = et.get();
+        op.edit = p.edit.get();
         return op;
     }
     /** Sets the state of the panes to HTML */
     setOpenPanes() {
-        [
-            '#settingsWrapper',
-            '#linesWrapper',
-            '#pointsWrapper',
-            '#editionWrapper',
-        ].forEach((e) => $(e).addClass('disabled'));
-        let op = this.openPanes;
-        $('#settingsWrapper').toggleClass('disabled', !op.config);
-        $('#linesWrapper').toggleClass('disabled', !op.line);
-        $('#pointsWrapper').toggleClass('disabled', !op.point);
-        $('#editionWrapper').toggleClass('disabled', !op.edit);
+        let op = this.paneState;
+        let p = this.panes;
+        let et = this.elementTabs;
+        p.config.set(op.config);
+        p.elements.set(op.elements);
+        et.set(op.selectedElement);
+        p.edit.set(op.edit);
         return true;
     }
     /**
@@ -147,6 +156,69 @@ export class Settings {
 Settings.dataProperties = [
     'map',
     'snap',
-    'openPanes'
+    'paneState'
 ];
+/** Manages a single Pane-Button pair that depend on each other to show/hide. */
+class PaneButtonPair {
+    constructor(pane, button, initialState) {
+        this.pane = pane;
+        this.button = button;
+        this.button.addEventListener('click', (e) => {
+            this.toggle();
+        });
+        this.set(initialState);
+    }
+    /** If true, opens the pane */
+    set(state) {
+        if (state) {
+            this.pane.classList.add('active');
+            this.button.classList.add('active');
+        }
+        else {
+            this.pane.classList.remove('active');
+            this.button.classList.remove('active');
+        }
+    }
+    /** Toggles the state of the pane */
+    toggle() {
+        this.set(!this.get());
+    }
+    /** Gets the state of the pane */
+    get() {
+        return this.pane.classList.contains('active');
+    }
+}
+/** Only allows one item in the collection to be active */
+class TabCollection {
+    constructor(PanePairs, firstOpenId) {
+        this.currentTab = 0;
+        this.tabs = PanePairs;
+        this.tabs.forEach((e, i) => {
+            e.button.addEventListener('click', (k) => {
+                this.close();
+                this.set(i);
+            });
+        });
+        let idToOpen = (firstOpenId !== undefined && firstOpenId < PanePairs.length) ? firstOpenId : 0;
+        this.set(idToOpen);
+    }
+    /** Closes all the panes */
+    close() {
+        let o = Object.values(this.tabs);
+        o.forEach((e) => {
+            e.set(false);
+        });
+    }
+    /** Opens the selected pane */
+    set(id) {
+        this.currentTab = id;
+        this.close();
+        if (this.tabs[id]) {
+            this.tabs[id].set(true);
+        }
+    }
+    get() {
+        return this.currentTab;
+    }
+}
 //# sourceMappingURL=Settings.js.map
