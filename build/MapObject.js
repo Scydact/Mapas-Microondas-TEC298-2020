@@ -10,6 +10,7 @@ export class MapObject {
             active: false,
             disabled: false,
         };
+        this.name = '';
         /**
          * If this is set to 'normal', 'hover', 'active' or 'disabled,
          * the object will be forcefully drawn using that style.
@@ -284,6 +285,9 @@ export class MapLine extends MapObject {
         x.l.p2 = p2;
         return x;
     }
+    getHoverMessageContent() {
+        return `d=${this.getLengthMetre().toFixed(2)}m`;
+    }
     toJObject() {
         let o = {
             l: this.l,
@@ -513,6 +517,10 @@ export class MapPoint extends MapObject {
         x.p.assign(p);
         return x;
     }
+    getHoverMessageContent() {
+        let position = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.p);
+        return `P @ (${position.x}, ${position.y})`;
+    }
     toJObject() {
         let o = {
             p: this.p,
@@ -572,7 +580,9 @@ export class MapPoint extends MapObject {
     }
     getListNodeElementContent(index) {
         let p = document.createElement('p');
-        p.innerHTML = `(${index + 1}) @(${this.p.x.toFixed(2)},${this.p.x.toFixed(2)})`;
+        let position = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.p);
+        p.innerHTML =
+            `(${index + 1}) @(${position.x},${position.y})`;
         return p;
     }
     getEditNodeContent() {
@@ -655,6 +665,9 @@ export class TopographicProfilePoint extends MapPoint {
         this.parentMapLine = parentMapLine;
         this.position = position;
         this.height = height;
+    }
+    getHoverMessageContent() {
+        return `d=${(this.position * this.parentMapLine.getLengthMetre()).toFixed(2)}m (linea=${this.getLengthMetre().toFixed(2)}m)`;
     }
     getCurrentStyle() {
         return this.parentMapLine.getCurrentStyle();

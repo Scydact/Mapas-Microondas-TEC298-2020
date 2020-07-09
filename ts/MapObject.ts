@@ -40,6 +40,7 @@ export abstract class MapObject implements Restorable {
         active: false,
         disabled: false,
     };
+    name = '';
 
     /**
      * If this is set to 'normal', 'hover', 'active' or 'disabled,
@@ -132,6 +133,9 @@ export abstract class MapObject implements Restorable {
         this.setState(state, !this.getState(state));
     }
     //#endregion
+
+    /** Returns the message that would display on top of  */
+    abstract getHoverMessageContent(): string;
 
     /** Returns the node that goes inside EditPane */
     abstract getEditNodeContent(): HTMLElement; // TODO: Make this an interface inside EditPane
@@ -435,6 +439,10 @@ export class MapLine extends MapObject {
         return x;
     }
 
+    getHoverMessageContent(): string {
+        return `d=${this.getLengthMetre().toFixed(2)}m`;
+    }
+
     toJObject() {
         let o = {
             l: this.l,
@@ -716,6 +724,11 @@ export class MapPoint extends MapObject {
         return x;
     }
 
+    getHoverMessageContent(): string {
+        let position = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.p);
+        return `P @ (${position.x}, ${position.y})`;
+    }
+
     toJObject(): object {
         let o = {
             p: this.p,
@@ -787,9 +800,9 @@ export class MapPoint extends MapObject {
 
     getListNodeElementContent(index) {
         let p = document.createElement('p');
-        p.innerHTML = `(${index + 1}) @(${this.p.x.toFixed(
-            2
-        )},${this.p.x.toFixed(2)})`;
+        let position = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.p);
+        p.innerHTML = 
+        `(${index + 1}) @(${position.x},${position.y})`;
         return p;
     }
 
@@ -882,6 +895,12 @@ export class TopographicProfilePoint extends MapPoint {
     position: number = 0.5;
     height: number = 0;
     parentMapLine: MapLine;
+
+    getHoverMessageContent(): string {
+        return `d=${(
+            this.position * this.parentMapLine.getLengthMetre()
+        ).toFixed(2)}m (linea=${this.getLengthMetre().toFixed(2)}m)`;
+    }
 
     getCurrentStyle() {
         return this.parentMapLine.getCurrentStyle();

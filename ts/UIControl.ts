@@ -6,7 +6,7 @@ import {
     MouseMessageDisplay,
 } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
-import { MapLine, MapPoint, TopographicProfilePoint, MapObjectList, MapLineList } from './MapObject.js';
+import { MapLine, MapPoint, TopographicProfilePoint, MapObjectList, MapLineList, MapObject } from './MapObject.js';
 import { EditPane } from './EditPane.js';
 import { timers } from 'jquery';
 import { Line } from './Line.js';
@@ -89,7 +89,7 @@ export class InteractivityManager {
         $(this.app.canvas).toggleClass('move', this.dragging);
 
         // Update mousePos / coordPos global vars
-        let snapData = this.updateAllMousePoints(newPoint, (this.clickMode.mode !== null));
+        let snapData = this.updateAllMousePoints(newPoint);
 
         // Update hover status
         this.app.objectListList.forEach((e) => {
@@ -101,10 +101,16 @@ export class InteractivityManager {
         // Display tooltip
         let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.app.mouse.canvas);
         let msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
-        if (snapData.snapMessage) {msg += '\n' + snapData.snapMessage};
+        if (snapData.snapObjectType) {
+            let snapObj = snapData.snapObject as MapObject;
+            msg += '\n' + snapObj.getHoverMessageContent();
+        };
+        if (this.app.settings.snap && snapData.snapObjectType && this.clickMode.mode) {
+            msg += snapData.snapMessage;
+        }
 
         switch (this.clickMode.mode) {
-            case 'setLinePoint1':
+            case 'setLinePoint1':                
                 break;
             case 'setLinePoint2':
                 break;
@@ -137,28 +143,28 @@ export class InteractivityManager {
 
         // Snap point
         let snapPoint = newPoint;
-        var outObject = {snapObject: null, snapMessage: null};
-        if (updateSnap) {
-            let hoverList: {line: MapLine[], point: MapPoint[]} = this._getCurrentHover() as {line: MapLine[], point: MapPoint[]};
-            /**
-             * Priority:
-             * - Point
-             * - Line
-             */
-            let snapObject = null;
-            if (hoverList.point.length) {
-                let tempP = hoverList.point[0].p;
-                snapPoint = this.app.canvasPointToScreenPoint(tempP);
-                outObject.snapMessage = '[Snap a punto]';
-                outObject.snapObject = tempP;
-            }
-            else if (hoverList.line.length) {
-                let tempL = hoverList.line[0].l;
-                let tempP = Line.PointProjection(tempL, canvasPoint);
-                snapPoint = this.app.canvasPointToScreenPoint(tempP);
-                outObject.snapMessage = '[Snap a linea]';
-                outObject.snapObject = tempL;
-            }
+        var outObject = {snapObject: null, snapMessage: null, snapObjectType: null};
+        let hoverList: {line: MapLine[], point: MapPoint[]} = this._getCurrentHover() as {line: MapLine[], point: MapPoint[]};
+        /**
+         * Priority:
+         * - Point
+         * - Line
+         */
+        let snapObject = null;
+        if (hoverList.point.length) {
+            let tempP = hoverList.point[0].p;
+            snapPoint = this.app.canvasPointToScreenPoint(tempP);
+            outObject.snapMessage = '[Snap a punto]';
+            outObject.snapObject = tempP;
+            outObject.snapObjectType = 'point';
+        }
+        else if (hoverList.line.length) {
+            let tempL = hoverList.line[0].l;
+            let tempP = Line.PointProjection(tempL, canvasPoint);
+            snapPoint = this.app.canvasPointToScreenPoint(tempP);
+            outObject.snapMessage = '[Snap a linea]';
+            outObject.snapObject = tempL;
+            outObject.snapObjectType = 'line';
         }
 
         let canvasSnap = this.app.screenPointToCanvasPoint(snapPoint);
@@ -171,7 +177,7 @@ export class InteractivityManager {
     }
 
     handlerScreenPointClick(newPoint: Point) {
-        this.updateAllMousePoints(newPoint, true);
+        this.updateAllMousePoints(newPoint);
         let mouse = this.app.mouse;
 
         if (!this.dragging) {
@@ -276,11 +282,13 @@ export class InteractivityManager {
                 this.clickMode.clear();
                 break;
 
-            case 'DELETE':
+            case 'DELETE': {
+                let hover = 
                 this.app.objectList.line.toolbox.deleteElement(true);
                 this.app.objectList.point.toolbox.deleteElement(true);
                 this.editPane.selfUpdate();
                 break;
+            }
 
             case 'L':
                 this.app.objectList.line.toolbox.createElement();
