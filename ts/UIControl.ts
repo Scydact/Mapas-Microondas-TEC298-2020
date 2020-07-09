@@ -297,6 +297,20 @@ export class InteractivityManager {
             case 'P':
                 this.app.objectList.point.toolbox.createElement();
                 break;
+
+            case 'Z': {
+                if (modifier.ctrl) {
+                    this.app.undoman.undo();
+                }
+                break;
+            }
+
+            case 'Y': {
+                if (modifier.ctrl) {
+                    this.app.undoman.redo();
+                }
+            }
+                
         }
 
         // Final draw
