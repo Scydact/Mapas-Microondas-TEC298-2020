@@ -899,7 +899,7 @@ export class TopographicProfilePoint extends MapPoint {
     getHoverMessageContent(): string {
         return `d=${(
             this.position * this.parentMapLine.getLengthMetre()
-        ).toFixed(2)}m (linea=${this.getLengthMetre().toFixed(2)}m)`;
+        ).toFixed(2)}m (linea=${this.parentMapLine.getLengthMetre().toFixed(2)}m)`;
     }
 
     getCurrentStyle() {

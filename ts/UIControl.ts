@@ -143,6 +143,7 @@ export class InteractivityManager {
 
         // Snap point
         let snapPoint = newPoint;
+        let snapEnabled = this.app.settings.snap;
         var outObject = {snapObject: null, snapMessage: null, snapObjectType: null};
         let hoverList: {line: MapLine[], point: MapPoint[]} = this._getCurrentHover() as {line: MapLine[], point: MapPoint[]};
         /**
@@ -153,7 +154,8 @@ export class InteractivityManager {
         let snapObject = null;
         if (hoverList.point.length) {
             let tempP = hoverList.point[0].p;
-            snapPoint = this.app.canvasPointToScreenPoint(tempP);
+            if (snapEnabled)
+                snapPoint = this.app.canvasPointToScreenPoint(tempP);
             outObject.snapMessage = '[Snap a punto]';
             outObject.snapObject = hoverList.point[0];
             outObject.snapObjectType = 'point';
@@ -161,7 +163,8 @@ export class InteractivityManager {
         else if (hoverList.line.length) {
             let tempL = hoverList.line[0].l;
             let tempP = Line.PointProjection(tempL, canvasPoint);
-            snapPoint = this.app.canvasPointToScreenPoint(tempP);
+            if (snapEnabled)
+                snapPoint = this.app.canvasPointToScreenPoint(tempP);
             outObject.snapMessage = '[Snap a linea]';
             outObject.snapObject = hoverList.line[0];
             outObject.snapObjectType = 'line';
@@ -223,11 +226,6 @@ export class InteractivityManager {
                                 h
                             )
                         )
-                        // TODO: Remove these comments
-                        // let tpt = this.temp.topoPointTool;
-                        // tpt.draftLine.l.p2 = 
-                        //     Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
-                        //temp.topo.add(screenToMapPos(snapPos), h);
                     }
                     break;
                 }
