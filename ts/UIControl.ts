@@ -155,7 +155,7 @@ export class InteractivityManager {
             let tempP = hoverList.point[0].p;
             snapPoint = this.app.canvasPointToScreenPoint(tempP);
             outObject.snapMessage = '[Snap a punto]';
-            outObject.snapObject = tempP;
+            outObject.snapObject = hoverList.point[0];
             outObject.snapObjectType = 'point';
         }
         else if (hoverList.line.length) {
@@ -163,7 +163,7 @@ export class InteractivityManager {
             let tempP = Line.PointProjection(tempL, canvasPoint);
             snapPoint = this.app.canvasPointToScreenPoint(tempP);
             outObject.snapMessage = '[Snap a linea]';
-            outObject.snapObject = tempL;
+            outObject.snapObject = hoverList.line[0];
             outObject.snapObjectType = 'line';
         }
 
@@ -239,7 +239,7 @@ export class InteractivityManager {
                         }
                         e
                             .getCloseToScreenPoint(newPoint, this.hoverDistance)
-                            .forEach((e) => (e.state.active = true));
+                            .forEach((e) => (e.flipState('active')));
                             
                         e.updateNode();
                     });
