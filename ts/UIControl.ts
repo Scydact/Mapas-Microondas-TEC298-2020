@@ -6,7 +6,7 @@ import {
     MouseMessageDisplay,
 } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
-import { MapLine, MapPoint, TopographicProfilePoint } from './MapObject.js';
+import { MapLine, MapPoint, TopographicProfilePoint, MapObjectList, MapLineList } from './MapObject.js';
 import { EditPane } from './EditPane.js';
 import { timers } from 'jquery';
 import { Line } from './Line.js';
@@ -62,12 +62,24 @@ export class InteractivityManager {
         this.editPane = new EditPane(app);
     }
 
+    /** Returns this.map.objectList, but filtered. */
+    _getCurrentHover() {
+        let iterateValues = Object.entries(this.app.objectList);
+        let output = {};
+        iterateValues.forEach((e) => {
+            let prop = e[0] as string;
+            let val = e[1] as MapObjectList;
+            output[prop] = val.getState('hover');
+        })
+        return output;
+    }
+
     /**
      *
      * @param newPoint New mouse position
      */
     handlerScreenPointMove(newPoint: Point) {
-        if (this.clicking) {
+        if (this.clicking) {// TODO: Start dragging only after <dragging> a few px from the center.
             this.dragging = true;
             let translate = this.app.posState.translate;
             translate.assign(Point.Minus(newPoint, this.startDragOffset));
@@ -77,22 +89,19 @@ export class InteractivityManager {
         $(this.app.canvas).toggleClass('move', this.dragging);
 
         // Update mousePos / coordPos global vars
-        this.updateAllMousePoints(newPoint);
+        let snapData = this.updateAllMousePoints(newPoint, (this.clickMode.mode !== null));
 
         // Update hover status
-        let lineList = this.app.objectList.line;
-        lineList.setState('hover', false);
-        lineList
-            .getCloseToScreenPoint(newPoint, this.hoverDistance)
-            .forEach((e) => (e.state.hover = true));
-        lineList.updateNode();
+        this.app.objectListList.forEach((e) => {
+            e.setState('hover', false);
+            e.getCloseToScreenPoint(newPoint, this.hoverDistance).forEach((e) => (e.state.hover = true));
+            e.updateNode();
+        })
 
-        let pointList = this.app.objectList.point;
-        pointList.setState('hover', false);
-        pointList
-            .getCloseToScreenPoint(newPoint, this.hoverDistance)
-            .forEach((e) => (e.state.hover = true));
-        pointList.updateNode();
+        // Display tooltip
+        let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.app.mouse.canvas);
+        let msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
+        if (snapData.snapMessage) {msg += '\n' + snapData.snapMessage};
 
         switch (this.clickMode.mode) {
             case 'setLinePoint1':
@@ -108,11 +117,15 @@ export class InteractivityManager {
             }
         }
 
+        this.out.mouseBar.set(msg);
+        this.out.mouseBar.setPosition(this.app.mouse.screen);
+
         // Final draw
         this.app.draw();
     }
 
-    updateAllMousePoints(newPoint: Point) {
+    /** Updates all mousepoints of this.app. If updateSnap is set, returns the snap msg along with the snap object. */
+    updateAllMousePoints(newPoint: Point, updateSnap?: boolean) {
         let pointList = this.app.mouse;
 
         // Screen point
@@ -124,14 +137,41 @@ export class InteractivityManager {
 
         // Snap point
         let snapPoint = newPoint;
-        // TODO: find snap conditions and place them here
-        pointList.screenSnap.assign(snapPoint);
+        var outObject = {snapObject: null, snapMessage: null};
+        if (updateSnap) {
+            let hoverList: {line: MapLine[], point: MapPoint[]} = this._getCurrentHover() as {line: MapLine[], point: MapPoint[]};
+            /**
+             * Priority:
+             * - Point
+             * - Line
+             */
+            let snapObject = null;
+            if (hoverList.point.length) {
+                let tempP = hoverList.point[0].p;
+                snapPoint = this.app.canvasPointToScreenPoint(tempP);
+                outObject.snapMessage = '[Snap a punto]';
+                outObject.snapObject = tempP;
+            }
+            else if (hoverList.line.length) {
+                let tempL = hoverList.line[0].l;
+                let tempP = Line.PointProjection(tempL, canvasPoint);
+                snapPoint = this.app.canvasPointToScreenPoint(tempP);
+                outObject.snapMessage = '[Snap a linea]';
+                outObject.snapObject = tempL;
+            }
+        }
+
         let canvasSnap = this.app.screenPointToCanvasPoint(snapPoint);
+        // let snapDelta = Point.Minus(canvasPoint, canvasSnap)
+        // console.log(`SnapDelta: {x: ${snapDelta.x}, y: ${snapDelta.y}}`)
+        pointList.screenSnap.assign(snapPoint);
         pointList.canvasSnap.assign(canvasSnap);
+
+        return outObject;
     }
 
     handlerScreenPointClick(newPoint: Point) {
-        this.updateAllMousePoints(newPoint);
+        this.updateAllMousePoints(newPoint, true);
         let mouse = this.app.mouse;
 
         if (!this.dragging) {
