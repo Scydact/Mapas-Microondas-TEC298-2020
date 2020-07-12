@@ -342,11 +342,13 @@ body {
     padding: var(--padding-pane);
     display: none;
     min-width: 25rem;
+    height: 100vh;
     box-shadow: var(--shadow);
 }
 
 .pane.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Tabs */
@@ -360,13 +362,10 @@ body {
     flex-direction: column;
 }
 
-.tabcontent {
-    flex-grow: 1;
-}
-
 .tabcontainer > .tabcontent,
 .tabcontainer > .tablinkContainer {
     width: 100%;
+    min-height: 0;
 }
 
 .tabcontainer  > h1, 
@@ -375,6 +374,7 @@ body {
 }
 
 .tablinkContainer {
+    flex-shrink: 0;
     display: grid;
     grid-auto-columns: 1fr;
     grid-auto-rows: 1fr;
@@ -431,7 +431,13 @@ body {
     display: flex;
     flex-direction: column;
     align-content: stretch;
-    }
+
+    flex-grow: 1;
+    flex-shrink: 1;
+
+    min-height: 0;
+
+}
 
 
 
@@ -452,6 +458,13 @@ body {
 
 #mouseMsg>p {
     margin: 0.25em 0.5em;
+}
+
+#editionContentWrapper, 
+#editionContentWrapper > div {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 #editionContentWrapper:empty {
@@ -507,7 +520,7 @@ body {
 
 .scroll {
     overflow-y: auto;
-    max-height: 80vh;
+    flex-shrink: 1;
 }
 
 .listContainer {

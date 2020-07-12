@@ -4,7 +4,7 @@ import { MapMeta } from './MapMeta.js';
 import { MapLoader } from './MapLoader.js';
 import { InteractivityManager } from './UIControl.js';
 import { Settings } from './Settings.js';
-import { MapLineList, MapPointList } from './MapObject.js';
+import { MapLineList, MapPointList, MapObjectStyleList } from './MapObject.js';
 import { Restorable } from './Utils.js';
 import { UndoRedoManager } from './UndoRedoManager.js';
 import { map } from 'jquery';
@@ -67,6 +67,29 @@ export class App {
         this.objectList.point,
     ];
 
+    globalDefaultStyle: MapObjectStyleList = {
+        normal: {
+            color: 'rgba(53,103,240,1)',
+            width: 3,
+            type: 'solid',
+        },
+        hover: {
+            color: 'rgba(53, 232, 255,.8)',
+            width: 4,
+            type: 'solid',
+        },
+        active: {
+            color: 'rgba(20,40,100,1)',
+            width: 4,
+            type: 'solid',
+        },
+        disabled: {
+            color: 'gray',
+            width: 1,
+            type: 'solid',
+        },
+    };
+
     // DEBUG
     DEBUG_RESET_SAVE = false;
 
@@ -83,10 +106,12 @@ export class App {
         });
 
         this.objectList.line.node = $('#lineListWrapper')[0];
+        this.objectList.line.globalStyle = this.globalDefaultStyle;
         this.objectList.line.updateNode();
         this.objectList.line.updateNodeButtons($('#lineListButtonWrapper')[0]);
     
         this.objectList.point.node = $('#pointListWrapper')[0];
+        this.objectList.point.globalStyle = this.globalDefaultStyle;
         this.objectList.point.updateNode();
         this.objectList.point.updateNodeButtons($('#pointListButtonWrapper')[0]);
     
@@ -162,6 +187,7 @@ export class App {
 
             if (tryAssign(this.objectList.line, o, 'lines')) {
                 this.objectList.line.node = $('#lineListWrapper')[0];
+                this.objectList.line.globalStyle = this.globalDefaultStyle;
                 this.objectList.line.updateNode();
                 this.objectList.line.updateNodeButtons(
                     $('#lineListButtonWrapper')[0]
@@ -170,6 +196,7 @@ export class App {
 
             if (tryAssign(this.objectList.point, o, 'points')) {
                 this.objectList.point.node = $('#pointListWrapper')[0];
+                this.objectList.point.globalStyle = this.globalDefaultStyle;
                 this.objectList.point.updateNode();
                 this.objectList.point.updateNodeButtons(
                     $('#pointListButtonWrapper')[0]

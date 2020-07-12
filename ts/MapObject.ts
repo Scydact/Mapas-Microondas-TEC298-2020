@@ -6,7 +6,7 @@ import {
     createLabel,
     lineBreak,
 } from './Utils.js';
-import { Point } from './Point.js';
+import { Point, UnaryOperator } from './Point.js';
 import { App } from './App.js';
 import { Line } from './Line.js';
 import { UndoRedoStackActionObject } from './UndoRedoManager.js';
@@ -75,6 +75,7 @@ export abstract class MapObject implements Restorable {
         },
     };
 
+    /** Checks if the globalStyle is defined and returns it, or returns the local style. */
     getCurrentStyle() {
         return this.globalStyle ? this.globalStyle : this.style;
     }
@@ -338,11 +339,12 @@ export abstract class MapObjectList implements Restorable {
                     }
                     obj.state.active = !obj.state.active;
 
-                    if (obj.state.active) {
-                        divJQuery.addClass('active');
-                    } else {
-                        divJQuery.removeClass('active');
-                    }
+                    // if (obj.state.active) {
+                    //     divJQuery.addClass('active');
+                    // } else {
+                    //     divJQuery.removeClass('active');
+                    // }
+                    this.updateNode();
 
                     this.app.draw();
                 });
@@ -649,7 +651,6 @@ export class MapLine extends MapObject {
             listDiv.classList.add('scroll');
             this.topoPoints.node = listDiv;
             this.topoPoints.updateNode();
-            $(listDiv).css('max-height','50vh'); // TODO: Use css grid to limit height when max.
         }
 
         return outDiv;
@@ -713,9 +714,14 @@ export class MapLineList extends MapObjectList {
     }
 }
 
+export type MapPointDrawStyle = (
+    {type: 'dot', scale: number, offset: number} | 
+    {type: 'line', angle: number, scale: number, offset: number});
+
 /** A point that can be drawed on the map */
 export class MapPoint extends MapObject {
     p = Point.ZERO();
+    drawStyle: MapPointDrawStyle = {type: 'dot', scale: 1.5, offset: 1};
 
     /** Creates a new line and sets its defining points. */
     static fromPoint(p: Point, app: App) {
@@ -771,12 +777,9 @@ export class MapPoint extends MapObject {
     }
 
     draw(context: CanvasRenderingContext2D) {
-        context.save();
         let sp = this.app.canvasPointToScreenPoint(this.p);
 
-        context.beginPath();
-
-        let styleList = this.globalStyle ? this.globalStyle : this.style;
+        let styleList = this.getCurrentStyle();
         let selectedStyle: MapObjectStyle;
         if (this.state.disabled) {
             selectedStyle = styleList.disabled;
@@ -788,12 +791,20 @@ export class MapPoint extends MapObject {
             selectedStyle = styleList.normal;
         }
 
-        context.arc(sp.x, sp.y, selectedStyle.width, 0, 2 * Math.PI, false);
+        context.save();
 
-        context.fillStyle = selectedStyle.color;
-        context.fill();
+        let ds = this.drawStyle;
+        if (ds.type = 'dot') {
+            context.beginPath();
+            let width = ds.scale * selectedStyle.width + ds.offset; 
 
-        context.closePath();
+            context.arc(sp.x, sp.y, width, 0, 2 * Math.PI, false);
+    
+            context.fillStyle = selectedStyle.color;
+            context.fill();
+    
+            context.closePath();
+        }
 
         context.restore();
     }
