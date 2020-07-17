@@ -1014,7 +1014,7 @@ export class TopographicProfilePointList extends MapPointList {
             let tt = im.temp.topoPointTool;
             im.clickMode.set('setTopographicPoint');
             im.out.topMsgBar.set(
-                'Click en un punto para marcar un punto del perfil topografico.'
+                'Click para marcar un punto del perfil topografico.'
             );
             tt.sourceLine = this.parentMapLine;
             tt.draftLine.app = this.app;

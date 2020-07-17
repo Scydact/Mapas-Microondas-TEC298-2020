@@ -195,7 +195,7 @@ body {
 
 /* On toolbar hover, expand and show tools */
 #toolBoxWrapper:hover {
-    width: 7.5rem;
+    width: 13.3rem;
 }
 
 #toolBoxWrapper:hover .toolbox-text {

@@ -42,13 +42,16 @@ export class ClickMode {
         switch (mode) {
             case 'setLinePoint1':
             case 'setLinePoint2':
-            case 'setTopographicPoint':
                 $('#toolLine').addClass('active');
                 $(canvas).addClass('crosshair');
                 break;
             case 'setPointMarker':
                 $('#toolPoint').addClass('active');
                 $(canvas).addClass('crosshair');
+                break;
+            case 'setTopographicPoint':
+            case 'selectTopographicLine':
+                $('#toolTopoPoint').addClass('active');
                 break;
             default:
                 $('#toolPointer').addClass('active');

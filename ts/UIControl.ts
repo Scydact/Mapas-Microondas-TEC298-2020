@@ -131,7 +131,7 @@ export class InteractivityManager {
     }
 
     /** Updates all mousepoints of this.app. If updateSnap is set, returns the snap msg along with the snap object. */
-    updateAllMousePoints(newPoint: Point, updateSnap?: boolean) {
+    updateAllMousePoints(newPoint: Point) {
         let pointList = this.app.mouse;
 
         // Screen point
@@ -211,6 +211,22 @@ export class InteractivityManager {
                     m.state.active = true;
                     this.app.objectList.point.add(m);
                     this.clickMode.clear;
+                    break;
+                }
+                case 'selectTopographicLine': {
+                    // copy of default case.
+                    this.app.objectListList.forEach((e) => {
+                        if (!this.modifier.shift) {
+                            e.setState('active', false);
+                        }
+                        e
+                            .getCloseToScreenPoint(newPoint, this.hoverDistance)
+                            .forEach((e) => (e.flipState('active')));
+                            
+                        e.updateNode();
+                    });
+                    
+                    this.topoToolClick();
                     break;
                 }
                 case 'setTopographicPoint': {
@@ -368,6 +384,27 @@ export class InteractivityManager {
     //     }
     // }
 
+    topoToolClick() {
+        this.editPane.selfUpdate();
+        this.app.settings.panes.edit.set(true); // Open element edit pane
+        let active = this.editPane.active;
+        if (active.length) {
+            let condition = active[0].length == 1 && !active[1].length; // only 1 line selected
+
+            if (condition) {
+                let currentLine = active[0][0] as MapLine;
+                currentLine.topoPoints.toolbox.createElement();
+            } else {
+                this.app.interman.clickMode.set('selectTopographicLine');
+                this.app.interman.out.topMsgBar.set(
+                    'Seleccione una linea para crear su perfil topografico.'
+                );
+            }
+        } else {
+            console.log('ERROR: editPane.active esta vacio?...')
+        }
+    }
+
     onWindowReady() {
         let app = this.app;
         let canvas = this.app.canvas;
@@ -485,6 +522,7 @@ export class InteractivityManager {
         $('#toolPoint').on('click', () =>
             this.app.objectList.point.toolbox.createElement()
         );
+        $('#toolTopoPoint').on('click', () => this.topoToolClick());
 
         //#endregion
     }
