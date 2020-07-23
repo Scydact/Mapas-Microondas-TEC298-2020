@@ -17,34 +17,44 @@ type MapChangeHandler = (changedMap?: string) => any;
  * Contains methods to load and draw the actual map on a canvas.
  */
 export class MapLoader {
-    mapStruct: {[name: string]: mapData} = {
+    static mapStruct: {[name: string]: mapData} = {
         azua: {
             elementSize: { w: 528, h: 520 },
             gridSize: { w: 17, h: 13 },
-            mapMeta: MapMeta.fromLegacyString('Azua', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1221,"x2Px":7463,"y1Deg":18.5,"y2Deg":18.33333,"y1Px":255,"y2Px":4613,"oneMetreInPx":1.9511393698710089}'),
+            mapMeta: MapMeta.fromJson("{\"name\":\"Azua\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":18.5},\"p2\":{\"x\":70.5,\"y\":18.33333}},\"px\":{\"p1\":{\"x\":1221,\"y\":255},\"p2\":{\"x\":7463,\"y\":4613}},\"oneMetreInPx\":0.23706773905510017}"),
+            //mapMeta: MapMeta.fromLegacyString('Azua', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1221,"x2Px":7463,"y1Deg":18.5,"y2Deg":18.33333,"y1Px":255,"y2Px":4613,"oneMetreInPx":1.9511393698710089}'),
         },
         constanza: {
             elementSize: { w: 520, h: 528 },
             gridSize: { w: 17, h: 13 },
-            mapMeta: MapMeta.fromLegacyString('Constanza', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1289,"x2Px":7507,"y1Deg":19,"y2Deg":18.83333,"y1Px":283,"y2Px":4642,"oneMetreInPx":1.96375716712138}'),
+            mapMeta: MapMeta.fromJson("{\"name\":\"Constanza\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19},\"p2\":{\"x\":70.5,\"y\":18.83333}},\"px\":{\"p1\":{\"x\":1289,\"y\":283},\"p2\":{\"x\":7507,\"y\":4642}},\"oneMetreInPx\":0.23663853123929837}"),
+            //mapMeta: MapMeta.fromLegacyString('Constanza', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1289,"x2Px":7507,"y1Deg":19,"y2Deg":18.83333,"y1Px":283,"y2Px":4642,"oneMetreInPx":1.96375716712138}'),
         },
 
         hato_mayor: {
             elementSize: { w: 512, h: 528 },
             gridSize: { w: 17, h: 13 },
-            mapMeta: MapMeta.fromLegacyString('Hato Mayor', '{"x1Deg":69.5,"x2Deg":69.25,"x1Px":1223,"x2Px":7432,"y1Deg":18.833333,"y2Deg":18.666666,"y1Px":189,"y2Px":4552,"oneMetreInPx":1.9551870650091925}'),
+            mapMeta: MapMeta.fromJson("{\"name\":\"Hato Mayor\",\"deg\":{\"p1\":{\"x\":69.5,\"y\":18.833333},\"p2\":{\"x\":69.25,\"y\":18.666666}},\"px\":{\"p1\":{\"x\":1223,\"y\":189},\"p2\":{\"x\":7432,\"y\":4552}},\"oneMetreInPx\":0.23598654280720946}"),
+            //mapMeta: MapMeta.fromLegacyString('Hato Mayor', '{"x1Deg":69.5,"x2Deg":69.25,"x1Px":1223,"x2Px":7432,"y1Deg":18.833333,"y2Deg":18.666666,"y1Px":189,"y2Px":4552,"oneMetreInPx":1.9551870650091925}'),
         },
 
         jarabacoa: {
             elementSize: { w: 528, h: 520 },
             gridSize: { w: 17, h: 13 },
-            mapMeta: MapMeta.fromLegacyString('Jarabacoa', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1252,"x2Px":7460,"y1Deg":19.16666,"y2Deg":19,"y1Px":271,"y2Px":4628,"oneMetreInPx":1.9614630420557655}'),
+            mapMeta: MapMeta.fromJson("{\"name\":\"Jarabacoa\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.16666},\"p2\":{\"x\":70.5,\"y\":19}},\"px\":{\"p1\":{\"x\":1252,\"y\":271},\"p2\":{\"x\":7460,\"y\":4628}},\"oneMetreInPx\":0.23666838456942246}"),
+            //mapMeta: MapMeta.fromLegacyString('Jarabacoa', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1252,"x2Px":7460,"y1Deg":19.16666,"y2Deg":19,"y1Px":271,"y2Px":4628,"oneMetreInPx":1.9614630420557655}'),
         },
 
         puerto_plata: {
             elementSize: { w: 512, h: 536 },
             gridSize: { w: 18, h: 13 },
-            mapMeta: MapMeta.fromLegacyString('Puerto Plata', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1342,"x2Px":7543,"y1Deg":19.833333,"y2Deg":19.666666,"y1Px":92,"y2Px":4588,"oneMetreInPx":1.9511866481881994}'),
+            mapMeta: MapMeta.fromJson("{\"name\":\"Puerto Plata\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.833333},\"p2\":{\"x\":70.5,\"y\":19.666666}},\"px\":{\"p1\":{\"x\":1343,\"y\":254},\"p2\":{\"x\":7542,\"y\":4588}},\"oneMetreInPx\":0.2358035678014027}"),
+            //mapMeta: MapMeta.fromLegacyString('Puerto Plata', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1342,"x2Px":7543,"y1Deg":19.833333,"y2Deg":19.666666,"y1Px":92,"y2Px":4588,"oneMetreInPx":1.9511866481881994}'), 
+        },
+        comendador: {
+            elementSize: { w: 528, h: 520 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"Comendador\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.0},\"p2\":{\"x\":71.5,\"y\":18.833333}},\"px\":{\"p1\":{\"x\":718,\"y\":483},\"p2\":{\"x\":6952,\"y\":4843}},\"oneMetreInPx\":0.23675550687947847}"),
         },
     }
 
@@ -66,7 +76,7 @@ export class MapLoader {
      * Returns the (assembled, not grid) size of the selected map.
      */
     get imageSize() {
-        let cs = this.mapStruct[this.currentMap];
+        let cs = MapLoader.mapStruct[this.currentMap];
         return {
             w: cs.elementSize.w * cs.gridSize.w,
             h: cs.elementSize.h * cs.gridSize.h,
@@ -120,7 +130,7 @@ export class MapLoader {
         this.currentMap = map;
         this.mapChangedEventRun(map);
 
-        mapMeta.set(this.mapStruct[map].mapMeta);
+        mapMeta.set(MapLoader.mapStruct[map].mapMeta);
         //document.title = `Mapa TEC298 — ${titleCase(map.replace('_',' '))}`;
         document.title = `Mapa TEC298 — ${mapMeta.name}`;
 
@@ -131,7 +141,7 @@ export class MapLoader {
         if (this.loadedMapCache[map] === undefined) {
             $("#loadingBarWrapper").removeClass("disabled");
             this.loadingMap = true;
-            let gSize = this.mapStruct[map].gridSize;
+            let gSize = MapLoader.mapStruct[map].gridSize;
             this.totalImages = gSize.w * gSize.h;
             this.currentLoadedImages = 0;
 
@@ -176,8 +186,8 @@ export class MapLoader {
     draw(context: CanvasRenderingContext2D, posState: MapPosState) {
         if (true) {
             let imageList = this.loadedMapCache[this.currentMap];
-            let elementSize = this.mapStruct[this.currentMap].elementSize;
-            let gridSize = this.mapStruct[this.currentMap].gridSize;
+            let elementSize = MapLoader.mapStruct[this.currentMap].elementSize;
+            let gridSize = MapLoader.mapStruct[this.currentMap].gridSize;
 
             context.save();
             context.translate(posState.translate.x, posState.translate.y);

@@ -442,7 +442,9 @@ export class MapLine extends MapObject {
     }
 
     getHoverMessageContent(): string {
-        return `d=${this.getLengthMetre().toFixed(2)}m`;
+        let x = this.app as any;
+        //x.VAR = this.getLengthMetre(); // DEBUG, used for adding distances
+        return `d = ${(this.getLengthMetre()/1e3).toFixed(2)}km`;
     }
 
     toJObject() {
@@ -495,6 +497,11 @@ export class MapLine extends MapObject {
     /** Returns the length of this line, in metres. */
     getLengthMetre() {
         return this.l.length() / this.app.mapMeta.oneMetreInPx;
+    }
+
+    /** Returns the distance formatted in KM */
+    getFormattedLength() {
+        return `${(this.getLengthMetre() / 1000).toFixed(2)} km`;
     }
 
     // TODO: Remove this;
@@ -584,7 +591,7 @@ export class MapLine extends MapObject {
 
     getListNodeElementContent(index) {
         let p = document.createElement('p');
-        p.innerHTML = `(${index + 1}) d=${this.getLengthMetre().toFixed(2)}m`;
+        p.innerHTML = `(${index + 1}) d = ${this.getFormattedLength()}`;
         return p;
     }
 
@@ -593,7 +600,7 @@ export class MapLine extends MapObject {
 
         createLabel(
             outDiv,
-            `Longitud de linea: ${this.getLengthMetre().toFixed(2)}m`
+            `Longitud de linea: ${this.getFormattedLength()}`
         );
         lineBreak(outDiv);
 
@@ -908,9 +915,9 @@ export class TopographicProfilePoint extends MapPoint {
     parentMapLine: MapLine;
 
     getHoverMessageContent(): string {
-        return `d=${(
-            this.position * this.parentMapLine.getLengthMetre()
-        ).toFixed(2)}m (linea=${this.parentMapLine.getLengthMetre().toFixed(2)}m)`;
+        return `d = ${(
+            this.position * this.parentMapLine.getLengthMetre() /1000
+        ).toFixed(2)} km (linea = ${this.parentMapLine.getFormattedLength()})`;
     }
 
     getCurrentStyle() {
@@ -988,7 +995,7 @@ export class TopographicProfilePoint extends MapPoint {
         let p = document.createElement('p');
         p.innerHTML = `d = ${(
             this.position * this.parentMapLine.getLengthMetre()
-        ).toFixed(2)} m, h = ${this.height.toFixed(2)} m`;
+        /1000).toFixed(2)} km, h = ${this.height.toFixed(2)} m`;
         return p;
     }
 }

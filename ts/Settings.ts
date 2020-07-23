@@ -150,7 +150,7 @@ export class Settings implements Restorable {
             let d = createElement(wrapperNode, 'div');
             createElement(d, 'h2', 'Mapa');
             $(createLabel(d, 'Mapa: ', 'El mapa actualmente cargado.')).prop('for','setting_current_map');
-            let maps = ['azua', 'constanza', 'hato_mayor', 'jarabacoa', 'puerto_plata'];
+            let maps = Object.keys(MapLoader.mapStruct);
             let formattedMaps = maps.map((e) => titleCase(e.replace('_',' ')));
             let mapSelector = createSelect(d, maps, formattedMaps);
             mapSelector.id = 'setting_current_map';

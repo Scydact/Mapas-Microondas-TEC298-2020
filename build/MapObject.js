@@ -287,7 +287,9 @@ export class MapLine extends MapObject {
         return x;
     }
     getHoverMessageContent() {
-        return `d=${this.getLengthMetre().toFixed(2)}m`;
+        let x = this.app;
+        //x.VAR = this.getLengthMetre(); // DEBUG, used for adding distances
+        return `d = ${(this.getLengthMetre() / 1e3).toFixed(2)}km`;
     }
     toJObject() {
         let o = {
@@ -331,6 +333,10 @@ export class MapLine extends MapObject {
     /** Returns the length of this line, in metres. */
     getLengthMetre() {
         return this.l.length() / this.app.mapMeta.oneMetreInPx;
+    }
+    /** Returns the distance formatted in KM */
+    getFormattedLength() {
+        return `${(this.getLengthMetre() / 1000).toFixed(2)} km`;
     }
     // TODO: Remove this;
     /** Returns the distance from this line to the given point, supposing that this line is infinite. */
@@ -404,12 +410,12 @@ export class MapLine extends MapObject {
     }
     getListNodeElementContent(index) {
         let p = document.createElement('p');
-        p.innerHTML = `(${index + 1}) d=${this.getLengthMetre().toFixed(2)}m`;
+        p.innerHTML = `(${index + 1}) d = ${this.getFormattedLength()}`;
         return p;
     }
     getEditNodeContent() {
         let outDiv = document.createElement('div');
-        createLabel(outDiv, `Longitud de linea: ${this.getLengthMetre().toFixed(2)}m`);
+        createLabel(outDiv, `Longitud de linea: ${this.getFormattedLength()}`);
         lineBreak(outDiv);
         {
             // Width
@@ -672,7 +678,7 @@ export class TopographicProfilePoint extends MapPoint {
         this.height = height;
     }
     getHoverMessageContent() {
-        return `d=${(this.position * this.parentMapLine.getLengthMetre()).toFixed(2)}m (linea=${this.parentMapLine.getLengthMetre().toFixed(2)}m)`;
+        return `d = ${(this.position * this.parentMapLine.getLengthMetre() / 1000).toFixed(2)} km (linea = ${this.parentMapLine.getFormattedLength()})`;
     }
     getCurrentStyle() {
         return this.parentMapLine.getCurrentStyle();
@@ -721,7 +727,8 @@ export class TopographicProfilePoint extends MapPoint {
     }
     getListNodeElementContent() {
         let p = document.createElement('p');
-        p.innerHTML = `d = ${(this.position * this.parentMapLine.getLengthMetre()).toFixed(2)} m, h = ${this.height.toFixed(2)} m`;
+        p.innerHTML = `d = ${(this.position * this.parentMapLine.getLengthMetre()
+            / 1000).toFixed(2)} km, h = ${this.height.toFixed(2)} m`;
         return p;
     }
 }

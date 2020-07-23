@@ -101,18 +101,20 @@ export class InteractivityManager {
         // Display tooltip
         let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.app.mouse.canvas);
         let msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
+        //msg += `\nCurrentCanvasPos: ${this.app.mouse.canvas.x}, ${this.app.mouse.canvas.y}`; DEBUG, for adding new maps
         if (snapData.snapObjectType) {
             let snapObj = snapData.snapObject as MapObject;
             msg += '\n' + snapObj.getHoverMessageContent();
         };
         if (this.app.settings.snap && snapData.snapObjectType && this.clickMode.mode) {
-            msg += snapData.snapMessage;
+            msg += ' ' + snapData.snapMessage;
         }
 
         switch (this.clickMode.mode) {
             case 'setLinePoint1':                
                 break;
             case 'setLinePoint2':
+                msg += `\nd = ${this.temp.lineTool.draftLine.getFormattedLength()}`
                 break;
             case 'setPointMarker':
                 break;
