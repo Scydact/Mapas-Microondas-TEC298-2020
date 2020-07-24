@@ -56,6 +56,21 @@ export class MapLoader {
             gridSize: { w: 17, h: 13 },
             mapMeta: MapMeta.fromJson("{\"name\":\"Comendador\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.0},\"p2\":{\"x\":71.5,\"y\":18.833333}},\"px\":{\"p1\":{\"x\":718,\"y\":483},\"p2\":{\"x\":6952,\"y\":4843}},\"oneMetreInPx\":0.23675550687947847}"),
         },
+        el_cercado: {
+            elementSize: { w: 528, h: 520 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"El Cercado\",\"deg\":{\"p1\":{\"x\":71.74961111,\"y\":18.83397222},\"p2\":{\"x\":71.49961111,\"y\":18.66733333}},\"px\":{\"p1\":{\"x\":1225,\"y\":260},\"p2\":{\"x\":7450,\"y\":4619}},\"oneMetreInPx\":0.23604730577261943}"),
+        },
+        esperanza: {
+            elementSize: { w: 520, h: 528 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"Esperanza\",\"deg\":{\"p1\":{\"x\":71.0,\"y\":19.666666},\"p2\":{\"x\":70.75,\"y\":19.5}},\"px\":{\"p1\":{\"x\":1267,\"y\":238},\"p2\":{\"x\":7468,\"y\":4580}},\"oneMetreInPx\":0.2355274163840207}"),
+        },
+        santiago: {
+            elementSize: { w: 512, h: 528 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"Santiago\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.5},\"p2\":{\"x\":70.5,\"y\":19.333333}},\"px\":{\"p1\":{\"x\":1223,\"y\":232},\"p2\":{\"x\":7424,\"y\":4586}},\"oneMetreInPx\":0.23647140258163157}"),
+        },
     }
 
     loadedMapCache = [];

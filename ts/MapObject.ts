@@ -442,7 +442,7 @@ export class MapLine extends MapObject {
     }
 
     getHoverMessageContent(): string {
-        let x = this.app as any;
+        //let x = this.app as any;
         //x.VAR = this.getLengthMetre(); // DEBUG, used for adding distances
         return `d = ${(this.getLengthMetre()/1e3).toFixed(2)}km`;
     }
