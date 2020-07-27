@@ -101,7 +101,8 @@ export class InteractivityManager {
         // Display tooltip
         let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.app.mouse.canvas);
         let msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
-        //msg += `\nCurrentCanvasPos: ${this.app.mouse.canvas.x}, ${this.app.mouse.canvas.y}`; //DEBUG, for adding new maps
+        if (this.app.DEBUG)
+            msg += `\nCurrent Canvas Position: ${this.app.mouse.canvas.x.toFixed(2)}, ${this.app.mouse.canvas.y.toFixed(2)}`; //DEBUG, for adding new maps
         if (snapData.snapObjectType) {
             let snapObj = snapData.snapObject as MapObject;
             msg += '\n' + snapObj.getHoverMessageContent();

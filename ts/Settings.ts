@@ -14,7 +14,7 @@ export class Settings implements Restorable {
         'paneState'
     ];
 
-    version = 1.2;
+    version = 1.3;
     map = 'hato_mayor';
     snap = true;
 
@@ -151,7 +151,8 @@ export class Settings implements Restorable {
             createElement(d, 'h2', 'Mapa');
             $(createLabel(d, 'Mapa: ', 'El mapa actualmente cargado.')).prop('for','setting_current_map');
             let maps = Object.keys(MapLoader.mapStruct);
-            let formattedMaps = maps.map((e) => titleCase(e.replace('_',' ')));
+            //let formattedMaps = maps.map((e) => titleCase(e.replace('_',' ')));
+            let formattedMaps = maps.map((e) => MapLoader.mapStruct[e].mapMeta.name);
             let mapSelector = createSelect(d, maps, formattedMaps);
             mapSelector.id = 'setting_current_map';
             mapSelector.value = mapLoader.currentMap;

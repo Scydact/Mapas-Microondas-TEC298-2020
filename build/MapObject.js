@@ -287,8 +287,10 @@ export class MapLine extends MapObject {
         return x;
     }
     getHoverMessageContent() {
-        //let x = this.app as any;
-        //x.VAR = this.getLengthMetre(); // DEBUG, used for adding distances
+        if (this.app.DEBUG) {
+            let x = this.app;
+            x.HOVER_LINE_LENGTH = this.getLengthMetre(); // DEBUG, used for adding distances
+        }
         return `d = ${(this.getLengthMetre() / 1e3).toFixed(2)}km`;
     }
     toJObject() {

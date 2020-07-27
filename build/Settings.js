@@ -1,11 +1,11 @@
-import { ObjectAssignProperty, createElement, createLabel, titleCase, createSelect } from "./Utils.js";
+import { ObjectAssignProperty, createElement, createLabel, createSelect } from "./Utils.js";
 import { MapLoader } from "./MapLoader.js";
 /**
  * Constains simple settings, and methods to load them to the forms
  */
 export class Settings {
     constructor() {
-        this.version = 1.2;
+        this.version = 1.3;
         this.map = 'hato_mayor';
         this.snap = true;
         this.paneState = {
@@ -123,7 +123,8 @@ export class Settings {
             createElement(d, 'h2', 'Mapa');
             $(createLabel(d, 'Mapa: ', 'El mapa actualmente cargado.')).prop('for', 'setting_current_map');
             let maps = Object.keys(MapLoader.mapStruct);
-            let formattedMaps = maps.map((e) => titleCase(e.replace('_', ' ')));
+            //let formattedMaps = maps.map((e) => titleCase(e.replace('_',' ')));
+            let formattedMaps = maps.map((e) => MapLoader.mapStruct[e].mapMeta.name);
             let mapSelector = createSelect(d, maps, formattedMaps);
             mapSelector.id = 'setting_current_map';
             mapSelector.value = mapLoader.currentMap;

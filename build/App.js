@@ -17,6 +17,7 @@ import { UndoRedoManager } from './UndoRedoManager.js';
 export class App {
     /** Initializes the canvas to #renderCanvas */
     constructor() {
+        this.DEBUG = false;
         /**
          * Contains all points related to the mouse:
          * - screen: Position on the user screen.

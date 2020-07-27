@@ -18,6 +18,7 @@ import { map } from 'jquery';
  * - Any loose pure functions should go on Utils.ts
  */
 export class App {
+    DEBUG = false;
     /**
      * Contains all points related to the mouse:
      * - screen: Position on the user screen.

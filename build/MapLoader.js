@@ -173,5 +173,10 @@ MapLoader.mapStruct = {
         gridSize: { w: 17, h: 13 },
         mapMeta: MapMeta.fromJson("{\"name\":\"Santiago\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.5},\"p2\":{\"x\":70.5,\"y\":19.333333}},\"px\":{\"p1\":{\"x\":1223,\"y\":232},\"p2\":{\"x\":7424,\"y\":4586}},\"oneMetreInPx\":0.23647140258163157}"),
     },
+    san_francisco_arriba: {
+        elementSize: { w: 528, h: 520 },
+        gridSize: { w: 17, h: 13 },
+        mapMeta: MapMeta.fromJson("{\"name\":\"San Francisco (Arriba)\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.666667},\"p2\":{\"x\":70.5,\"y\":19.5}},\"px\":{\"p1\":{\"x\":1256,\"y\":249},\"p2\":{\"x\":7449,\"y\":4606}},\"oneMetreInPx\":0.23587486042433833}"),
+    },
 };
 //# sourceMappingURL=MapLoader.js.map
