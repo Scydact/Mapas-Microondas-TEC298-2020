@@ -6,13 +6,20 @@ import {
     MouseMessageDisplay,
 } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
-import { MapLine, MapPoint, TopographicProfilePoint, MapObjectList, MapLineList, MapObject, MapObjectState } from './MapObject.js';
+import {
+    MapLine,
+    MapPoint,
+    TopographicProfilePoint,
+    MapObjectList,
+    MapLineList,
+    MapObject,
+    MapObjectState,
+} from './MapObject.js';
 import { EditPane } from './EditPane.js';
 import { timers } from 'jquery';
 import { Line } from './Line.js';
 
-
-type AppMapObjectGroup = {line: MapLine[], point: MapPoint[]};
+type AppMapObjectGroup = { line: MapLine[]; point: MapPoint[] };
 /**
  * * Main auxiliary class of this map application. Should be loaded once.
  * (Though nothing stops you from creating more than one.)
@@ -38,8 +45,12 @@ export class InteractivityManager {
     touchScaleMultiplier = 1 / 100;
 
     startDragOffset = new Point(0, 0);
+    startDrag = new Point(0, 0);
 
     hoverDistance = 7; // TODO: Move to settings
+    hoverDistanceFactor = 1;
+
+    DEBUG_DRAG = 0;
 
     temp = {
         lineTool: {
@@ -49,7 +60,7 @@ export class InteractivityManager {
         topoPointTool: {
             draftLine: new MapLine(this.app),
             sourceLine: new MapLine(this.app),
-        }
+        },
     };
 
     out = {
@@ -65,7 +76,10 @@ export class InteractivityManager {
     }
 
     /** Returns this.map.objectList, but filtered with the given state. */
-    _getCurrentState(state: MapObjectState, value?: boolean): AppMapObjectGroup {
+    _getCurrentState(
+        state: MapObjectState,
+        value?: boolean
+    ): AppMapObjectGroup {
         if (value === undefined) {
             value = true;
         }
@@ -76,8 +90,8 @@ export class InteractivityManager {
             let prop = e[0] as string;
             let val = e[1] as MapObjectList;
             output[prop] = val.getState(state, value);
-        })
-        return output as AppMapObjectGroup ;
+        });
+        return output as AppMapObjectGroup;
     }
 
     /** Returns this.map.objectList, but filtered. */
@@ -90,58 +104,89 @@ export class InteractivityManager {
      * @param newPoint New mouse position
      */
     handlerScreenPointMove(newPoint: Point) {
-        if (this.clicking) {// TODO: Start dragging only after <dragging> a few px from the center.
-            this.dragging = true;
-            let translate = this.app.posState.translate;
-            translate.assign(Point.Minus(newPoint, this.startDragOffset));
+        let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
+        if (this.clicking) {
+            // TODO: Start dragging only after <dragging> a few px from the center.
+            //this.dragging = true;
+            if (!this.dragging) {
+                let dragDist = Point.Distance(this.startDrag, newPointScaled);
+                this.DEBUG_DRAG = dragDist;
+                let dragThreshold = 2 * devicePixelRatio + 2;
+                if (dragDist > dragThreshold) this.dragging = true;
+            }
+
+            if (this.dragging)
+                this.app.posState.translate.assign(
+                    Point.Minus(newPointScaled, this.startDragOffset)
+                );
         }
 
         // Set mouse pointer to 'move' if dragging
         $(this.app.canvas).toggleClass('move', this.dragging);
 
         // Update mousePos / coordPos global vars
-        let snapData = this.updateAllMousePoints(newPoint);
+        let snapData = this.updateAllMousePoints(newPointScaled);
 
         // Update hover status
         this.app.objectListList.forEach((e) => {
             e.setState('hover', false);
-            e.getCloseToScreenPoint(newPoint, this.hoverDistance).forEach((e) => (e.state.hover = true));
+            e.getCloseToScreenPoint(newPointScaled, devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor).forEach(
+                (e) => (e.state.hover = true)
+            );
             e.updateNode();
-        })
+        });
 
         // Display tooltip
-        let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.app.mouse.canvas);
+        let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(
+            this.app.mouse.canvas
+        );
         let msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
+        //msg += `\nDrag Offset = ${this.DEBUG_DRAG}`;
+        //this.out.statusBar.set(`wdpx: ${devicePixelRatio} x: ${innerWidth}, y: ${innerHeight}`); //`x: ${this.app.canvas.width}, y: ${this.app.canvas.height}`);
         if (this.app.DEBUG)
-            msg += `\nCurrent Canvas Position: ${this.app.mouse.canvas.x.toFixed(2)}, ${this.app.mouse.canvas.y.toFixed(2)}`; //DEBUG, for adding new maps
+            msg += `\nCurrent Canvas Position: ${this.app.mouse.canvas.x.toFixed(
+                2
+            )}, ${this.app.mouse.canvas.y.toFixed(2)}`; //DEBUG, for adding new maps
         if (snapData.snapObjectType) {
             let snapObj = snapData.snapObject as MapObject;
             msg += '\n' + snapObj.getHoverMessageContent();
-        };
-        if (this.app.settings.snap && snapData.snapObjectType && this.clickMode.mode) {
+        }
+        if (
+            this.app.settings.snap &&
+            snapData.snapObjectType &&
+            this.clickMode.mode
+        ) {
             msg += ' ' + snapData.snapMessage;
         }
 
         switch (this.clickMode.mode) {
-            case 'setLinePoint1':                
+            case 'setLinePoint1':
                 break;
             case 'setLinePoint2':
-                msg += `\nd = ${this.temp.lineTool.draftLine.getFormattedLength()}`
+                msg += `\nd = ${this.temp.lineTool.draftLine.getFormattedLength()}`;
                 break;
             case 'setPointMarker':
                 break;
             case 'setTopographicPoint': {
                 let tpt = this.temp.topoPointTool;
-                let LineProjection = Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap)
+                let LineProjection = Line.PointProjection(
+                    tpt.sourceLine.l,
+                    this.app.mouse.canvasSnap
+                );
                 tpt.draftLine.l.p2 = LineProjection;
-                let distance = Point.Distance(LineProjection, tpt.sourceLine.l.p1);
-                msg += `\nd = ${(distance / (1000 * this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
-                
+                let distance = Point.Distance(
+                    LineProjection,
+                    tpt.sourceLine.l.p1
+                );
+                msg += `\nd = ${(
+                    distance /
+                    (1000 * this.app.mapMeta.oneMetreInPx)
+                ).toFixed(2)} km`;
             }
         }
 
         this.out.mouseBar.set(msg);
-        this.out.mouseBar.setPosition(this.app.mouse.screen);
+        this.out.mouseBar.setPosition(newPoint);
 
         // Final draw
         this.app.draw();
@@ -161,7 +206,11 @@ export class InteractivityManager {
         // Snap point
         let snapPoint = newPoint;
         let snapEnabled = this.app.settings.snap;
-        var outObject = {snapObject: null, snapMessage: null, snapObjectType: null};
+        var outObject = {
+            snapObject: null,
+            snapMessage: null,
+            snapObjectType: null,
+        };
         let hoverList = this._getCurrentHover();
         /**
          * Priority:
@@ -176,8 +225,7 @@ export class InteractivityManager {
             outObject.snapMessage = '[Snap a punto]';
             outObject.snapObject = hoverList.point[0];
             outObject.snapObjectType = 'point';
-        }
-        else if (hoverList.line.length) {
+        } else if (hoverList.line.length) {
             let tempL = hoverList.line[0].l;
             let tempP = Line.PointProjection(tempL, canvasPoint);
             if (snapEnabled)
@@ -197,7 +245,8 @@ export class InteractivityManager {
     }
 
     handlerScreenPointClick(newPoint: Point) {
-        this.updateAllMousePoints(newPoint);
+        let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
+        this.updateAllMousePoints(newPointScaled);
         let mouse = this.app.mouse;
 
         if (!this.dragging) {
@@ -236,13 +285,14 @@ export class InteractivityManager {
                         if (!this.modifier.shift) {
                             e.setState('active', false);
                         }
-                        e
-                            .getCloseToScreenPoint(newPoint, this.hoverDistance)
-                            .forEach((e) => (e.flipState('active')));
-                            
+                        e.getCloseToScreenPoint(
+                            newPointScaled,
+                            devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor
+                        ).forEach((e) => e.flipState('active'));
+
                         e.updateNode();
                     });
-                    
+
                     this.topoToolClick();
                     break;
                 }
@@ -258,7 +308,7 @@ export class InteractivityManager {
                                 mouse.canvasSnap.copy(),
                                 h
                             )
-                        )
+                        );
                     }
                     break;
                 }
@@ -268,10 +318,11 @@ export class InteractivityManager {
                         if (!this.modifier.shift) {
                             e.setState('active', false);
                         }
-                        e
-                            .getCloseToScreenPoint(newPoint, this.hoverDistance)
-                            .forEach((e) => (e.flipState('active')));
-                            
+                        e.getCloseToScreenPoint(
+                            newPointScaled,
+                            devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor
+                        ).forEach((e) => e.flipState('active'));
+
                         e.updateNode();
                     });
                     break;
@@ -289,10 +340,12 @@ export class InteractivityManager {
     }
 
     handlerScreenPointClickDown(newPoint: Point) {
+        let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
         this.clicking = true;
         let translate = this.app.posState.translate;
 
-        this.startDragOffset.assign(Point.Minus(newPoint, translate));
+        this.startDragOffset.assign(Point.Minus(newPointScaled, translate));
+        this.startDrag.assign(newPointScaled);
     }
 
     handlerKeyUp(keyEvent) {
@@ -319,10 +372,8 @@ export class InteractivityManager {
                     let l = activeList.line[0];
                     if (l.topoPoints.getState('active').length)
                         l.topoPoints.toolbox.deleteElement(true);
-                    else
-                        this.app.objectList.line.toolbox.deleteElement(true);
-                }
-                else {
+                    else this.app.objectList.line.toolbox.deleteElement(true);
+                } else {
                     this.app.objectList.line.toolbox.deleteElement(true);
                     this.app.objectList.point.toolbox.deleteElement(true);
                 }
@@ -350,7 +401,6 @@ export class InteractivityManager {
                     this.app.undoman.redo();
                 }
             }
-                
         }
 
         // Final draw
@@ -377,8 +427,9 @@ export class InteractivityManager {
         return new Point(evt.clientX, evt.clientY);
     }
 
-    static TouchEvtToPos(evt) {
-        let x = evt.originalEvent.changedTouches[0];
+    static TouchEvtToPos(evt, index?: number) {
+        if (index === undefined) index = 0;
+        let x = evt.originalEvent.changedTouches[index];
         return new Point(x.clientX, x.clientY);
     }
 
@@ -427,7 +478,7 @@ export class InteractivityManager {
                 );
             }
         } else {
-            console.log('ERROR: editPane.active esta vacio?...')
+            console.log('ERROR: editPane.active esta vacio?...');
         }
     }
 
@@ -444,16 +495,24 @@ export class InteractivityManager {
         $(document).keyup((e) => this.handlerKeyUp(e));
         $(document).keydown((e) => this.handlerKeyDown(e));
 
-        $(canvas).on('mousemove', (e) =>
+        $(canvas).on('mousemove', (e) => {
+            this.hoverDistanceFactor = 1;
             this.handlerScreenPointMove(InteractivityManager.MouseEvtToPos(e))
+        }
         );
-        $(canvas).on('mousedown', (e) =>
-            this.handlerScreenPointClickDown(
-                InteractivityManager.MouseEvtToPos(e)
-            )
+        $(canvas).on('mousedown', (e) => {
+            
+        this.hoverDistanceFactor = 1;
+        this.handlerScreenPointClickDown(
+            InteractivityManager.MouseEvtToPos(e)
         );
-        $(canvas).on('mouseup', (e) =>
-            this.handlerScreenPointClick(InteractivityManager.MouseEvtToPos(e))
+        }
+        );
+        $(canvas).on('mouseup', (e) => {
+            
+        this.hoverDistanceFactor = 1;
+        this.handlerScreenPointClick(InteractivityManager.MouseEvtToPos(e))
+        }
         );
 
         function disableClick() {
@@ -471,7 +530,10 @@ export class InteractivityManager {
             // calculate scale direction
             let scaleMult =
                 e.deltaY > 0 ? T.scaleMultiplier : 1 / T.scaleMultiplier;
-            let centerPoint = new Point(e.offsetX, e.offsetY);
+            let centerPoint = new Point(
+                devicePixelRatio * e.offsetX,
+                devicePixelRatio * e.offsetY
+            );
             app.posState.zoomAtPosition(
                 centerPoint,
                 app.posState.scale * scaleMult
@@ -502,41 +564,92 @@ export class InteractivityManager {
         });
         //#endregion
 
-        //#region Side panes
+        //#region Touch support
 
-        // $('#openSettings').on('click', function () {
-        //     // These things should be managed by Settings.ts
-        //     //mapMeta.loadToSetup();
-        //     //$('#snapCheckbox').prop('checked', snapEnabled);
-        //     $('#settingsWrapper').toggleClass('disabled');
-        //     $('#openSettings').toggleClass('active', !$('#settingsWrapper').hasClass('disabled'));
-        // });
+        $(canvas).on('touchstart', (e) => {
+            this.hoverDistanceFactor = devicePixelRatio;
+            e.preventDefault(); //sets preventDefault tag;
+            $(canvas).focus(); // Avoids very weird glitches related to random clicking
+            let oe = e.originalEvent;
 
-        // $('#openEditionPane').on('click', function () {
-        //     $('#editionWrapper').toggleClass('disabled');
-        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
-        // });
+            if (oe.touches.length == 1) {
+                this.handlerScreenPointClickDown(
+                    InteractivityManager.TouchEvtToPos(e)
+                );
+                
+                this.handlerScreenPointMove(
+                    InteractivityManager.TouchEvtToPos(e)
+                );
+            } else if (oe.touches.length == 2) {
+                //TODO: Implement zoom by touch
+                // touchZooming = 2;
+                // let t1 = oe.touches[0];
+                // let t2 = oe.touches[1];
+                // let p1 = new p(t1.clientX, t1.clientY);
+                // let p2 = new p(t2.clientX, t2.clientY);
+                // touchZoomingDistance = p.Distance(p1, p2);
+            }
+        });
 
-        // $('#openElementsPane').on('click', function() {
-        //     $('#editionWrapper').toggleClass('disabled');
-        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
-        // })
+        $(canvas).on('touchmove', (e) => {
+            this.hoverDistanceFactor = devicePixelRatio;
+            e.preventDefault(); //sets preventDefault tag;
+            let oe = e.originalEvent;
+            $(canvas).focus(); // Avoids very weird glitches related to random clicking
 
-        // //#endregion
+            if (oe.touches.length == 1) {
+                this.handlerScreenPointMove(
+                    InteractivityManager.TouchEvtToPos(e)
+                );
+            } else if (oe.touches.length >= 2) {
+                //TODO: Implement zoom by touch
+                // let t1 = oe.touches[0];
+                // let t2 = oe.touches[1];
+                // let p1 = new p(t1.clientX, t1.clientY);
+                // let p2 = new p(t2.clientX, t2.clientY);
+                // let d = p.Distance(p1, p2);
+                // let centerPoint = p.MidPoint(p1, p2);
+                // let dx = d - touchZoomingDistance;
+                // let scaleMult = 1;
+                // let threshold = 2;
+                // let scaledDx = Math.abs(dx*touchScaleMultiplier);
+                // if (dx > 0) {
+                //     scaleMult = 1 + scaledDx;
+                // }
+                // else if (dx < 0) {
+                //     scaleMult = 1 / (1 + scaledDx);
+                // }
+                // // if (dx < -threshold) {
+                // //     scaleMult = scaleMultiplier;
+                // //     console.log(`Zooming out: ${d} : ${dx}`);
+                // // }
+                // // else if (dx > threshold) {
+                // //     scaleMult = 1 / scaleMultiplier;
+                // //     console.log(`Zooming in: ${d} : ${dx}`);
+                // // }
+                // // else {
+                // //     console.log(`Not zooming`);
+                // // }
+                // zoomAtPosition(centerPoint.x, centerPoint.y, scale * scaleMult);
+                // draw();
+                // touchZoomingDistance = d; // save to previous state;
+            }
+        });
 
-        // //#region Object list panes
-        
-        // $('#openLinePane').on('click', function () {
-        //     $('#linesWrapper').toggleClass('disabled');
-        //     $('#openLinePane').toggleClass('active', !$('#linesWrapper').hasClass('disabled'));
-        // });
-        // //mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
+        $(canvas).on('touchend', (e) => {
+            this.hoverDistanceFactor = devicePixelRatio;
+            //touchend is registered as a mouse up somewhere else????
+            e.preventDefault();
+            $(canvas).focus(); // Avoids very weird glitches related to random clicking
+            // if (touchZooming) {
+            //     touchZooming--;
+            //     return;
+            // }
 
-        // $('#openPointPane').on('click', function () {
-        //     $('#pointsWrapper').toggleClass('disabled');
-        //     $('#openPointPane').toggleClass('active', !$('#pointsWrapper').hasClass('disabled'));
-        // });
-        // //mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
+            this.handlerScreenPointClick(InteractivityManager.TouchEvtToPos(e));
+        });
+
+        $('.toolBtn').on('touchend', (e) => $(canvas).focus());
 
         //#endregion
 

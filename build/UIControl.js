@@ -1,7 +1,7 @@
 import { Point } from './Point.js';
 import { TopStatusMessageDisplay, StatusBarMessageDisplay, MouseMessageDisplay, } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
-import { MapLine, MapPoint, TopographicProfilePoint } from './MapObject.js';
+import { MapLine, MapPoint, TopographicProfilePoint, } from './MapObject.js';
 import { EditPane } from './EditPane.js';
 import { Line } from './Line.js';
 /**
@@ -24,7 +24,10 @@ export class InteractivityManager {
         this.touchZoomingDistance = 0;
         this.touchScaleMultiplier = 1 / 100;
         this.startDragOffset = new Point(0, 0);
+        this.startDrag = new Point(0, 0);
         this.hoverDistance = 7; // TODO: Move to settings
+        this.hoverDistanceFactor = 1;
+        this.DEBUG_DRAG = 0;
         this.temp = {
             lineTool: {
                 draftLine: new MapLine(this.app),
@@ -33,7 +36,7 @@ export class InteractivityManager {
             topoPointTool: {
                 draftLine: new MapLine(this.app),
                 sourceLine: new MapLine(this.app),
-            }
+            },
         };
         this.out = {
             topMsgBar: new TopStatusMessageDisplay(),
@@ -74,32 +77,44 @@ export class InteractivityManager {
      * @param newPoint New mouse position
      */
     handlerScreenPointMove(newPoint) {
-        if (this.clicking) { // TODO: Start dragging only after <dragging> a few px from the center.
-            this.dragging = true;
-            let translate = this.app.posState.translate;
-            translate.assign(Point.Minus(newPoint, this.startDragOffset));
+        let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
+        if (this.clicking) {
+            // TODO: Start dragging only after <dragging> a few px from the center.
+            //this.dragging = true;
+            if (!this.dragging) {
+                let dragDist = Point.Distance(this.startDrag, newPointScaled);
+                this.DEBUG_DRAG = dragDist;
+                let dragThreshold = 2 * devicePixelRatio + 2;
+                if (dragDist > dragThreshold)
+                    this.dragging = true;
+            }
+            if (this.dragging)
+                this.app.posState.translate.assign(Point.Minus(newPointScaled, this.startDragOffset));
         }
         // Set mouse pointer to 'move' if dragging
         $(this.app.canvas).toggleClass('move', this.dragging);
         // Update mousePos / coordPos global vars
-        let snapData = this.updateAllMousePoints(newPoint);
+        let snapData = this.updateAllMousePoints(newPointScaled);
         // Update hover status
         this.app.objectListList.forEach((e) => {
             e.setState('hover', false);
-            e.getCloseToScreenPoint(newPoint, this.hoverDistance).forEach((e) => (e.state.hover = true));
+            e.getCloseToScreenPoint(newPointScaled, devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor).forEach((e) => (e.state.hover = true));
             e.updateNode();
         });
         // Display tooltip
         let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.app.mouse.canvas);
         let msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
+        //msg += `\nDrag Offset = ${this.DEBUG_DRAG}`;
+        //this.out.statusBar.set(`wdpx: ${devicePixelRatio} x: ${innerWidth}, y: ${innerHeight}`); //`x: ${this.app.canvas.width}, y: ${this.app.canvas.height}`);
         if (this.app.DEBUG)
             msg += `\nCurrent Canvas Position: ${this.app.mouse.canvas.x.toFixed(2)}, ${this.app.mouse.canvas.y.toFixed(2)}`; //DEBUG, for adding new maps
         if (snapData.snapObjectType) {
             let snapObj = snapData.snapObject;
             msg += '\n' + snapObj.getHoverMessageContent();
         }
-        ;
-        if (this.app.settings.snap && snapData.snapObjectType && this.clickMode.mode) {
+        if (this.app.settings.snap &&
+            snapData.snapObjectType &&
+            this.clickMode.mode) {
             msg += ' ' + snapData.snapMessage;
         }
         switch (this.clickMode.mode) {
@@ -115,11 +130,12 @@ export class InteractivityManager {
                 let LineProjection = Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
                 tpt.draftLine.l.p2 = LineProjection;
                 let distance = Point.Distance(LineProjection, tpt.sourceLine.l.p1);
-                msg += `\nd = ${(distance / (1000 * this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
+                msg += `\nd = ${(distance /
+                    (1000 * this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
             }
         }
         this.out.mouseBar.set(msg);
-        this.out.mouseBar.setPosition(this.app.mouse.screen);
+        this.out.mouseBar.setPosition(newPoint);
         // Final draw
         this.app.draw();
     }
@@ -134,7 +150,11 @@ export class InteractivityManager {
         // Snap point
         let snapPoint = newPoint;
         let snapEnabled = this.app.settings.snap;
-        var outObject = { snapObject: null, snapMessage: null, snapObjectType: null };
+        var outObject = {
+            snapObject: null,
+            snapMessage: null,
+            snapObjectType: null,
+        };
         let hoverList = this._getCurrentHover();
         /**
          * Priority:
@@ -167,7 +187,8 @@ export class InteractivityManager {
         return outObject;
     }
     handlerScreenPointClick(newPoint) {
-        this.updateAllMousePoints(newPoint);
+        let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
+        this.updateAllMousePoints(newPointScaled);
         let mouse = this.app.mouse;
         if (!this.dragging) {
             switch (this.clickMode.mode) {
@@ -202,9 +223,7 @@ export class InteractivityManager {
                         if (!this.modifier.shift) {
                             e.setState('active', false);
                         }
-                        e
-                            .getCloseToScreenPoint(newPoint, this.hoverDistance)
-                            .forEach((e) => (e.flipState('active')));
+                        e.getCloseToScreenPoint(newPointScaled, devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor).forEach((e) => e.flipState('active'));
                         e.updateNode();
                     });
                     this.topoToolClick();
@@ -224,9 +243,7 @@ export class InteractivityManager {
                         if (!this.modifier.shift) {
                             e.setState('active', false);
                         }
-                        e
-                            .getCloseToScreenPoint(newPoint, this.hoverDistance)
-                            .forEach((e) => (e.flipState('active')));
+                        e.getCloseToScreenPoint(newPointScaled, devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor).forEach((e) => e.flipState('active'));
                         e.updateNode();
                     });
                     break;
@@ -241,9 +258,11 @@ export class InteractivityManager {
         this.app.draw();
     }
     handlerScreenPointClickDown(newPoint) {
+        let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
         this.clicking = true;
         let translate = this.app.posState.translate;
-        this.startDragOffset.assign(Point.Minus(newPoint, translate));
+        this.startDragOffset.assign(Point.Minus(newPointScaled, translate));
+        this.startDrag.assign(newPointScaled);
     }
     handlerKeyUp(keyEvent) {
         let modifier = this.modifier;
@@ -314,8 +333,10 @@ export class InteractivityManager {
     static MouseEvtToPos(evt) {
         return new Point(evt.clientX, evt.clientY);
     }
-    static TouchEvtToPos(evt) {
-        let x = evt.originalEvent.changedTouches[0];
+    static TouchEvtToPos(evt, index) {
+        if (index === undefined)
+            index = 0;
+        let x = evt.originalEvent.changedTouches[index];
         return new Point(x.clientX, x.clientY);
     }
     // /**
@@ -366,9 +387,18 @@ export class InteractivityManager {
         //#region Canvas interactivity
         $(document).keyup((e) => this.handlerKeyUp(e));
         $(document).keydown((e) => this.handlerKeyDown(e));
-        $(canvas).on('mousemove', (e) => this.handlerScreenPointMove(InteractivityManager.MouseEvtToPos(e)));
-        $(canvas).on('mousedown', (e) => this.handlerScreenPointClickDown(InteractivityManager.MouseEvtToPos(e)));
-        $(canvas).on('mouseup', (e) => this.handlerScreenPointClick(InteractivityManager.MouseEvtToPos(e)));
+        $(canvas).on('mousemove', (e) => {
+            this.hoverDistanceFactor = 1;
+            this.handlerScreenPointMove(InteractivityManager.MouseEvtToPos(e));
+        });
+        $(canvas).on('mousedown', (e) => {
+            this.hoverDistanceFactor = 1;
+            this.handlerScreenPointClickDown(InteractivityManager.MouseEvtToPos(e));
+        });
+        $(canvas).on('mouseup', (e) => {
+            this.hoverDistanceFactor = 1;
+            this.handlerScreenPointClick(InteractivityManager.MouseEvtToPos(e));
+        });
         function disableClick() {
             T.clicking = false;
             T.dragging = false;
@@ -381,7 +411,7 @@ export class InteractivityManager {
             e.preventDefault(); // for touch support
             // calculate scale direction
             let scaleMult = e.deltaY > 0 ? T.scaleMultiplier : 1 / T.scaleMultiplier;
-            let centerPoint = new Point(e.offsetX, e.offsetY);
+            let centerPoint = new Point(devicePixelRatio * e.offsetX, devicePixelRatio * e.offsetY);
             app.posState.zoomAtPosition(centerPoint, app.posState.scale * scaleMult);
             app.draw();
         });
@@ -405,34 +435,80 @@ export class InteractivityManager {
             this.app.draw();
         });
         //#endregion
-        //#region Side panes
-        // $('#openSettings').on('click', function () {
-        //     // These things should be managed by Settings.ts
-        //     //mapMeta.loadToSetup();
-        //     //$('#snapCheckbox').prop('checked', snapEnabled);
-        //     $('#settingsWrapper').toggleClass('disabled');
-        //     $('#openSettings').toggleClass('active', !$('#settingsWrapper').hasClass('disabled'));
-        // });
-        // $('#openEditionPane').on('click', function () {
-        //     $('#editionWrapper').toggleClass('disabled');
-        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
-        // });
-        // $('#openElementsPane').on('click', function() {
-        //     $('#editionWrapper').toggleClass('disabled');
-        //     $('#openEditionPane').toggleClass('active', !$('#editionWrapper').hasClass('disabled'));
-        // })
-        // //#endregion
-        // //#region Object list panes
-        // $('#openLinePane').on('click', function () {
-        //     $('#linesWrapper').toggleClass('disabled');
-        //     $('#openLinePane').toggleClass('active', !$('#linesWrapper').hasClass('disabled'));
-        // });
-        // //mapLineList.updateToolNode(document.querySelector('#lineListButtonWrapper'));
-        // $('#openPointPane').on('click', function () {
-        //     $('#pointsWrapper').toggleClass('disabled');
-        //     $('#openPointPane').toggleClass('active', !$('#pointsWrapper').hasClass('disabled'));
-        // });
-        // //mapPointList.updateToolNode(document.querySelector('#pointListButtonWrapper'));
+        //#region Touch support
+        $(canvas).on('touchstart', (e) => {
+            this.hoverDistanceFactor = devicePixelRatio;
+            e.preventDefault(); //sets preventDefault tag;
+            $(canvas).focus(); // Avoids very weird glitches related to random clicking
+            let oe = e.originalEvent;
+            if (oe.touches.length == 1) {
+                this.handlerScreenPointClickDown(InteractivityManager.TouchEvtToPos(e));
+                this.handlerScreenPointMove(InteractivityManager.TouchEvtToPos(e));
+            }
+            else if (oe.touches.length == 2) {
+                //TODO: Implement zoom by touch
+                // touchZooming = 2;
+                // let t1 = oe.touches[0];
+                // let t2 = oe.touches[1];
+                // let p1 = new p(t1.clientX, t1.clientY);
+                // let p2 = new p(t2.clientX, t2.clientY);
+                // touchZoomingDistance = p.Distance(p1, p2);
+            }
+        });
+        $(canvas).on('touchmove', (e) => {
+            this.hoverDistanceFactor = devicePixelRatio;
+            e.preventDefault(); //sets preventDefault tag;
+            let oe = e.originalEvent;
+            $(canvas).focus(); // Avoids very weird glitches related to random clicking
+            if (oe.touches.length == 1) {
+                this.handlerScreenPointMove(InteractivityManager.TouchEvtToPos(e));
+            }
+            else if (oe.touches.length >= 2) {
+                //TODO: Implement zoom by touch
+                // let t1 = oe.touches[0];
+                // let t2 = oe.touches[1];
+                // let p1 = new p(t1.clientX, t1.clientY);
+                // let p2 = new p(t2.clientX, t2.clientY);
+                // let d = p.Distance(p1, p2);
+                // let centerPoint = p.MidPoint(p1, p2);
+                // let dx = d - touchZoomingDistance;
+                // let scaleMult = 1;
+                // let threshold = 2;
+                // let scaledDx = Math.abs(dx*touchScaleMultiplier);
+                // if (dx > 0) {
+                //     scaleMult = 1 + scaledDx;
+                // }
+                // else if (dx < 0) {
+                //     scaleMult = 1 / (1 + scaledDx);
+                // }
+                // // if (dx < -threshold) {
+                // //     scaleMult = scaleMultiplier;
+                // //     console.log(`Zooming out: ${d} : ${dx}`);
+                // // }
+                // // else if (dx > threshold) {
+                // //     scaleMult = 1 / scaleMultiplier;
+                // //     console.log(`Zooming in: ${d} : ${dx}`);
+                // // }
+                // // else {
+                // //     console.log(`Not zooming`);
+                // // }
+                // zoomAtPosition(centerPoint.x, centerPoint.y, scale * scaleMult);
+                // draw();
+                // touchZoomingDistance = d; // save to previous state;
+            }
+        });
+        $(canvas).on('touchend', (e) => {
+            this.hoverDistanceFactor = devicePixelRatio;
+            //touchend is registered as a mouse up somewhere else????
+            e.preventDefault();
+            $(canvas).focus(); // Avoids very weird glitches related to random clicking
+            // if (touchZooming) {
+            //     touchZooming--;
+            //     return;
+            // }
+            this.handlerScreenPointClick(InteractivityManager.TouchEvtToPos(e));
+        });
+        $('.toolBtn').on('touchend', (e) => $(canvas).focus());
         //#endregion
         //#region Tool buttons
         $('#toolPointer').on('click', (e) => this.clickMode.clear());

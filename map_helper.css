@@ -39,6 +39,11 @@ body {
     user-select: none;
 }
 
+#renderCanvas {
+    width: 100%;
+    height: 100%;
+}
+
 #wrapper {
     overflow: hidden;
     position: absolute;
@@ -49,8 +54,9 @@ body {
 }
 
 #statusBarWrapper {
-    position               : relative;
-    float                  : right;
+    position               : absolute;
+    bottom: 0;
+    left: 20%;
     background             : black;
     color                  : white;
     min-width              : 25vw;
@@ -256,7 +262,7 @@ body {
     top: 0;
     right: 0;
 
-    height: 100vh;
+    height: 100%;
 
     display: grid;
     grid-template-columns: auto auto;
@@ -342,7 +348,7 @@ body {
     padding: var(--padding-pane);
     display: none;
     min-width: 25rem;
-    height: 100vh;
+    height: 100%;
     box-shadow: var(--shadow);
 }
 
@@ -487,8 +493,8 @@ body {
     pointer-events: none;
     top           : 0;
     left          : 0;
-    height        : 100vh;
-    width         : 100vw;
+    height        : 100%;
+    width         : 100%;
 }
 
 

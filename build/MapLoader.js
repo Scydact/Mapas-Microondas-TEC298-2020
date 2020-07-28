@@ -47,8 +47,8 @@ export class MapLoader {
         mapPosStateObject.translate.y = -(this.imageSize.h - innerHeight) / 2;
         mapPosStateObject.scale = 1;
         mapPosStateObject.zoomAtPosition({
-            x: innerWidth / 2,
-            y: innerHeight / 2
+            x: devicePixelRatio * innerWidth / 2,
+            y: devicePixelRatio * innerHeight / 2
         }, innerHeight / this.imageSize.h);
     }
     /**

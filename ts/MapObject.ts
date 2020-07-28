@@ -566,7 +566,8 @@ export class MapLine extends MapObject {
         }
 
         context.strokeStyle = selectedStyle.color;
-        context.lineWidth = selectedStyle.width;
+        // devicePixelRatio for device zooming & mobile support
+        context.lineWidth = devicePixelRatio * selectedStyle.width;
 
         context.stroke();
         context.closePath();
@@ -819,7 +820,8 @@ export class MapPoint extends MapObject {
         let ds = this.drawStyle;
         if (ds.type = 'dot') {
             context.beginPath();
-            let width = ds.scale * selectedStyle.width + ds.offset; 
+            // devicePixelRatio for device zooming & mobile support
+            let width = devicePixelRatio * ds.scale * selectedStyle.width + ds.offset; 
 
             context.arc(sp.x, sp.y, width, 0, 2 * Math.PI, false);
     

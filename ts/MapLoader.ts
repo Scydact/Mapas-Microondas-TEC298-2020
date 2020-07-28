@@ -130,8 +130,8 @@ export class MapLoader {
 
         mapPosStateObject.zoomAtPosition(
             {
-                x: innerWidth / 2,
-                y: innerHeight / 2
+                x: devicePixelRatio * innerWidth / 2,
+                y: devicePixelRatio * innerHeight / 2
             },
             innerHeight / this.imageSize.h
         );

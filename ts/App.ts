@@ -249,8 +249,9 @@ export class App {
         let clickMode = (this.interman) ? this.interman.clickMode : {mode: null}
 
         // Update width/height of canvas
-        canvas.width = innerWidth;
-        canvas.height = innerHeight;
+        let windowScale = window.devicePixelRatio;
+        canvas.width = innerWidth * windowScale;
+        canvas.height = innerHeight * windowScale;
 
         // Clear canvas
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -300,4 +301,5 @@ window.onbeforeunload = function (event) {
     } else {
         mapApp.saveToLocalStorage(saveString);
     }
+    window.scrollTo(0,1);
 };
