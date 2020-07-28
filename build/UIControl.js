@@ -105,8 +105,10 @@ export class InteractivityManager {
                 break;
             case 'setTopographicPoint': {
                 let tpt = this.temp.topoPointTool;
-                tpt.draftLine.l.p2 =
-                    Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
+                let LineProjection = Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
+                tpt.draftLine.l.p2 = LineProjection;
+                let distance = Point.Distance(LineProjection, tpt.sourceLine.l.p1);
+                msg += `\nd = ${(distance / (1000 * this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
             }
         }
         this.out.mouseBar.set(msg);
