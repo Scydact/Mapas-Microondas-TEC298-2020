@@ -1,15 +1,15 @@
 /**
-* Convert a decimal value to a sexagecimal string
-*/
+ * Convert a decimal value to a sexagecimal string
+ */
 export function decimalToSexagecimal(dec) {
     let x = Math.abs(dec);
     let sign = Math.sign(dec);
     let minutes = (x - Math.floor(x)) * 60;
     let seconds = (minutes - Math.floor(minutes)) * 60;
-    let signChar = sign == -1 ? "-" : "";
+    let signChar = sign == -1 ? '-' : '';
     return (signChar +
         Math.floor(x).toString() +
-        "°" +
+        '°' +
         Math.floor(minutes).toString() +
         "'" +
         seconds.toFixed(2).toString() +
@@ -36,11 +36,11 @@ export function ObjectAssignProperty(target, source, propertyName) {
  * @param string String to convert to title case
  */
 export function titleCase(string) {
-    var sentence = string.toLowerCase().split(" ");
+    var sentence = string.toLowerCase().split(' ');
     for (var i = 0; i < sentence.length; i++) {
         sentence[i] = sentence[i][0].toUpperCase() + sentence[i].slice(1);
     }
-    return sentence.join(" ");
+    return sentence.join(' ');
 }
 /**
  * Creates a button and appends it to parentNode.
@@ -78,9 +78,9 @@ export function createLabel(parentNode, text, tooltip) {
     return l;
 }
 /**
-  * Creates a line break <br> and appends it to parentNode.
-  * @param parentNode The node to append the break to.
-  */
+ * Creates a line break <br> and appends it to parentNode.
+ * @param parentNode The node to append the break to.
+ */
 export function lineBreak(parentNode) {
     let b = document.createElement('br');
     parentNode.appendChild(b);
@@ -99,7 +99,7 @@ export function createSelect(parentNode, optionList, optionValueList, tooltip) {
         l.setAttribute('title', tooltip);
     }
     parentNode.appendChild(l);
-    let displayNames = (optionValueList) ? optionValueList : optionList;
+    let displayNames = optionValueList ? optionValueList : optionList;
     for (let i = 0; i < displayNames.length; i++) {
         let o = document.createElement('option');
         let jo = $(o);
@@ -116,5 +116,42 @@ export function createElement(parentNode, tagName, innerHtml) {
         e.innerHTML = innerHtml;
     }
     return e;
+}
+/** Converts an SVG object to a png image */
+export function svgToPng(svg, callback) {
+    const url = getSvgUrl(svg);
+    svgUrlToPng(url, (imgData) => {
+        callback(imgData);
+        URL.revokeObjectURL(url);
+    });
+}
+function getSvgUrl(svg) {
+    return URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+}
+function svgUrlToPng(svgUrl, callback) {
+    const svgImage = document.createElement('img');
+    // imgPreview.style.position = 'absolute';
+    // imgPreview.style.top = '-9999px';
+    document.body.appendChild(svgImage);
+    svgImage.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = svgImage.clientWidth;
+        canvas.height = svgImage.clientHeight;
+        const canvasCtx = canvas.getContext('2d');
+        canvasCtx.drawImage(svgImage, 0, 0);
+        const imgData = canvas.toDataURL('image/png');
+        callback(imgData);
+        document.body.removeChild(svgImage);
+    };
+    svgImage.src = svgUrl;
+}
+/** Prompts download of a given Uri */
+export function downloadBlob(dataToEncode, fileName) {
+    var encodedUri = encodeURI(dataToEncode);
+    var link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', fileName);
+    //document.body.appendChild(link); // Required for FF
+    link.click();
 }
 //# sourceMappingURL=Utils.js.map

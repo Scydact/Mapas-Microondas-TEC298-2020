@@ -1,4 +1,13 @@
-import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, } from './Utils.js';
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, svgToPng, downloadBlob, } from './Utils.js';
 import { Point } from './Point.js';
 import { Line } from './Line.js';
 /** Generic MapObject that can be drawn, saved, and restored. */
@@ -49,7 +58,6 @@ export class MapObject {
     }
     /** Called when setState or flipState is used */
     _StateChanged(state, newValue) { }
-    ;
     //#region state related methods
     /**
      * Gets all the elements that are in the given state.
@@ -142,7 +150,7 @@ export class MapObjectList {
      * Direct replacement to deselectAll();
      */
     setState(state, value) {
-        this.list.forEach((e) => (e.setState(state, value)));
+        this.list.forEach((e) => e.setState(state, value));
         return this.list;
     }
     /**
@@ -252,8 +260,7 @@ export class MapObjectList {
         return false;
     }
     /** Called after adding basic buttons. */
-    _extraNodeButtons(toolNode) {
-    }
+    _extraNodeButtons(toolNode) { }
     /** Recreates the tool buttons (add, remove...) for the list. */
     updateNodeButtons(toolNode) {
         if (toolNode) {
@@ -468,6 +475,25 @@ export class MapLine extends MapObject {
             lineBreak(outDiv);
             createLabel(outDiv, 'Perfil topografico: ');
             lineBreak(outDiv);
+            let topoRender = createElement(outDiv, 'div');
+            this.topoPoints.nodeRender = topoRender;
+            this.topoPoints.updateNodeRender();
+            $(topoRender).on('click', () => {
+                let s = this.topoPoints.mySvg;
+                try {
+                    // Firefox needs these attributes to render the image.
+                    s.setAttribute('width', 2 * s.width.baseVal.value);
+                    s.setAttribute('height', 2 * s.height.baseVal.value);
+                    // Chrome doesnt need this, so it will throw error...
+                }
+                catch (e) { }
+                svgToPng(s.outerHTML, (data) => {
+                    downloadBlob(data, `perfil_topografico_${this.app.mapLoader.currentMap}.png`);
+                });
+                // Remove the Firefox's attributes, so image can autoscale again.
+                s.removeAttribute('width');
+                s.removeAttribute('height');
+            });
             let toolDiv = createElement(outDiv, 'div');
             this.topoPoints.updateNodeButtons(toolDiv);
             let listDiv = createElement(outDiv, 'div');
@@ -594,7 +620,7 @@ export class MapPoint extends MapObject {
         }
         context.save();
         let ds = this.drawStyle;
-        if (ds.type = 'dot') {
+        if ((ds.type = 'dot')) {
             context.beginPath();
             // devicePixelRatio for device zooming & mobile support
             let width = devicePixelRatio * ds.scale * selectedStyle.width + ds.offset;
@@ -608,8 +634,7 @@ export class MapPoint extends MapObject {
     getListNodeElementContent(index) {
         let p = document.createElement('p');
         let position = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.p);
-        p.innerHTML =
-            `(${index + 1}) @(${position.x},${position.y})`;
+        p.innerHTML = `(${index + 1}) @(${position.x},${position.y})`;
         return p;
     }
     getEditNodeContent() {
@@ -694,7 +719,8 @@ export class TopographicProfilePoint extends MapPoint {
         this.height = height;
     }
     getHoverMessageContent() {
-        return `d = ${(this.position * this.parentMapLine.getLengthMetre() / 1000).toFixed(2)} km (linea = ${this.parentMapLine.getFormattedLength()})`;
+        return `d = ${((this.position * this.parentMapLine.getLengthMetre()) /
+            1000).toFixed(2)} km (linea = ${this.parentMapLine.getFormattedLength()})`;
     }
     getCurrentStyle() {
         return this.parentMapLine.getCurrentStyle();
@@ -743,8 +769,8 @@ export class TopographicProfilePoint extends MapPoint {
     }
     getListNodeElementContent() {
         let p = document.createElement('p');
-        p.innerHTML = `d = ${(this.position * this.parentMapLine.getLengthMetre()
-            / 1000).toFixed(2)} km, h = ${this.height.toFixed(2)} m`;
+        p.innerHTML = `d = ${((this.position * this.parentMapLine.getLengthMetre()) /
+            1000).toFixed(2)} km, h = ${this.height.toFixed(2)} m`;
         return p;
     }
 }
@@ -782,6 +808,7 @@ export class TopographicProfilePointList extends MapPointList {
                 if (!doNotDraw) {
                     this.app.draw();
                 } // on functions that already draw.
+                this.updateNodeRender(); // Somehow, it is called on element creation but not on deletion.
             },
         };
         this.parentMapLine = parentMapLine;
@@ -833,19 +860,26 @@ export class TopographicProfilePointList extends MapPointList {
             let coords = formatAsCoords(currentPoint.p);
             rows.push([d, h, coords.x, coords.y, currentPoint.position]);
         }
-        rows.push(['Distancia [m]', 'Altura [m]', 'Longitud', 'Latitud', 'Posicion [%]']);
+        rows.push([
+            'Distancia [m]',
+            'Altura [m]',
+            'Longitud',
+            'Latitud',
+            'Posicion [%]',
+        ]);
         return rows.reverse();
     }
     /** Creates a csv blob from this object */
     _toCsv() {
         // TODO: Move this to Utils
         let data = this._getDataAsTableArray();
-        return 'data:text/csv;charset=utf-8,\ufeff' // extra BOM character, cuz excel recognizes CSV files as ASCII 
-            + data.map(e => e.join(',')).join('\n');
+        return ('data:text/csv;charset=utf-8,\ufeff' + // extra BOM character, cuz excel recognizes CSV files as ASCII
+            data.map((e) => e.join(',')).join('\n'));
     }
     /** Prompts download of a csv file containing this topographical profile's data. */
     _downloadCsv() {
-        var encodedUri = encodeURI(this._toCsv());
+        var csvStr = this._toCsv();
+        var encodedUri = encodeURI(csvStr); // fix not opening well on excel...
         var link = document.createElement('a');
         link.setAttribute('href', encodedUri);
         link.setAttribute('download', `perfil_topografico_${this.app.mapLoader.currentMap}.csv`);
@@ -862,6 +896,102 @@ export class TopographicProfilePointList extends MapPointList {
         createButton(editNode, 'Descargar', () => {
             this._downloadCsv(); // TODO: Change to Util.downloadBlob();
         }, 'Descargar la lista de puntos topograficos de esta linea en formato .csv');
+    }
+    /** Generates this.mySvg and this.myPolyline */
+    _generateSvgNode() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.mySvg) {
+                let i = document.createElement('img');
+                i.src = 'PERFIL TOPO.svg';
+                i.id = 'perfilTopo';
+                i.title = 'Click para descargar la imagen.';
+                this.nodeRender.appendChild(i);
+                yield SVGInject(i);
+                this.mySvg = document.getElementById('perfilTopo');
+                this.mySvg.id = ''; // remove Id...
+                let p = document.createElement('polyline');
+                p.setAttribute('style', 'fill:none;stroke:red;stroke-width:2');
+                this.mySvg.appendChild(p);
+                this.myPolyline = p;
+            }
+            return this.mySvg;
+        });
+    }
+    /** Returns a point array {x: distanceFromStart, y: height} */
+    _getDataAsPointList() {
+        let out = [];
+        let totalLength = this.parentMapLine.getLengthMetre();
+        this.list.forEach((currentPoint) => {
+            let d = currentPoint.position * totalLength;
+            let h = currentPoint.height;
+            out.push(new Point(d, h));
+        });
+        return out;
+    }
+    updateNodeRender() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.nodeRender) {
+                this.nodeRender.innerHTML = '';
+                if (!this.mySvg) {
+                    yield this._generateSvgNode();
+                }
+                //#region get Points and scale
+                let pointList = this._getDataAsPointList();
+                let h_min = Infinity;
+                let h_max = -Infinity;
+                let d_min = Infinity;
+                let d_max = -Infinity;
+                pointList.forEach((p) => {
+                    let d = p.x;
+                    let h = p.y;
+                    if (d > d_max)
+                        d_max = d;
+                    if (d < d_min)
+                        d_min = d;
+                    if (h > h_max)
+                        h_max = h;
+                    if (h < h_min)
+                        h_min = h;
+                });
+                let dh = h_max - h_min;
+                let dd = d_max - d_min;
+                // Choose scale (A = 240/4000, B=120/1000, C=60/250)
+                const scales = {
+                    A: [240e3, 4e3],
+                    B: [120e3, 1e3],
+                    C: [60e3, 250],
+                };
+                let selectedScale = scales.A;
+                if (dh <= scales.C[1] && dd <= scales.C[0])
+                    selectedScale = scales.C;
+                else if (dh <= scales.B[1] && dd <= scales.B[0])
+                    selectedScale = scales.B;
+                // Scale the points according to scale
+                let p1 = new Point(90.81, 485.91); // Lower left
+                let p2 = new Point(733.45, 161.32); // Upper right
+                let pc = new Point(412.13, 1176.85); // Circle point (for curvature)
+                let pr = 762; // Circle radius (for curvature)
+                let pd = Point.Minus(p2, p1);
+                let mappedPointList = pointList.map((p) => {
+                    let x = (p.x - d_min) * pd.x / selectedScale[0] + p1.x;
+                    let y_t = (p.y - h_min) * pd.y / selectedScale[1];
+                    let y = -Math.sqrt(Math.pow(pr, 2) - Math.pow((x - pc.x), 2)) + pc.y + y_t;
+                    return new Point(x, y);
+                });
+                // Create polyline string
+                let polyStr = '';
+                if (mappedPointList.length > 1) {
+                    let l = mappedPointList.length;
+                    for (let i = 0; i < l; i++) {
+                        polyStr += `${mappedPointList[i].x.toFixed(2)},${mappedPointList[i].y.toFixed(2)} `;
+                    }
+                }
+                this.myPolyline.setAttribute('points', polyStr);
+                //#endregion
+                this.nodeRender.appendChild(this.mySvg);
+                this.nodeRender.innerHTML += ' ';
+            }
+        });
     }
 }
 //# sourceMappingURL=MapObject.js.map

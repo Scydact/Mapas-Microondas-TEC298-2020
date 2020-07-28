@@ -348,7 +348,7 @@ body {
     padding: var(--padding-pane);
     display: none;
     min-width: 25rem;
-    height: 100%;
+    height: 100vh; /* This stops the things from expanding over 100% (e.g. long lists) */
     box-shadow: var(--shadow);
 }
 

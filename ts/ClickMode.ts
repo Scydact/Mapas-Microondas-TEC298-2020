@@ -10,7 +10,8 @@ export type ClickModeType = (
     'setLinePoint2' | 
     'setPointMarker' | 
     'selectTopographicLine' |
-    'setTopographicPoint');
+    'setTopographicPoint' |
+    'screenshot');
 
 /**
  * Stores the current click mode (selected tool) and updates a few things when changed.

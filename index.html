@@ -12,11 +12,27 @@
     <script src=https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js></script>
     <script src="https://kit.fontawesome.com/636bd4a313.js" crossorigin="anonymous"></script>
     <script src="jscolor.js"></script>
+    <script src="svg-inject.js"></script>
     <!-- 
     <script src=map_helper.js></script>
     <script src=map_loader.js></script>
     <script src=map_draw.js></script>
     <script src=ui_control.js></script>
+
+    var i = document.createElement('img');
+    i.src = "PERFIL TOPO.svg";
+    i.id = "test";
+    document.getElementById("lineListWrapper").appendChild(i);
+    await SVGInject(i);
+
+
+    var p = document.createElement('polyline');
+    var pointList = "0,40 40,100";//"91,483 412,155 731,485";
+    p.setAttribute('points',pointList);
+    p.setAttribute('style',"stroke:red;stroke-width:4");
+    p.id = "droga";
+
+    document.getElementById('test').appendChild(p);
      -->
     <script type="module" src=./build/App.js></script>
 </head>
@@ -26,7 +42,9 @@
     <div id=imageLoader class=disabled>
         <!-- <img id=baseImage src=a-mapa-completo.jpg /> -->
     </div>
-
+    <!-- <div id=svgLoader class=disabled>
+        <img id="perfilTopo" src="PERFIL TOPO.svg" onload="SVGInject(this)">
+    </div> -->
     <div id=wrapper>
         <canvas id=renderCanvas></canvas>
         <div id=colorFilter></div>
