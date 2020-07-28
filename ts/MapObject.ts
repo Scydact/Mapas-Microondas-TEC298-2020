@@ -85,6 +85,9 @@ export abstract class MapObject implements Restorable {
         this.app = app;
     }
 
+    /** Called when setState or flipState is used */
+    _StateChanged(state: MapObjectState, newValue: boolean) {};
+
     abstract toJObject(): object;
 
     abstract assign(o): boolean;
@@ -112,7 +115,6 @@ export abstract class MapObject implements Restorable {
      * Gets all the elements that are in the given state.
      * Direct replacement to getActive();
      * @param state State to filter.
-     * @param invertSelection If true, inverts the selection.
      */
     getState(state: MapObjectState) {
         return this.state[state];
@@ -124,6 +126,7 @@ export abstract class MapObject implements Restorable {
      */
     setState(state: MapObjectState, value: boolean) {
         this.state[state] = value;
+        this._StateChanged(state, value);
     }
 
     /**
@@ -132,6 +135,7 @@ export abstract class MapObject implements Restorable {
      */
     flipState(state: MapObjectState) {
         this.setState(state, !this.getState(state));
+        this._StateChanged(state, this.getState(state));
     }
     //#endregion
 
@@ -206,13 +210,16 @@ export abstract class MapObjectList implements Restorable {
      * Gets all the elements that are in the given state.
      * Direct replacement to getActive();
      * @param state State to filter.
-     * @param invertSelection If true, inverts the selection.
+     * @param value Optional, gets states with this value. Defaults to true.
      */
-    getState(state: MapObjectState, invertSelection?: boolean) {
-        if (invertSelection) {
-            return this.list.filter((e) => !e.getState(state));
-        } else {
+    getState(state: MapObjectState, value?: boolean) {
+        if (value === undefined)
+            value = true;
+
+        if (value) {
             return this.list.filter((e) => e.getState(state));
+        } else {
+            return this.list.filter((e) => !e.getState(state));
         }
     }
 
@@ -229,10 +236,12 @@ export abstract class MapObjectList implements Restorable {
      * Deletes all the elements that are in the given state.
      * Direct replacement to deleteActive();
      * @param state State to filter.
-     * @param invertSelection If true, inverts the selection.
+     * @param value Deletes states with this value.
      */
-    deleteState(state: MapObjectState, invertSelection?: boolean) {
-        this.list = this.getState(state, !invertSelection);
+    deleteState(state: MapObjectState, value?: boolean) {
+        if (value === undefined)
+            value = true;
+        this.list = this.getState(state, !value);
         return this.list;
     }
 
@@ -432,6 +441,11 @@ export class MapLine extends MapObject {
     l = new Line(Point.ZERO(), Point.ZERO());
     divisions = 0;
     topoPoints = new TopographicProfilePointList(this);
+
+    _StateChanged(state: MapObjectState, value: boolean) {
+        if (state == 'active' && !value)
+            this.topoPoints.setState('active',false);
+    }
 
     /** Creates a new line and sets its defining points. */
     static fromPoints(p1: Point, p2: Point, app: App) {

@@ -6,11 +6,13 @@ import {
     MouseMessageDisplay,
 } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
-import { MapLine, MapPoint, TopographicProfilePoint, MapObjectList, MapLineList, MapObject } from './MapObject.js';
+import { MapLine, MapPoint, TopographicProfilePoint, MapObjectList, MapLineList, MapObject, MapObjectState } from './MapObject.js';
 import { EditPane } from './EditPane.js';
 import { timers } from 'jquery';
 import { Line } from './Line.js';
 
+
+type AppMapObjectGroup = {line: MapLine[], point: MapPoint[]};
 /**
  * * Main auxiliary class of this map application. Should be loaded once.
  * (Though nothing stops you from creating more than one.)
@@ -62,16 +64,25 @@ export class InteractivityManager {
         this.editPane = new EditPane(app);
     }
 
-    /** Returns this.map.objectList, but filtered. */
-    _getCurrentHover() {
+    /** Returns this.map.objectList, but filtered with the given state. */
+    _getCurrentState(state: MapObjectState, value?: boolean): AppMapObjectGroup {
+        if (value === undefined) {
+            value = true;
+        }
+
         let iterateValues = Object.entries(this.app.objectList);
         let output = {};
         iterateValues.forEach((e) => {
             let prop = e[0] as string;
             let val = e[1] as MapObjectList;
-            output[prop] = val.getState('hover');
+            output[prop] = val.getState(state, value);
         })
-        return output;
+        return output as AppMapObjectGroup ;
+    }
+
+    /** Returns this.map.objectList, but filtered. */
+    _getCurrentHover(): AppMapObjectGroup {
+        return this._getCurrentState('hover');
     }
 
     /**
@@ -124,7 +135,7 @@ export class InteractivityManager {
                 let LineProjection = Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap)
                 tpt.draftLine.l.p2 = LineProjection;
                 let distance = Point.Distance(LineProjection, tpt.sourceLine.l.p1);
-                msg += `\nd = ${(distance / (1000*this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
+                msg += `\nd = ${(distance / (1000 * this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
                 
             }
         }
@@ -151,7 +162,7 @@ export class InteractivityManager {
         let snapPoint = newPoint;
         let snapEnabled = this.app.settings.snap;
         var outObject = {snapObject: null, snapMessage: null, snapObjectType: null};
-        let hoverList: {line: MapLine[], point: MapPoint[]} = this._getCurrentHover() as {line: MapLine[], point: MapPoint[]};
+        let hoverList = this._getCurrentHover();
         /**
          * Priority:
          * - Point
@@ -303,9 +314,18 @@ export class InteractivityManager {
                 break;
 
             case 'DELETE': {
-                let hover = 
-                this.app.objectList.line.toolbox.deleteElement(true);
-                this.app.objectList.point.toolbox.deleteElement(true);
+                let activeList = this._getCurrentState('active');
+                if (activeList.line.length == 1 && !activeList.point.length) {
+                    let l = activeList.line[0];
+                    if (l.topoPoints.getState('active').length)
+                        l.topoPoints.toolbox.deleteElement(true);
+                    else
+                        this.app.objectList.line.toolbox.deleteElement(true);
+                }
+                else {
+                    this.app.objectList.line.toolbox.deleteElement(true);
+                    this.app.objectList.point.toolbox.deleteElement(true);
+                }
                 this.editPane.selfUpdate();
                 break;
             }

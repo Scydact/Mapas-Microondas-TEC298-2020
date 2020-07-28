@@ -47,12 +47,14 @@ export class MapObject {
     getCurrentStyle() {
         return this.globalStyle ? this.globalStyle : this.style;
     }
+    /** Called when setState or flipState is used */
+    _StateChanged(state, newValue) { }
+    ;
     //#region state related methods
     /**
      * Gets all the elements that are in the given state.
      * Direct replacement to getActive();
      * @param state State to filter.
-     * @param invertSelection If true, inverts the selection.
      */
     getState(state) {
         return this.state[state];
@@ -63,6 +65,7 @@ export class MapObject {
      */
     setState(state, value) {
         this.state[state] = value;
+        this._StateChanged(state, value);
     }
     /**
      * Switches the given state of all the list elements. (a = !a)
@@ -70,6 +73,7 @@ export class MapObject {
      */
     flipState(state) {
         this.setState(state, !this.getState(state));
+        this._StateChanged(state, this.getState(state));
     }
 }
 /**
@@ -121,14 +125,16 @@ export class MapObjectList {
      * Gets all the elements that are in the given state.
      * Direct replacement to getActive();
      * @param state State to filter.
-     * @param invertSelection If true, inverts the selection.
+     * @param value Optional, gets states with this value. Defaults to true.
      */
-    getState(state, invertSelection) {
-        if (invertSelection) {
-            return this.list.filter((e) => !e.getState(state));
+    getState(state, value) {
+        if (value === undefined)
+            value = true;
+        if (value) {
+            return this.list.filter((e) => e.getState(state));
         }
         else {
-            return this.list.filter((e) => e.getState(state));
+            return this.list.filter((e) => !e.getState(state));
         }
     }
     /**
@@ -143,10 +149,12 @@ export class MapObjectList {
      * Deletes all the elements that are in the given state.
      * Direct replacement to deleteActive();
      * @param state State to filter.
-     * @param invertSelection If true, inverts the selection.
+     * @param value Deletes states with this value.
      */
-    deleteState(state, invertSelection) {
-        this.list = this.getState(state, !invertSelection);
+    deleteState(state, value) {
+        if (value === undefined)
+            value = true;
+        this.list = this.getState(state, !value);
         return this.list;
     }
     /**
@@ -278,6 +286,10 @@ export class MapLine extends MapObject {
         this.l = new Line(Point.ZERO(), Point.ZERO());
         this.divisions = 0;
         this.topoPoints = new TopographicProfilePointList(this);
+    }
+    _StateChanged(state, value) {
+        if (state == 'active' && !value)
+            this.topoPoints.setState('active', false);
     }
     /** Creates a new line and sets its defining points. */
     static fromPoints(p1, p2, app) {

@@ -51,16 +51,23 @@ export class InteractivityManager {
         this.clickMode = new ClickMode(app);
         this.editPane = new EditPane(app);
     }
-    /** Returns this.map.objectList, but filtered. */
-    _getCurrentHover() {
+    /** Returns this.map.objectList, but filtered with the given state. */
+    _getCurrentState(state, value) {
+        if (value === undefined) {
+            value = true;
+        }
         let iterateValues = Object.entries(this.app.objectList);
         let output = {};
         iterateValues.forEach((e) => {
             let prop = e[0];
             let val = e[1];
-            output[prop] = val.getState('hover');
+            output[prop] = val.getState(state, value);
         });
         return output;
+    }
+    /** Returns this.map.objectList, but filtered. */
+    _getCurrentHover() {
+        return this._getCurrentState('hover');
     }
     /**
      *
@@ -254,8 +261,18 @@ export class InteractivityManager {
                 this.clickMode.clear();
                 break;
             case 'DELETE': {
-                let hover = this.app.objectList.line.toolbox.deleteElement(true);
-                this.app.objectList.point.toolbox.deleteElement(true);
+                let activeList = this._getCurrentState('active');
+                if (activeList.line.length == 1 && !activeList.point.length) {
+                    let l = activeList.line[0];
+                    if (l.topoPoints.getState('active').length)
+                        l.topoPoints.toolbox.deleteElement(true);
+                    else
+                        this.app.objectList.line.toolbox.deleteElement(true);
+                }
+                else {
+                    this.app.objectList.line.toolbox.deleteElement(true);
+                    this.app.objectList.point.toolbox.deleteElement(true);
+                }
                 this.editPane.selfUpdate();
                 break;
             }
