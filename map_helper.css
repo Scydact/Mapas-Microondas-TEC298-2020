@@ -115,18 +115,17 @@ h2 {
 
 #loadingBarWrapper {
     position : absolute;
-    top      : 50%;
+    bottom      : var(--border-radius-toolbox);
     left     : 50%;
-    transform: translate(-50%, -50%);
-    min-width: 10em;
+    transform: translate(-50%, 0);
+    min-width: 22rem;
 
     color    : white;
-    font-size: 2rem;
+    font-size: 1.2rem;
 
-    background-color: rgba(0, 0, 0, 50%);
-    backdrop-filter : blur(5px);
+    background-color: var(--bg-toolbox);
     overflow        : hidden;
-    border-radius   : 3px;
+    border-radius   : var(--border-radius-toolbox);
 
     display        : flex;
     align-items    : center;
@@ -135,7 +134,7 @@ h2 {
 }
 
 #loadingBarWrapper>p {
-    margin: 0.2em 1em;
+    margin: 1rem 2rem;
 }
 
 #loadingBarPercentWrapper {
@@ -147,7 +146,7 @@ h2 {
 #loadingBarPercent {
     height          : 100%;
     width           : 0;
-    background-color: rgb(113, 103, 253);
+    background-color: var(--bg-active);
 }
 
 /* Tools */

@@ -1,5 +1,6 @@
 import { MapMeta } from "./MapMeta.js";
 import type { MapPosState } from "./MapPosState.js";
+import { TopographicProfilePoint } from "./MapObject.js";
 
 /**
  * Interface for basic map data structure, including section size, grid size, and its Metadata (default points and coords)
@@ -108,13 +109,13 @@ export class MapLoader {
      */
     updateLoadingBar() {
         let loadBarMsg = document.getElementById("loadingBarMsg");
-        loadBarMsg.innerHTML =
-            "Cargando " + this.currentLoadedImages + " / " + this.totalImages;
+        let n1 = this.currentLoadedImages;
+        let n2 = this.totalImages;
+        let pc = (100 * n1/n2).toFixed(2) + '%';
 
-            let loadBar = document.getElementById("loadingBarPercent");
-            let w = 100 * this.currentLoadedImages / this.totalImages;
-
-            loadBar.style.width = w.toString() + "%";
+        loadBarMsg.innerHTML =`Cargando: ${pc} (${n1}/${n2})`;
+        let loadBar = document.getElementById("loadingBarPercent");
+        loadBar.style.width = pc;
     };
 
     /**

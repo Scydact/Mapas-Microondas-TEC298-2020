@@ -30,11 +30,12 @@ export class MapLoader {
      */
     updateLoadingBar() {
         let loadBarMsg = document.getElementById("loadingBarMsg");
-        loadBarMsg.innerHTML =
-            "Cargando " + this.currentLoadedImages + " / " + this.totalImages;
+        let n1 = this.currentLoadedImages;
+        let n2 = this.totalImages;
+        let pc = (100 * n1 / n2).toFixed(2) + '%';
+        loadBarMsg.innerHTML = `Cargando: ${pc} (${n1}/${n2})`;
         let loadBar = document.getElementById("loadingBarPercent");
-        let w = 100 * this.currentLoadedImages / this.totalImages;
-        loadBar.style.width = w.toString() + "%";
+        loadBar.style.width = pc;
     }
     ;
     /**
