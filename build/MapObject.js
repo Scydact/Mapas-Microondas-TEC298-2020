@@ -499,8 +499,8 @@ export class MapLine extends MapObject {
                 i.src = url;
                 let footer = createElement(d, 'div');
                 footer.classList.add('footerButtonWrapper');
-                createButton(footer, 'Descargar SVG', () => this.topoPoints._downloadSvg(), 'Descargar la imagen en formato vectorial SVG');
-                createButton(footer, 'Descargar PNG', () => this.topoPoints._downloadPng(), 'Descargar la imagen en formato bitmap PNG');
+                createButton(footer, 'Descargar SVG', () => this.topoPoints._downloadSvg(), 'Descargar la imagen en formato vectorial SVG.');
+                createButton(footer, 'Descargar PNG', () => this.topoPoints._downloadPng(), 'Descargar la imagen en formato bitmap PNG.');
                 this.app.interman.out.dialog.createExitButton(footer);
                 this.app.interman.out.dialog.setNode(d, false);
             });

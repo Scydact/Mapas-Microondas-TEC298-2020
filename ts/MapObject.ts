@@ -697,13 +697,13 @@ export class MapLine extends MapObject {
                     footer, 
                     'Descargar SVG',
                     () => this.topoPoints._downloadSvg(),
-                    'Descargar la imagen en formato vectorial SVG'
+                    'Descargar la imagen en formato vectorial SVG.'
                 );
                 createButton(
                     footer, 
                     'Descargar PNG',
                     () => this.topoPoints._downloadPng(),
-                    'Descargar la imagen en formato bitmap PNG'
+                    'Descargar la imagen en formato bitmap PNG.'
                 );
                 this.app.interman.out.dialog.createExitButton(footer);
                 this.app.interman.out.dialog.setNode(d,false);
