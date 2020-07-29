@@ -118,7 +118,7 @@ export function createElement(parentNode, tagName, innerHtml) {
     }
     return e;
 }
-/** Converts an SVG object to a png image */
+/** Converts an SVG string to a PNG image, and passes it to callback(data) */
 export function svgToPng(svg, callback) {
     const url = getSvgUrl(svg);
     svgUrlToPng(url, (imgData) => {
@@ -126,17 +126,19 @@ export function svgToPng(svg, callback) {
         URL.revokeObjectURL(url);
     });
 }
-function getSvgUrl(svg) {
+/** Creates an URL from an SVG. Remember to do URL.revokeObjectURL() after using it. */
+export function getSvgUrl(svg) {
     return URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
 }
-function svgUrlToPng(svgUrl, callback) {
+/** Renders the given URL into a canvas, and runs the output URL through callback(data) */
+export function svgUrlToPng(svgUrl, callback, OutputWidth = 2000) {
     const svgImage = document.createElement('img');
     svgImage.style.position = 'absolute';
     svgImage.style.top = '-9999px';
     document.body.appendChild(svgImage);
     svgImage.onload = function () {
         const canvas = document.createElement('canvas');
-        let w = 2000;
+        let w = OutputWidth;
         let h = w * svgImage.height / svgImage.width;
         canvas.width = w;
         canvas.height = h;
@@ -148,21 +150,22 @@ function svgUrlToPng(svgUrl, callback) {
     };
     svgImage.src = svgUrl;
 }
-/** Prompts download of a given Uri */
-export function downloadUri(encodedData, fileName) {
-    var encodedUri = encodeURI(encodedData);
-    var link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', fileName);
-    link.click();
+/** Prompts download of a given Uri (also encodes it, just in case) */
+export function downloadUri(data, fileName) {
+    var encodedUri = encodeURI(data);
+    downloadUrl(encodedUri, fileName);
 }
 /** Prompts download of a given Uri */
 export function downloadBlob(blob, fileName) {
     let url = URL.createObjectURL(blob);
+    downloadUrl(url, fileName);
+    URL.revokeObjectURL(url);
+}
+/** Creates a link and clicks it automatically */
+export function downloadUrl(url, fileName) {
     var link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', fileName);
     link.click();
-    URL.revokeObjectURL(url);
 }
 //# sourceMappingURL=Utils.js.map

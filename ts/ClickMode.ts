@@ -39,7 +39,7 @@ export class ClickMode {
     clear() {
         this.oldMode = this.mode;
         this.mode = null;
-        this.app.interman.out.topMsgBar.clear();
+        this.app.interman.out.topMsg.clear();
         this.updateUITools();
     }
 

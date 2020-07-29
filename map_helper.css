@@ -30,13 +30,16 @@
     --input-min-size     : 2rem;
     --input-border-radius: 0.5rem;
 
-    --btn-background       : rgba(0, 0, 0, 0.1);
-    --btn-background-hover : rgba(0, 0, 0, 0.2);
-    --btn-background-active: rgb(53, 103, 240);
+    --btn-background       : rgba(0, 0, 0, 0.2);
+    --btn-background-hover : rgba(0, 0, 0, 0.3);
     --btn-color            : rgba(0, 0, 0, 0.8);
-    --btn-color-hover      : rgba(0, 0, 0, 0.8);
-    --btn-color-active     : white;
+    --btn-color-hover      : rgba(0, 0, 0, 0.9);
 
+    /* Directly taken from <active> palette */
+    --btn-primary-background: rgba(53, 103, 240, 1);
+    --btn-primary-background-hover: rgba(53, 103, 240, 0.7);
+    --btn-primary-color            : rgba(255,255,255, 0.8);
+    --btn-primary-color-hover      : rgba(255,255,255, 0.8);
 
 }
 
@@ -48,7 +51,6 @@ body {
     color      : #222;
     padding    : 0;
     margin     : 0;
-    user-select: none;
 }
 
 h1,
@@ -149,6 +151,39 @@ h2 {
     background-color: var(--bg-active);
 }
 
+#dialogWrapperWrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#dialogWrapper {
+    background: var(--bg-primary);
+    padding: var(--border-radius-toolbox);
+    border-radius: var(--border-radius-toolbox);
+    min-width: 15rem;
+}
+
+.footerButtonWrapper {
+    width: calc(100% + 1rem);
+    margin-left: -0.5rem;
+    margin-bottom: -0.5rem;
+
+    display: flex;
+    flex-direction: row;
+}
+
+#dialogWrapper > p:only-of-type {
+    text-align: center;
+}
+
 /* Tools */
 .floatingButtonWrapper {
     position     : absolute;
@@ -192,6 +227,7 @@ h2 {
 }
 
 #toolBoxWrapper {
+    user-select: none; /* Disables selection */
     top  : 0;
     left : 0;
     width: var(--width-toolbox);
@@ -304,6 +340,7 @@ h2 {
 }
 
 .rightPaneNav {
+    user-select: none;
     height    : 100%;
     width     : var(--width-toolbox);
     color     : var(--text-rightpane);
@@ -579,6 +616,7 @@ h2 {
 
 /* Buttons */
 .button {
+    user-select: none;
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -604,10 +642,17 @@ h2 {
     background: var(--btn-background-hover);
     color     : var(--btn-color-hover);
 }
-
 .button:active {
-    background: var(--btn-background-active);
-    color     : var(--btn-color-active);
+    box-shadow: inset 0px 0px 0px 0.2rem rgba(0,0,0,0.3);
+}
+
+.button.primary {
+    background: var(--btn-primary-background);
+    color: var(--btn-primary-color);
+}
+.button.primary:hover {
+    background: var(--btn-primary-background-hover);
+    color: var(--btn-primary-color-hover);
 }
 
 .btnGroup {

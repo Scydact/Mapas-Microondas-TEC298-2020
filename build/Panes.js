@@ -1,3 +1,4 @@
+import { createButton, createElement } from "./Utils.js";
 /** Generic MessageDisplay */
 class GenericMessageDisplay {
     clear() {
@@ -7,7 +8,6 @@ class GenericMessageDisplay {
     }
     set(txt) {
         let splitList = txt.split("\n");
-        let T = this;
         this.clear();
         splitList.forEach((t) => {
             let p = document.createElement('p');
@@ -21,6 +21,7 @@ class GenericMessageDisplay {
     setNode(HTMLElement) {
         this.clear();
         this.node.appendChild(HTMLElement);
+        this.node.classList.remove('disabled');
         return true;
     }
 }
@@ -57,4 +58,57 @@ export class MouseMessageDisplay extends GenericMessageDisplay {
     }
 }
 ;
+export class DialogDisplay {
+    constructor() {
+        this.node = document.getElementById('dialogWrapper');
+        this.wrapperNode = document.getElementById('dialogWrapperWrapper');
+    }
+    setVisible(isVisible) {
+        if (isVisible)
+            this.wrapperNode.classList.remove('disabled');
+        else
+            this.wrapperNode.classList.add('disabled');
+    }
+    createExitButton(parentNode = this.createFooterButtonWrapperNode(this.node)) {
+        let b = createButton(parentNode, 'OK', () => this.clear(), 'Aceptar y continuar.');
+        b.classList.add('primary');
+        return b;
+    }
+    createFooterButtonWrapperNode(parentNode = this.node) {
+        let d = createElement(parentNode, 'div');
+        d.classList.add('footerButtonWrapper');
+        return d;
+    }
+    clear() {
+        this.node.innerHTML = "";
+        this.setVisible(false);
+        return true;
+    }
+    set(string) {
+        let splitList = string.split("\n");
+        this.clear();
+        splitList.forEach((t) => {
+            let p = document.createElement('p');
+            let tnode = document.createTextNode(t);
+            p.appendChild(tnode);
+            this.node.appendChild(p);
+        });
+        this.createExitButton();
+        this.setVisible(true);
+        return true;
+    }
+    /**
+     *
+     * @param HTMLElement The node to append to the pane.
+     * @param doOkButton If true, will add an OK button to close the pane. Default true.
+     */
+    setNode(HTMLElement, doOkButton = true) {
+        this.clear();
+        this.node.appendChild(HTMLElement);
+        if (doOkButton)
+            this.createExitButton();
+        this.setVisible(true);
+        return true;
+    }
+}
 //# sourceMappingURL=Panes.js.map

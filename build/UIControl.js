@@ -1,5 +1,5 @@
 import { Point } from './Point.js';
-import { TopStatusMessageDisplay, StatusBarMessageDisplay, MouseMessageDisplay, } from './Panes.js';
+import { TopStatusMessageDisplay, StatusBarMessageDisplay, MouseMessageDisplay, DialogDisplay, } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
 import { MapLine, MapPoint, TopographicProfilePoint, } from './MapObject.js';
 import { EditPane } from './EditPane.js';
@@ -39,9 +39,10 @@ export class InteractivityManager {
             },
         };
         this.out = {
-            topMsgBar: new TopStatusMessageDisplay(),
-            statusBar: new StatusBarMessageDisplay(),
-            mouseBar: new MouseMessageDisplay(),
+            topMsg: new TopStatusMessageDisplay(),
+            status: new StatusBarMessageDisplay(),
+            mouse: new MouseMessageDisplay(),
+            dialog: new DialogDisplay(),
         };
         // Pane functionality, as methods in case any other thing wants to use it.
         this.PaneIdList = [
@@ -132,8 +133,8 @@ export class InteractivityManager {
                     (1000 * this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
             }
         }
-        this.out.mouseBar.set(msg);
-        this.out.mouseBar.setPosition(newPoint);
+        this.out.mouse.set(msg);
+        this.out.mouse.setPosition(newPoint);
         // Final draw
         this.app.draw();
     }
@@ -196,7 +197,7 @@ export class InteractivityManager {
                     this.temp.lineTool.draftLine.l.p1 = this.temp.lineTool.p1;
                     this.temp.lineTool.draftLine.l.p2 = mouse.canvasSnap;
                     this.clickMode.set('setLinePoint2');
-                    this.out.topMsgBar.set('Click en el 2do punto de la linea');
+                    this.out.topMsg.set('Click en el 2do punto de la linea');
                     break;
                 }
                 case 'setLinePoint2': {
@@ -368,7 +369,7 @@ export class InteractivityManager {
             }
             else {
                 this.app.interman.clickMode.set('selectTopographicLine');
-                this.app.interman.out.topMsgBar.set('Seleccione una linea para crear su perfil topografico.');
+                this.app.interman.out.topMsg.set('Seleccione una linea para crear su perfil topografico.');
             }
         }
         else {

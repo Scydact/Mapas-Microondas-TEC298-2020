@@ -4,6 +4,7 @@ import {
     TopStatusMessageDisplay,
     StatusBarMessageDisplay,
     MouseMessageDisplay,
+    DialogDisplay,
 } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
 import {
@@ -64,9 +65,10 @@ export class InteractivityManager {
     };
 
     out = {
-        topMsgBar: new TopStatusMessageDisplay(),
-        statusBar: new StatusBarMessageDisplay(),
-        mouseBar: new MouseMessageDisplay(),
+        topMsg: new TopStatusMessageDisplay(),
+        status: new StatusBarMessageDisplay(),
+        mouse: new MouseMessageDisplay(),
+        dialog: new DialogDisplay(),
     };
 
     constructor(app: App) {
@@ -183,8 +185,8 @@ export class InteractivityManager {
             }
         }
 
-        this.out.mouseBar.set(msg);
-        this.out.mouseBar.setPosition(newPoint);
+        this.out.mouse.set(msg);
+        this.out.mouse.setPosition(newPoint);
 
         // Final draw
         this.app.draw();
@@ -255,7 +257,7 @@ export class InteractivityManager {
                     this.temp.lineTool.draftLine.l.p1 = this.temp.lineTool.p1;
                     this.temp.lineTool.draftLine.l.p2 = mouse.canvasSnap;
                     this.clickMode.set('setLinePoint2');
-                    this.out.topMsgBar.set('Click en el 2do punto de la linea');
+                    this.out.topMsg.set('Click en el 2do punto de la linea');
                     break;
                 }
                 case 'setLinePoint2': {
@@ -471,7 +473,7 @@ export class InteractivityManager {
                 currentLine.topoPoints.toolbox.createElement();
             } else {
                 this.app.interman.clickMode.set('selectTopographicLine');
-                this.app.interman.out.topMsgBar.set(
+                this.app.interman.out.topMsg.set(
                     'Seleccione una linea para crear su perfil topografico.'
                 );
             }

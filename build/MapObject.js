@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, svgToPng, downloadUri, downloadBlob, } from './Utils.js';
+import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, svgToPng, downloadUri, downloadBlob, getSvgUrl, downloadUrl, } from './Utils.js';
 import { Point } from './Point.js';
 import { Line } from './Line.js';
 /** Generic MapObject that can be drawn, saved, and restored. */
@@ -484,10 +484,26 @@ export class MapLine extends MapObject {
             lineBreak(outDiv);
             createElement(outDiv, 'h2', 'Perfil topografico: ');
             lineBreak(outDiv);
-            createElement(outDiv, 'span', '(Click en la imagen para descargarla.)');
+            //createElement(outDiv, 'span','(Click en la imagen para descargarla.)');
             let topoRender = createElement(outDiv, 'div');
             this.topoPoints.nodeRender = topoRender;
             this.topoPoints.updateNodeRender();
+            $(topoRender).on('click', () => {
+                let d = document.createElement('div');
+                let i = createElement(d, 'img');
+                i.style.width = '80vw';
+                i.style.height = '80vh';
+                i.style.objectFit = 'contain';
+                let url = getSvgUrl(this.topoPoints.mySvg.outerHTML);
+                i.onload = () => URL.revokeObjectURL(url);
+                i.src = url;
+                let footer = createElement(d, 'div');
+                footer.classList.add('footerButtonWrapper');
+                createButton(footer, 'Descargar SVG', () => this.topoPoints._downloadSvg(), 'Descargar la imagen en formato vectorial SVG');
+                createButton(footer, 'Descargar PNG', () => this.topoPoints._downloadPng(), 'Descargar la imagen en formato bitmap PNG');
+                this.app.interman.out.dialog.createExitButton(footer);
+                this.app.interman.out.dialog.setNode(d, false);
+            });
             lineBreak(outDiv);
             let toolDiv = createElement(outDiv, 'div');
             toolDiv.classList.add('buttonWrapper');
@@ -512,7 +528,7 @@ export class MapLineList extends MapObjectList {
         this.toolbox = {
             createElement: () => {
                 this.app.interman.clickMode.set('setLinePoint1');
-                this.app.interman.out.topMsgBar.set('Click en el 1er punto de la linea');
+                this.app.interman.out.topMsg.set('Click en el 1er punto de la linea');
             },
             deleteElement: (doNotDraw) => {
                 let undoActionObject = {
@@ -665,7 +681,7 @@ export class MapPointList extends MapObjectList {
         this.toolbox = {
             createElement: () => {
                 this.app.interman.clickMode.set('setPointMarker');
-                this.app.interman.out.topMsgBar.set('Click en un punto para marcarlo');
+                this.app.interman.out.topMsg.set('Click en un punto para marcarlo');
             },
             deleteElement: (doNotDraw) => {
                 let undoActionObject = {
@@ -783,7 +799,7 @@ export class TopographicProfilePointList extends MapPointList {
                 let im = this.app.interman;
                 let tt = im.temp.topoPointTool;
                 im.clickMode.set('setTopographicPoint');
-                im.out.topMsgBar.set('Click para marcar un punto del perfil topografico.');
+                im.out.topMsg.set('Click para marcar un punto del perfil topografico.');
                 tt.sourceLine = this.parentMapLine;
                 tt.draftLine.app = this.app;
                 tt.draftLine.l.p1 = this.app.mouse.canvasSnap;
@@ -871,6 +887,9 @@ export class TopographicProfilePointList extends MapPointList {
         ]);
         return rows.reverse();
     }
+    _getDownloadName() {
+        return `perfil_topografico_${this.app.mapLoader.currentMap}`;
+    }
     /** Creates a csv blob from this object */
     _toCsv() {
         // TODO: Move this to Utils
@@ -880,7 +899,7 @@ export class TopographicProfilePointList extends MapPointList {
     }
     /** Prompts download of a .csv file containing this topographical profile's data. */
     _downloadCsv() {
-        var fileName = `perfil_topografico_${this.app.mapLoader.currentMap}.csv`;
+        var fileName = this._getDownloadName() + '.csv';
         var csvStr = this._toCsv();
         downloadUri(csvStr, fileName);
     }
@@ -900,7 +919,7 @@ export class TopographicProfilePointList extends MapPointList {
     }
     /** Prompts download of a .xlsx file containing this topographical profile's data. */
     _downloadXlsx() {
-        var fileName = `perfil_topografico_${this.app.mapLoader.currentMap}.xlsx`;
+        var fileName = this._getDownloadName() + '.xlsx';
         var s = this._toXlsx();
         // Convert binary data to octet stream
         var buf = new ArrayBuffer(s.length); //convert s to arrayBuffer
@@ -910,6 +929,27 @@ export class TopographicProfilePointList extends MapPointList {
         // Download
         let blob = new Blob([buf], { type: "application/octet-stream" });
         downloadBlob(blob, fileName);
+    }
+    _downloadPng() {
+        let s = this.mySvg;
+        try {
+            // Firefox needs these attributes to render the image.
+            s.setAttribute('width', s.width.baseVal.value);
+            s.setAttribute('height', s.height.baseVal.value);
+            // Chrome doesnt even need/have this, so it will throw error...
+        }
+        catch (e) { }
+        svgToPng(s.outerHTML, (data) => {
+            downloadUri(data, this._getDownloadName() + '.png');
+        });
+        // Remove the Firefox's attributes, so image can autoscale again.
+        s.removeAttribute('width');
+        s.removeAttribute('height');
+    }
+    _downloadSvg() {
+        let url = getSvgUrl(this.mySvg.outerHTML);
+        downloadUrl(url, this._getDownloadName() + '.svg');
+        URL.revokeObjectURL(url);
     }
     _extraNodeButtons(editNode) {
         lineBreak(editNode);
@@ -922,22 +962,7 @@ export class TopographicProfilePointList extends MapPointList {
         createButton(editNode, '<i class="fas fa-file-download"></i><span>Descargar Excel</span>', () => {
             this._downloadXlsx();
         }, 'Descargar la lista de puntos topográficos de esta linea en formato .xlsx');
-        createButton(editNode, '<i class="fas fa-chart-area"></i><span>Descargar perfil</span>', () => {
-            let s = this.mySvg;
-            try {
-                // Firefox needs these attributes to render the image.
-                s.setAttribute('width', s.width.baseVal.value);
-                s.setAttribute('height', s.height.baseVal.value);
-                // Chrome doesnt even need/have this, so it will throw error...
-            }
-            catch (e) { }
-            svgToPng(s.outerHTML, (data) => {
-                downloadUri(data, `perfil_topografico_${this.app.mapLoader.currentMap}.png`);
-            });
-            // Remove the Firefox's attributes, so image can autoscale again.
-            s.removeAttribute('width');
-            s.removeAttribute('height');
-        }, 'Descargar el perfil topográfico ya graficado (formato .png)');
+        createButton(editNode, '<i class="fas fa-chart-area"></i><span>Descargar perfil</span>', () => this._downloadPng(), 'Descargar el perfil topográfico ya graficado (formato .png)');
     }
     /** Returns a point array {x: distanceFromStart, y: height} */
     _getDataAsPointList() {
