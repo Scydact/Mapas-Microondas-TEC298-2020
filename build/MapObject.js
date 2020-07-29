@@ -81,7 +81,6 @@ export class MapObject {
      */
     flipState(state) {
         this.setState(state, !this.getState(state));
-        this._StateChanged(state, this.getState(state));
     }
 }
 /**
@@ -247,11 +246,11 @@ export class MapObjectList {
                     this.app.draw();
                 });
                 divJQuery.on('mouseover', () => {
-                    obj.state.hover = true;
+                    obj.setState('hover', true);
                     this.app.draw();
                 });
                 divJQuery.on('mouseout', () => {
-                    obj.state.hover = false;
+                    obj.setState('hover', false);
                     this.app.draw();
                 });
                 // Append to the actual list.
@@ -304,8 +303,12 @@ export class MapLine extends MapObject {
         this.topoPoints = new TopographicProfilePointList(this);
     }
     _StateChanged(state, value) {
-        if (state == 'active' && !value)
+        if (state == 'active' && !value) {
             this.topoPoints.setState('active', false);
+            this.topoPoints.setState('hover', false);
+        }
+        else if (state == 'hover' && !this.state.active)
+            this.topoPoints.setState('hover', value);
     }
     /** Creates a new line and sets its defining points. */
     static fromPoints(p1, p2, app) {
@@ -319,7 +322,7 @@ export class MapLine extends MapObject {
             let x = this.app;
             x.HOVER_LINE_LENGTH = this.getLengthMetre(); // DEBUG, used for adding distances
         }
-        return `[Lin] d = ${(this.getLengthMetre() / 1e3).toFixed(2)} km`;
+        return `L @ d = ${(this.getLengthMetre() / 1e3).toFixed(2)} km`;
     }
     toJObject() {
         let o = {
@@ -731,8 +734,9 @@ export class TopographicProfilePoint extends MapPoint {
         this.height = height;
     }
     getHoverMessageContent() {
-        return `d = ${((this.position * this.parentMapLine.getLengthMetre()) /
-            1000).toFixed(2)} km (linea = ${this.parentMapLine.getFormattedLength()})`;
+        let dp = ((this.position * this.parentMapLine.getLengthMetre()) / 1000).toFixed(2);
+        let dl = this.parentMapLine.getFormattedLength();
+        return `PT @ d = ${dp} / ${dl}`;
     }
     getCurrentStyle() {
         return this.parentMapLine.getCurrentStyle();

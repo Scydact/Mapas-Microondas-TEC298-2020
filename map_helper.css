@@ -584,8 +584,8 @@ h2 {
 }
 
 .objectList {
-    background-color: rgba(0, 0, 0, 20%);
-    border-radius   : 3px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius   : var(--border-radius-tab);
     padding         : 0.5em;
     margin-top      : 0.5em;
 }
@@ -596,11 +596,12 @@ h2 {
 
 .objectList:hover,
 .objectList.hover {
-    background-color: rgba(0, 0, 0, 30%);
+    background-color: var(--btn-background-hover);
 }
 
 .objectList.active {
-    background-color: rgba(17, 3, 143, 0.3);
+    background-color: var(--btn-primary-background);
+    color: var(--btn-primary-color)
 }
 
 .scroll {

@@ -55,6 +55,9 @@ export class InteractivityManager {
         this.clickMode = new ClickMode(app);
         this.editPane = new EditPane(app);
     }
+    _getMouseDistanceThreshold() {
+        return devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor;
+    }
     /** Returns this.map.objectList, but filtered with the given state. */
     _getCurrentState(state, value) {
         if (value === undefined) {
@@ -79,6 +82,7 @@ export class InteractivityManager {
      */
     handlerScreenPointMove(newPoint) {
         let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
+        let mouseDistanceThreshold = this._getMouseDistanceThreshold();
         if (this.clicking) {
             if (!this.dragging) {
                 let dragDist = Point.Distance(this.startDrag, newPointScaled);
@@ -97,14 +101,25 @@ export class InteractivityManager {
         // Update hover status
         this.app.objectListList.forEach((e) => {
             e.setState('hover', false);
-            e.getCloseToScreenPoint(newPointScaled, devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor).forEach((e) => (e.state.hover = true));
+            e.getCloseToScreenPoint(newPointScaled, mouseDistanceThreshold).forEach((e) => (e.setState('hover', true)));
             e.updateNode();
         });
+        // Update hover of topopoints (if available)
+        let currentActive = this._getCurrentState('active');
+        if (currentActive.line.length == 1 &&
+            currentActive.point.length == 0 &&
+            currentActive.line[0].getDistanceToScreenPoint(newPointScaled) < mouseDistanceThreshold) {
+            // If clicked near the line, actuate the hoverPoints.
+            // Direct copy from below, but applied to TopoPoints.
+            let currentLine = currentActive.line[0];
+            currentLine.topoPoints.setState('hover', false);
+            let topoCloseToScreen = currentLine.topoPoints.getCloseToScreenPoint(newPointScaled, mouseDistanceThreshold);
+            topoCloseToScreen.forEach((e) => e.setState('hover', true));
+            currentLine.topoPoints.updateNode();
+        }
         // Display tooltip
         let formattedPosition = this.app.mapMeta.sexagecimalCanvasPointToCoordPoint(this.app.mouse.canvas);
         let msg = `Pos: (${formattedPosition.x}, ${formattedPosition.y})`;
-        //msg += `\nDrag Offset = ${this.DEBUG_DRAG}`;
-        //this.out.statusBar.set(`wdpx: ${devicePixelRatio} x: ${innerWidth}, y: ${innerHeight}`); //`x: ${this.app.canvas.width}, y: ${this.app.canvas.height}`);
         if (this.app.DEBUG)
             msg += `\nCurrent Canvas Position: ${this.app.mouse.canvas.x.toFixed(2)}, ${this.app.mouse.canvas.y.toFixed(2)}`; //DEBUG, for adding new maps
         if (snapData.snapObjectType) {
@@ -177,6 +192,16 @@ export class InteractivityManager {
             outObject.snapMessage = '[Snap a linea]';
             outObject.snapObject = hoverList.line[0];
             outObject.snapObjectType = 'line';
+            // Snap at topo point
+            let topoHover = hoverList.line[0].topoPoints.getCloseToScreenPoint(newPoint, this._getMouseDistanceThreshold());
+            if (topoHover.length) {
+                let o = topoHover[0];
+                if (snapEnabled)
+                    snapPoint = this.app.canvasPointToScreenPoint(o.p);
+                outObject.snapMessage = '[Snap a punto topo]';
+                outObject.snapObject = o;
+                outObject.snapObjectType = 'topoPoint';
+            }
         }
         let canvasSnap = this.app.screenPointToCanvasPoint(snapPoint);
         // let snapDelta = Point.Minus(canvasPoint, canvasSnap)
@@ -189,6 +214,7 @@ export class InteractivityManager {
         let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
         this.updateAllMousePoints(newPointScaled);
         let mouse = this.app.mouse;
+        let mouseDistanceThreshold = this._getMouseDistanceThreshold();
         if (!this.dragging) {
             switch (this.clickMode.mode) {
                 case 'setLinePoint1': {
@@ -222,7 +248,7 @@ export class InteractivityManager {
                         if (!this.modifier.shift) {
                             e.setState('active', false);
                         }
-                        e.getCloseToScreenPoint(newPointScaled, devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor).forEach((e) => e.flipState('active'));
+                        e.getCloseToScreenPoint(newPointScaled, mouseDistanceThreshold).forEach((e) => e.flipState('active'));
                         e.updateNode();
                     });
                     this.topoToolClick();
@@ -238,13 +264,30 @@ export class InteractivityManager {
                     break;
                 }
                 default: {
-                    this.app.objectListList.forEach((e) => {
+                    // If topopoint is active.
+                    let currentActive = this._getCurrentState('active');
+                    if (currentActive.line.length == 1 &&
+                        currentActive.point.length == 0 &&
+                        currentActive.line[0].getDistanceToScreenPoint(newPointScaled) < mouseDistanceThreshold) {
+                        // If clicked near the line, actuate the hoverPoints.
+                        // Direct copy from below, but applied to TopoPoints.
+                        let currentLine = currentActive.line[0];
                         if (!this.modifier.shift) {
-                            e.setState('active', false);
+                            currentLine.topoPoints.setState('active', false);
                         }
-                        e.getCloseToScreenPoint(newPointScaled, devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor).forEach((e) => e.flipState('active'));
-                        e.updateNode();
-                    });
+                        let topoCloseToScreen = currentLine.topoPoints.getCloseToScreenPoint(newPointScaled, mouseDistanceThreshold);
+                        topoCloseToScreen.forEach((e) => e.flipState('active'));
+                    }
+                    else {
+                        // Interact with lines//points
+                        this.app.objectListList.forEach((e) => {
+                            if (!this.modifier.shift) {
+                                e.setState('active', false);
+                            }
+                            e.getCloseToScreenPoint(newPointScaled, mouseDistanceThreshold).forEach((e) => e.flipState('active'));
+                            e.updateNode();
+                        });
+                    }
                     break;
                 }
             }
