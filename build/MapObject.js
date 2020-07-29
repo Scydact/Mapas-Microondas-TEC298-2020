@@ -842,6 +842,7 @@ export class TopographicProfilePointList extends MapPointList {
                     if (n !== NaN) {
                         let targetLine = this.parentMapLine;
                         targetLine.topoPoints.add(TopographicProfilePoint.fromCanvasPoint(targetLine, canvasPoint, n));
+                        targetLine.topoPoints.updateNodeRender();
                         this.app.draw();
                     }
                     diag.clear();
@@ -979,10 +980,21 @@ export class TopographicProfilePointList extends MapPointList {
             this.app.draw();
             this.updateNodeRender();
         }, 'Invertir el orden de los puntos de inicio/fin. Ej. en vez de A a B, sera de B a A.');
-        createButton(editNode, '<i class="fas fa-file-download"></i><span>Descargar Excel</span>', () => {
-            this._downloadXlsx();
-        }, 'Descargar la lista de puntos topográficos de esta linea en formato .xlsx');
-        createButton(editNode, '<i class="fas fa-chart-area"></i><span>Descargar perfil</span>', () => this._downloadPng(), 'Descargar el perfil topográfico ya graficado (formato .png)');
+        createButton(editNode, '<i class="fas fa-file-download"></i><span>Descargar perfil</span>', () => {
+            let d = document.createElement('div');
+            createElement(d, 'h1', 'Descargar perfil topografico');
+            let btnWrap = createElement(d, 'div');
+            btnWrap.classList.add('grid-2-cols');
+            btnWrap.style.width = '100%';
+            createButton(btnWrap, '<i class="fas fa-file-excel"></i><span>Descargar Excel</span>', () => {
+                this._downloadXlsx();
+            }, 'Descargar la lista de puntos topográficos de esta linea en formato .xlsx');
+            createButton(btnWrap, '<i class="fas fa-file-image"></i><span>Descargar PNG</span>', () => this._downloadPng(), 'Descargar el perfil topográfico ya graficado (formato .png)');
+            createButton(btnWrap, '<i class="fas fa-file-csv"></i><span>Descargar CSV</span>', () => this._downloadCsv(), 'Descargar el perfil topográfico en formato .csv separado por tabulación.');
+            createButton(btnWrap, '<i class="fas fa-bezier-curve"></i><span>Descargar SVG</span>', () => this._downloadSvg(), 'Descargar el perfil topográfico ya graficado (formato .svg)');
+            this.app.interman.out.dialog.setNode(d);
+        }, 'Descargar el perfil seleccionado en varios formatos.');
+        createButton(editNode, '<i class="fas fa-info-circle"></i><span>Info</span>', () => { }, 'Informacion sobre la linea.');
     }
     /** Returns a point array {x: distanceFromStart, y: height} */
     _getDataAsPointList() {
