@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, svgToPng, downloadBlob, } from './Utils.js';
+import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, svgToPng, downloadUri, downloadBlob, } from './Utils.js';
 import { Point } from './Point.js';
 import { Line } from './Line.js';
 /** Generic MapObject that can be drawn, saved, and restored. */
@@ -265,9 +265,11 @@ export class MapObjectList {
     updateNodeButtons(toolNode) {
         if (toolNode) {
             toolNode.innerHTML = '';
-            createButton(toolNode, '+', () => this.toolbox.createElement(), this.toolboxTooltips.createElement);
-            createButton(toolNode, '-', () => this.toolbox.deleteElement(), this.toolboxTooltips.deleteElement);
-            createButton(toolNode, 'Todos', () => {
+            let AddRemoveDiv = createElement(toolNode, 'div');
+            AddRemoveDiv.classList.add('btnGroup');
+            createButton(AddRemoveDiv, '+', () => this.toolbox.createElement(), this.toolboxTooltips.createElement);
+            createButton(AddRemoveDiv, '-', () => this.toolbox.deleteElement(), this.toolboxTooltips.deleteElement);
+            createButton(toolNode, 'Seleccionar todos', () => {
                 let elements = this.list;
                 let activeElements = this.getState('active');
                 // Deselect all if everything is already selected
@@ -276,7 +278,7 @@ export class MapObjectList {
                 this.updateNode();
                 this.app.draw();
             }, 'Selecciona/deselecciona todos los elementos de la lista.');
-            createButton(toolNode, 'Invertir', () => {
+            createButton(toolNode, 'Invertir selección', () => {
                 this.flipState('active');
                 this.updateNode();
                 this.app.draw();
@@ -439,7 +441,7 @@ export class MapLine extends MapObject {
         let outDiv = document.createElement('div');
         createLabel(outDiv, `Longitud de linea: ${this.getFormattedLength()}`);
         lineBreak(outDiv);
-        {
+        if (false) {
             // Width
             createLabel(outDiv, 'Anchura: ');
             let inputWidth = createElement(outDiv, 'input');
@@ -456,7 +458,7 @@ export class MapLine extends MapObject {
             });
             lineBreak(outDiv);
         }
-        {
+        if (false) {
             // Divisions
             createLabel(outDiv, 'Divisiones: ');
             let inputDivs = createElement(outDiv, 'input');
@@ -473,8 +475,9 @@ export class MapLine extends MapObject {
         {
             // Topographic profile points
             lineBreak(outDiv);
-            createLabel(outDiv, 'Perfil topografico: ');
+            createElement(outDiv, 'h2', 'Perfil topografico: ');
             lineBreak(outDiv);
+            createElement(outDiv, 'span', '(Click en la imagen para descargarla.)');
             let topoRender = createElement(outDiv, 'div');
             this.topoPoints.nodeRender = topoRender;
             this.topoPoints.updateNodeRender();
@@ -488,13 +491,15 @@ export class MapLine extends MapObject {
                 }
                 catch (e) { }
                 svgToPng(s.outerHTML, (data) => {
-                    downloadBlob(data, `perfil_topografico_${this.app.mapLoader.currentMap}.png`);
+                    downloadUri(data, `perfil_topografico_${this.app.mapLoader.currentMap}.png`);
                 });
                 // Remove the Firefox's attributes, so image can autoscale again.
                 s.removeAttribute('width');
                 s.removeAttribute('height');
             });
+            lineBreak(outDiv);
             let toolDiv = createElement(outDiv, 'div');
+            toolDiv.classList.add('buttonWrapper');
             this.topoPoints.updateNodeButtons(toolDiv);
             let listDiv = createElement(outDiv, 'div');
             listDiv.classList.add('listContainer');
@@ -848,7 +853,7 @@ export class TopographicProfilePointList extends MapPointList {
      *  - lat
      *  - pos (%)
      */
-    _getDataAsTableArray() {
+    _getDataAsArray() {
         let rows = [];
         let totalLength = this.parentMapLine.getLengthMetre();
         let mapMeta = this.app.mapMeta;
@@ -858,44 +863,71 @@ export class TopographicProfilePointList extends MapPointList {
             let d = currentPoint.position * totalLength;
             let h = currentPoint.height;
             let coords = formatAsCoords(currentPoint.p);
-            rows.push([d, h, coords.x, coords.y, currentPoint.position]);
+            rows.push([
+                Math.round(d),
+                h,
+                coords.x,
+                coords.y,
+            ]);
         }
         rows.push([
             'Distancia [m]',
             'Altura [m]',
             'Longitud',
             'Latitud',
-            'Posicion [%]',
         ]);
         return rows.reverse();
     }
     /** Creates a csv blob from this object */
     _toCsv() {
         // TODO: Move this to Utils
-        let data = this._getDataAsTableArray();
-        return ('data:text/csv;charset=utf-8,\ufeff' + // extra BOM character, cuz excel recognizes CSV files as ASCII
-            data.map((e) => e.join(',')).join('\n'));
+        let data = this._getDataAsArray();
+        let dataStr = data.map((e) => e.join('\t')).join('\n');
+        return 'data:text/csv;charset=UTF-8,sep=\t\n' + dataStr;
     }
-    /** Prompts download of a csv file containing this topographical profile's data. */
+    /** Prompts download of a .csv file containing this topographical profile's data. */
     _downloadCsv() {
+        var fileName = `perfil_topografico_${this.app.mapLoader.currentMap}.csv`;
         var csvStr = this._toCsv();
-        var encodedUri = encodeURI(csvStr); // fix not opening well on excel...
-        var link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `perfil_topografico_${this.app.mapLoader.currentMap}.csv`);
-        //document.body.appendChild(link); // Required for FF
-        link.click();
+        downloadUri(csvStr, fileName);
+    }
+    /** Creates excel (xlsx) binary data from this object */
+    _toXlsx() {
+        var mapName = this.app.mapMeta.name;
+        var wb = XLSX.utils.book_new();
+        wb.Props = {
+            Title: `Perfil topografico en ${mapName}`
+        };
+        wb.SheetNames.push(mapName);
+        var ws_data = this._getDataAsArray();
+        var ws = XLSX.utils.aoa_to_sheet(ws_data);
+        wb.Sheets[mapName] = ws;
+        var wb_out = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+        return wb_out;
+    }
+    /** Prompts download of a .xlsx file containing this topographical profile's data. */
+    _downloadXlsx() {
+        var fileName = `perfil_topografico_${this.app.mapLoader.currentMap}.xlsx`;
+        var s = this._toXlsx();
+        // Convert binary data to octet stream
+        var buf = new ArrayBuffer(s.length); //convert s to arrayBuffer
+        var view = new Uint8Array(buf); //create uint8array as viewer
+        for (var i = 0; i < s.length; i++)
+            view[i] = s.charCodeAt(i) & 0xFF; //convert to octet
+        // Download
+        let blob = new Blob([buf], { type: "application/octet-stream" });
+        downloadBlob(blob, fileName);
     }
     _extraNodeButtons(editNode) {
         lineBreak(editNode);
-        createButton(editNode, 'Reverse', () => {
+        createButton(editNode, 'Invertir inicio/fin', () => {
             this.parentMapLine.l.flip();
             this.reverseList();
             this.app.draw();
         }, 'Invertir el orden de los puntos. Ej. en vez de A a B, sera de B a A.');
-        createButton(editNode, 'Descargar', () => {
-            this._downloadCsv(); // TODO: Change to Util.downloadBlob();
-        }, 'Descargar la lista de puntos topograficos de esta linea en formato .csv');
+        createButton(editNode, 'Descargar Excel', () => {
+            this._downloadXlsx();
+        }, 'Descargar la lista de puntos topograficos de esta linea en formato .xlsx');
     }
     /** Generates this.mySvg and this.myPolyline */
     _generateSvgNode() {
@@ -909,10 +941,65 @@ export class TopographicProfilePointList extends MapPointList {
                 yield SVGInject(i);
                 this.mySvg = document.getElementById('perfilTopo');
                 this.mySvg.id = ''; // remove Id...
-                let p = document.createElement('polyline');
-                p.setAttribute('style', 'fill:none;stroke:red;stroke-width:2');
-                this.mySvg.appendChild(p);
-                this.myPolyline = p;
+                {
+                    let p = document.createElement('polyline');
+                    p.setAttribute('style', 'fill:none;stroke:red;stroke-width:2');
+                    this.mySvg.appendChild(p);
+                    this.myPolyline = p;
+                }
+                {
+                    let p = document.createElement('rect');
+                    p.setAttribute('style', 'fill:none;stroke:red;stroke-width:2');
+                    p.setAttribute('x', '417.10');
+                    p.setAttribute('y', '448.13');
+                    p.setAttribute('width', '57.19');
+                    p.setAttribute('height', '10.70');
+                    this.mySvg.appendChild(p);
+                    this.myRectangle = p;
+                }
+                {
+                    let p = document.createElement('line');
+                    p.setAttribute('style', 'fill:none;stroke:red;stroke-width:1;stroke-dasharray:4');
+                    this.mySvg.appendChild(p);
+                    this.myLine = p;
+                }
+                let textStyle = 'fill: red; font: 10px "Segoe UI", "Segoe", Helvetica, Arial, sans-serif';
+                {
+                    let p = document.createElement('text');
+                    p.setAttribute('style', textStyle);
+                    p.setAttribute('x', '305.78');
+                    p.setAttribute('y', '530.60');
+                    p.setAttribute('text-anchor', 'end');
+                    this.mySvg.appendChild(p);
+                    this.myTextAltitud1 = p;
+                }
+                {
+                    let p = document.createElement('text');
+                    p.setAttribute('style', textStyle);
+                    p.setAttribute('x', '623.40');
+                    p.setAttribute('y', '530.60');
+                    p.setAttribute('text-anchor', 'end');
+                    this.mySvg.appendChild(p);
+                    this.myTextAltitud2 = p;
+                }
+                {
+                    let p = document.createElement('text');
+                    p.setAttribute('style', textStyle);
+                    p.setAttribute('x', '623.40');
+                    p.setAttribute('y', '530.60');
+                    p.setAttribute('text-anchor', 'end');
+                    this.mySvg.appendChild(p);
+                    this.myTextAltitud2 = p;
+                }
+                {
+                    let p = document.createElement('text');
+                    p.setAttribute('style', textStyle);
+                    p.setAttribute('x', '460.17');
+                    p.setAttribute('y', '519.11');
+                    p.setAttribute('text-anchor', 'end');
+                    this.mySvg.appendChild(p);
+                    this.myTextDistancia = p;
+                }
             }
             return this.mySvg;
         });
@@ -961,11 +1048,23 @@ export class TopographicProfilePointList extends MapPointList {
                     B: [120e3, 1e3],
                     C: [60e3, 250],
                 };
-                let selectedScale = scales.A;
-                if (dh <= scales.C[1] && dd <= scales.C[0])
-                    selectedScale = scales.C;
-                else if (dh <= scales.B[1] && dd <= scales.B[0])
-                    selectedScale = scales.B;
+                let selectedScaleIndex = 'A';
+                if (dh <= scales.C[1] * 1.1 && dd <= scales.C[0])
+                    selectedScaleIndex = 'C';
+                else if (dh <= scales.B[1] * 1.1 && dd <= scales.B[0])
+                    selectedScaleIndex = 'B';
+                let selectedScale = scales[selectedScaleIndex];
+                switch (selectedScaleIndex) {
+                    case 'A':
+                        this.myRectangle.setAttribute('y', '448.13');
+                        break;
+                    case 'B':
+                        this.myRectangle.setAttribute('y', '458.28');
+                        break;
+                    case 'C':
+                        this.myRectangle.setAttribute('y', '468.73');
+                        break;
+                }
                 // Scale the points according to scale
                 let p1 = new Point(90.81, 485.91); // Lower left
                 let p2 = new Point(733.45, 161.32); // Upper right
@@ -973,8 +1072,8 @@ export class TopographicProfilePointList extends MapPointList {
                 let pr = 762; // Circle radius (for curvature)
                 let pd = Point.Minus(p2, p1);
                 let mappedPointList = pointList.map((p) => {
-                    let x = (p.x - d_min) * pd.x / selectedScale[0] + p1.x;
-                    let y_t = (p.y - h_min) * pd.y / selectedScale[1];
+                    let x = ((p.x - d_min) * pd.x) / selectedScale[0] + p1.x;
+                    let y_t = ((p.y - h_min) * pd.y) / selectedScale[1];
                     let y = -Math.sqrt(Math.pow(pr, 2) - Math.pow((x - pc.x), 2)) + pc.y + y_t;
                     return new Point(x, y);
                 });
@@ -985,6 +1084,24 @@ export class TopographicProfilePointList extends MapPointList {
                     for (let i = 0; i < l; i++) {
                         polyStr += `${mappedPointList[i].x.toFixed(2)},${mappedPointList[i].y.toFixed(2)} `;
                     }
+                    // Add start-end line
+                    this.myLine.setAttribute('x1', mappedPointList[0].x.toFixed(2));
+                    this.myLine.setAttribute('y1', mappedPointList[0].y.toFixed(2));
+                    this.myLine.setAttribute('x2', mappedPointList[l - 1].x.toFixed(2));
+                    this.myLine.setAttribute('y2', mappedPointList[l - 1].y.toFixed(2));
+                    this.myTextAltitud1.innerHTML = pointList[0].y.toString();
+                    this.myTextAltitud2.innerHTML = pointList[l - 1].y.toString();
+                    this.myTextDistancia.innerHTML = (dd / 1e3).toFixed(2);
+                }
+                else {
+                    this.myRectangle.setAttribute('y', '-100'); // yeet it out
+                    this.myLine.removeAttribute('x1');
+                    this.myLine.removeAttribute('y1');
+                    this.myLine.removeAttribute('x2');
+                    this.myLine.removeAttribute('y2');
+                    this.myTextAltitud1.innerHTML = '';
+                    this.myTextAltitud2.innerHTML = '';
+                    this.myTextDistancia.innerHTML = '';
                 }
                 this.myPolyline.setAttribute('points', polyStr);
                 //#endregion

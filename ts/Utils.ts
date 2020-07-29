@@ -16,7 +16,7 @@ export function decimalToSexagecimal(dec: number) {
         '°' +
         Math.floor(minutes).toString() +
         "'" +
-        seconds.toFixed(2).toString() +
+        seconds.toFixed(0) +
         "''"
     );
 }
@@ -196,11 +196,21 @@ function svgUrlToPng(svgUrl, callback) {
 }
 
 /** Prompts download of a given Uri */
-export function downloadBlob(dataToEncode: string, fileName: string) {
-    var encodedUri = encodeURI(dataToEncode);
+export function downloadUri(encodedData: string, fileName: string) {
+    var encodedUri = encodeURI(encodedData);
     var link = document.createElement('a');
     link.setAttribute('href', encodedUri);
     link.setAttribute('download', fileName);
-    //document.body.appendChild(link); // Required for FF
     link.click();
+}
+
+/** Prompts download of a given Uri */
+export function downloadBlob(blob: Blob, fileName: string) {
+    let url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.click();
+
+    URL.revokeObjectURL(url);
 }

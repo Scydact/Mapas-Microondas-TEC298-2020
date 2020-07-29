@@ -12,7 +12,7 @@ export function decimalToSexagecimal(dec) {
         '°' +
         Math.floor(minutes).toString() +
         "'" +
-        seconds.toFixed(2).toString() +
+        seconds.toFixed(0) +
         "''");
 }
 /**
@@ -146,12 +146,20 @@ function svgUrlToPng(svgUrl, callback) {
     svgImage.src = svgUrl;
 }
 /** Prompts download of a given Uri */
-export function downloadBlob(dataToEncode, fileName) {
-    var encodedUri = encodeURI(dataToEncode);
+export function downloadUri(encodedData, fileName) {
+    var encodedUri = encodeURI(encodedData);
     var link = document.createElement('a');
     link.setAttribute('href', encodedUri);
     link.setAttribute('download', fileName);
-    //document.body.appendChild(link); // Required for FF
     link.click();
+}
+/** Prompts download of a given Uri */
+export function downloadBlob(blob, fileName) {
+    let url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.click();
+    URL.revokeObjectURL(url);
 }
 //# sourceMappingURL=Utils.js.map

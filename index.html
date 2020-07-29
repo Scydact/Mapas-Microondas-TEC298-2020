@@ -9,32 +9,14 @@
     <link rel=stylesheet href=map_helper.css>
     <link rel=stylesheet href=cursor_modes.css>
 
-    <script src=https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js></script>
-    <script src="https://kit.fontawesome.com/636bd4a313.js" crossorigin="anonymous"></script>
-    <script src="jscolor.js"></script>
-    <script src="svg-inject.js"></script>
-    <!-- 
-    <script src=map_helper.js></script>
-    <script src=map_loader.js></script>
-    <script src=map_draw.js></script>
-    <script src=ui_control.js></script>
+    <script defer src=https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js></script>
+    <script defer src="https://kit.fontawesome.com/636bd4a313.js" crossorigin="anonymous"></script>
+    <script defer src="jscolor.js"></script>
+    <script defer src="svg-inject.js"></script>
+    <script defer src="xlsx.full.min.js"></script>
 
-    var i = document.createElement('img');
-    i.src = "PERFIL TOPO.svg";
-    i.id = "test";
-    document.getElementById("lineListWrapper").appendChild(i);
-    await SVGInject(i);
-
-
-    var p = document.createElement('polyline');
-    var pointList = "0,40 40,100";//"91,483 412,155 731,485";
-    p.setAttribute('points',pointList);
-    p.setAttribute('style',"stroke:red;stroke-width:4");
-    p.id = "droga";
-
-    document.getElementById('test').appendChild(p);
-     -->
-    <script type="module" src=./build/App.js></script>
+    <!-- App -->
+    <script defer type="module" src=./build/App.js></script>
 </head>
 
 <body>
@@ -76,13 +58,13 @@
 
                     <div id=linesWrapper class='tabcontent'>
                         <h2>Lineas</h2>
-                        <div id=lineListButtonWrapper></div>
+                        <div id=lineListButtonWrapper class='buttonWrapper'></div>
                         <div id=lineListWrapper class='listContainer scroll'></div>
                     </div>
 
                     <div id=pointsWrapper class='tabcontent'>
                         <h2>Puntos</h2>
-                        <div id=pointListButtonWrapper></div>
+                        <div id=pointListButtonWrapper class='buttonWrapper'></div>
                         <div id=pointListWrapper class='listContainer scroll'></div>
                     </div>
                 </div>

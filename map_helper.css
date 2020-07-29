@@ -26,6 +26,59 @@
     --border-radius-tab: .5rem;
     --bg-tab-inactive: rgba(0,0,0,10%);
     --bg-tab-hover: rgba(0,0,0,15%);
+
+    --input-min-size: 2rem;
+    --input-border-radius: 0.5rem;
+
+    --input-background: rgba(0,0,0,0.1);
+    --input-background-hover: rgba(0,0,0,0.2);
+    --input-background-active: rgb(53, 103, 240);
+    --input-color: black;
+    --input-color-hover: black;
+    --input-color-active: white;
+    
+
+}
+
+input {
+    background: var(--input-background);
+    color: var(--input-color);
+
+    border: none;
+
+    min-height: var(--input-min-size);
+    min-width: var(--input-min-size);
+    border-radius: var(--input-border-radius);
+    margin: 0.1rem;
+
+    flex-grow: 1;
+}
+
+input:hover, input:focus {
+    background: var(--input-background-hover);
+    color: var(--input-color-hover);
+}
+
+input:active {
+    background: var(--input-background-active);
+    color: var(--input-color-active);
+}
+
+.btnGroup {
+    display: inline-block;
+    margin: 0.1rem;
+}
+.btnGroup input {
+    margin: 0;
+    border-radius: 0;
+}
+.btnGroup input:first-child {
+    border-top-left-radius: var(--input-border-radius);
+    border-bottom-left-radius: var(--input-border-radius);
+}
+.btnGroup input:last-child {
+    border-top-right-radius: var(--input-border-radius);
+    border-bottom-right-radius: var(--input-border-radius);
 }
 
 * {
@@ -37,6 +90,11 @@ body {
     padding    : 0;
     margin     : 0;
     user-select: none;
+}
+
+h2 {
+    margin: 0;
+    margin-top: 0.25rem;
 }
 
 #renderCanvas {
@@ -213,6 +271,15 @@ body {
     left : 0;
 }
 
+.buttonWrapper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+    flex-flow: wrap;
+    flex: 0 0;
+}
+
+
 /* #dialogButtonWrapper {
     top  : 2px;
     right: 2px;
@@ -347,7 +414,7 @@ body {
     background: white;
     padding: var(--padding-pane);
     display: none;
-    min-width: 25rem;
+    width: 25rem;
     height: 100vh; /* This stops the things from expanding over 100% (e.g. long lists) */
     box-shadow: var(--shadow);
 }
