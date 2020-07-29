@@ -138,7 +138,8 @@ export class InteractivityManager {
             e.setState('hover', false);
             e.getCloseToScreenPoint(
                 newPointScaled,
-                mouseDistanceThreshold).forEach((e) => (e.setState('hover', true)));
+                mouseDistanceThreshold
+            ).forEach((e) => e.setState('hover', true));
             e.updateNode();
         });
 
@@ -147,9 +148,8 @@ export class InteractivityManager {
         if (
             currentActive.line.length == 1 &&
             currentActive.point.length == 0 &&
-            currentActive.line[0].getDistanceToScreenPoint(
-                newPointScaled
-            ) < mouseDistanceThreshold
+            currentActive.line[0].getDistanceToScreenPoint(newPointScaled) <
+                mouseDistanceThreshold
         ) {
             // If clicked near the line, actuate the hoverPoints.
             // Direct copy from below, but applied to TopoPoints.
@@ -272,7 +272,6 @@ export class InteractivityManager {
                 outObject.snapObject = o;
                 outObject.snapObjectType = 'topoPoint';
             }
-
         }
 
         let canvasSnap = this.app.screenPointToCanvasPoint(snapPoint);
@@ -339,19 +338,8 @@ export class InteractivityManager {
                     break;
                 }
                 case 'setTopographicPoint': {
-                    let hTxt = prompt('Altura de punto: ', '');
-                    if (hTxt) {
-                        let h = parseFloat(hTxt);
-                        let targetLine = this.temp.topoPointTool.sourceLine;
-
-                        targetLine.topoPoints.add(
-                            TopographicProfilePoint.fromCanvasPoint(
-                                targetLine,
-                                mouse.canvasSnap.copy(),
-                                h
-                            )
-                        );
-                    }
+                    let l = this.temp.topoPointTool.sourceLine.topoPoints;
+                    l.toolbox.createElementPrompt(mouse.canvasSnap.copy());
                     break;
                 }
 
@@ -413,8 +401,12 @@ export class InteractivityManager {
     }
 
     handlerKeyUp(keyEvent) {
-        let modifier = this.modifier;
+        if (this.out.dialog.getVisible()) {
+            this.out.dialog._onKeyUp(keyEvent);
+            return;
+        }
 
+        let modifier = this.modifier;
         switch (keyEvent.key.toUpperCase()) {
             case 'SHIFT':
                 modifier.shift = false;

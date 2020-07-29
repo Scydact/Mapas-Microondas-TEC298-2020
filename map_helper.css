@@ -166,15 +166,15 @@ h2 {
 
 #dialogWrapper {
     background: var(--bg-primary);
-    padding: var(--border-radius-toolbox);
+    padding: 0.5rem 1.5rem 1rem;
     border-radius: var(--border-radius-toolbox);
     min-width: 15rem;
 }
 
 .footerButtonWrapper {
     width: calc(100% + 1rem);
+    margin-top: 1rem;
     margin-left: -0.5rem;
-    margin-bottom: -0.5rem;
 
     display: flex;
     flex-direction: row;

@@ -1,6 +1,6 @@
-import { Point } from "./Point.js";
-import { MapObject, MapObjectList } from "./MapObject.js";
-import { createButton, createElement } from "./Utils.js";
+import { Point } from './Point.js';
+import { MapObject, MapObjectList } from './MapObject.js';
+import { createButton, createElement } from './Utils.js';
 
 interface MessageDisplay {
     /**
@@ -35,8 +35,9 @@ class GenericMessageDisplay implements MessageDisplay {
         this.node.classList.add('disabled');
         return true;
     }
-    set(txt: any): boolean {// TODO: single \n adds <br>, double \n\n adds new <p>
-        let splitList = txt.split("\n");
+    set(txt: any): boolean {
+        // TODO: single \n adds <br>, double \n\n adds new <p>
+        let splitList = txt.split('\n');
 
         this.clear();
         splitList.forEach((t) => {
@@ -90,15 +91,34 @@ export class MouseMessageDisplay extends GenericMessageDisplay {
         this.node.style.left = p.x.toString();
         return true;
     }
-};
+}
 
 export class DialogDisplay implements MessageDisplay {
     node: HTMLElement;
     wrapperNode: HTMLElement;
+    callbackKeyEnter: CallableFunction;
+    callbackKeyEscape: CallableFunction;
 
     constructor() {
         this.node = document.getElementById('dialogWrapper');
         this.wrapperNode = document.getElementById('dialogWrapperWrapper');
+    }
+
+    _onKeyUp(keyEvent) {
+        switch (keyEvent.key.toUpperCase()) {
+            case 'ENTER': {
+                if (this.callbackKeyEnter) {
+                    this.callbackKeyEnter();
+                }
+                break;
+            }
+            case 'ESCAPE': {
+                if (this.callbackKeyEscape) {
+                    this.callbackKeyEscape();
+                }
+                break;
+            }
+        }
     }
 
     setVisible(isVisible: boolean) {
@@ -106,13 +126,23 @@ export class DialogDisplay implements MessageDisplay {
         else this.wrapperNode.classList.add('disabled');
     }
 
-    createExitButton(parentNode: HTMLElement = this.createFooterButtonWrapperNode(this.node)) {
+    getVisible() {
+        return !this.wrapperNode.classList.contains('disabled');
+    }
+
+    createOkButton(
+        parentNode: HTMLElement = this.createFooterButtonWrapperNode(this.node)
+    ) {
+        let exitCallback = () => this.clear();
         let b = createButton(
-            parentNode, 
-            'OK', 
-            () => this.clear(),
-            'Aceptar y continuar.');
+            parentNode,
+            'OK',
+            exitCallback,
+            'Aceptar y continuar.'
+        );
         b.classList.add('primary');
+        this.callbackKeyEnter = exitCallback;
+        this.callbackKeyEscape = exitCallback;
         return b;
     }
 
@@ -123,14 +153,17 @@ export class DialogDisplay implements MessageDisplay {
     }
 
     clear(): boolean {
-        this.node.innerHTML = "";
+        this.node.innerHTML = '';
         this.setVisible(false);
+
+        this.callbackKeyEnter = null;
+        this.callbackKeyEscape = null;
 
         return true;
     }
 
     set(string: any): boolean {
-        let splitList = string.split("\n");
+        let splitList = string.split('\n');
 
         this.clear();
         splitList.forEach((t) => {
@@ -140,13 +173,13 @@ export class DialogDisplay implements MessageDisplay {
             this.node.appendChild(p);
         });
 
-        this.createExitButton();
+        this.createOkButton();
         this.setVisible(true);
         return true;
     }
 
     /**
-     * 
+     *
      * @param HTMLElement The node to append to the pane.
      * @param doOkButton If true, will add an OK button to close the pane. Default true.
      */
@@ -154,11 +187,8 @@ export class DialogDisplay implements MessageDisplay {
         this.clear();
         this.node.appendChild(HTMLElement);
 
-        if (doOkButton) this.createExitButton();
+        if (doOkButton) this.createOkButton();
         this.setVisible(true);
         return true;
     }
-
-    
-
 }

@@ -1,4 +1,4 @@
-import { createButton, createElement } from "./Utils.js";
+import { createButton, createElement } from './Utils.js';
 /** Generic MessageDisplay */
 class GenericMessageDisplay {
     clear() {
@@ -7,7 +7,8 @@ class GenericMessageDisplay {
         return true;
     }
     set(txt) {
-        let splitList = txt.split("\n");
+        // TODO: single \n adds <br>, double \n\n adds new <p>
+        let splitList = txt.split('\n');
         this.clear();
         splitList.forEach((t) => {
             let p = document.createElement('p');
@@ -57,11 +58,26 @@ export class MouseMessageDisplay extends GenericMessageDisplay {
         return true;
     }
 }
-;
 export class DialogDisplay {
     constructor() {
         this.node = document.getElementById('dialogWrapper');
         this.wrapperNode = document.getElementById('dialogWrapperWrapper');
+    }
+    _onKeyUp(keyEvent) {
+        switch (keyEvent.key.toUpperCase()) {
+            case 'ENTER': {
+                if (this.callbackKeyEnter) {
+                    this.callbackKeyEnter();
+                }
+                break;
+            }
+            case 'ESCAPE': {
+                if (this.callbackKeyEscape) {
+                    this.callbackKeyEscape();
+                }
+                break;
+            }
+        }
     }
     setVisible(isVisible) {
         if (isVisible)
@@ -69,9 +85,15 @@ export class DialogDisplay {
         else
             this.wrapperNode.classList.add('disabled');
     }
-    createExitButton(parentNode = this.createFooterButtonWrapperNode(this.node)) {
-        let b = createButton(parentNode, 'OK', () => this.clear(), 'Aceptar y continuar.');
+    getVisible() {
+        return !this.wrapperNode.classList.contains('disabled');
+    }
+    createOkButton(parentNode = this.createFooterButtonWrapperNode(this.node)) {
+        let exitCallback = () => this.clear();
+        let b = createButton(parentNode, 'OK', exitCallback, 'Aceptar y continuar.');
         b.classList.add('primary');
+        this.callbackKeyEnter = exitCallback;
+        this.callbackKeyEscape = exitCallback;
         return b;
     }
     createFooterButtonWrapperNode(parentNode = this.node) {
@@ -80,12 +102,14 @@ export class DialogDisplay {
         return d;
     }
     clear() {
-        this.node.innerHTML = "";
+        this.node.innerHTML = '';
         this.setVisible(false);
+        this.callbackKeyEnter = null;
+        this.callbackKeyEscape = null;
         return true;
     }
     set(string) {
-        let splitList = string.split("\n");
+        let splitList = string.split('\n');
         this.clear();
         splitList.forEach((t) => {
             let p = document.createElement('p');
@@ -93,7 +117,7 @@ export class DialogDisplay {
             p.appendChild(tnode);
             this.node.appendChild(p);
         });
-        this.createExitButton();
+        this.createOkButton();
         this.setVisible(true);
         return true;
     }
@@ -106,7 +130,7 @@ export class DialogDisplay {
         this.clear();
         this.node.appendChild(HTMLElement);
         if (doOkButton)
-            this.createExitButton();
+            this.createOkButton();
         this.setVisible(true);
         return true;
     }

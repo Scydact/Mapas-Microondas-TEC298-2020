@@ -504,7 +504,7 @@ export class MapLine extends MapObject {
                 footer.classList.add('footerButtonWrapper');
                 createButton(footer, 'Descargar SVG', () => this.topoPoints._downloadSvg(), 'Descargar la imagen en formato vectorial SVG.');
                 createButton(footer, 'Descargar PNG', () => this.topoPoints._downloadPng(), 'Descargar la imagen en formato bitmap PNG.');
-                this.app.interman.out.dialog.createExitButton(footer);
+                this.app.interman.out.dialog.createOkButton(footer);
                 this.app.interman.out.dialog.setNode(d, false);
             });
             lineBreak(outDiv);
@@ -734,7 +734,8 @@ export class TopographicProfilePoint extends MapPoint {
         this.height = height;
     }
     getHoverMessageContent() {
-        let dp = ((this.position * this.parentMapLine.getLengthMetre()) / 1000).toFixed(2);
+        let dp = ((this.position * this.parentMapLine.getLengthMetre()) /
+            1000).toFixed(2);
         let dl = this.parentMapLine.getFormattedLength();
         return `PT @ d = ${dp} / ${dl}`;
     }
@@ -826,6 +827,32 @@ export class TopographicProfilePointList extends MapPointList {
                 } // on functions that already draw.
                 this.updateNodeRender(); // Somehow, it is called on element creation but not on deletion.
             },
+            createElementPrompt: (canvasPoint) => {
+                let d = document.createElement('div');
+                createElement(d, 'h3', 'Crear punto topográfico');
+                createLabel(d, 'Altura del punto marcado [m]: ');
+                let input = createElement(d, 'input');
+                input.setAttribute('type', 'number');
+                let diag = this.app.interman.out.dialog;
+                let f = diag.createFooterButtonWrapperNode(d);
+                let cancelCallback = () => { diag.clear(); };
+                let okCallback = () => {
+                    let hTxt = input.value;
+                    let n = parseFloat(hTxt);
+                    if (n !== NaN) {
+                        let targetLine = this.parentMapLine;
+                        targetLine.topoPoints.add(TopographicProfilePoint.fromCanvasPoint(targetLine, canvasPoint, n));
+                        this.app.draw();
+                    }
+                    diag.clear();
+                };
+                createButton(f, 'Cancelar', cancelCallback);
+                createButton(f, 'OK', okCallback).classList.add('primary');
+                diag.setNode(d, false);
+                diag.callbackKeyEnter = okCallback;
+                diag.callbackKeyEscape = cancelCallback;
+                input.focus();
+            },
         };
         this.parentMapLine = parentMapLine;
     }
@@ -842,8 +869,7 @@ export class TopographicProfilePointList extends MapPointList {
         this.list = newList;
         return true;
     }
-    _extraNode() {
-    }
+    _extraNode() { }
     _addExtra() {
         this.sortList();
     }
@@ -876,19 +902,9 @@ export class TopographicProfilePointList extends MapPointList {
             let d = currentPoint.position * totalLength;
             let h = currentPoint.height;
             let coords = formatAsCoords(currentPoint.p);
-            rows.push([
-                Math.round(d),
-                h,
-                coords.x,
-                coords.y,
-            ]);
+            rows.push([Math.round(d), h, coords.x, coords.y]);
         }
-        rows.push([
-            'Distancia [m]',
-            'Altura [m]',
-            'Longitud',
-            'Latitud',
-        ]);
+        rows.push(['Distancia [m]', 'Altura [m]', 'Longitud', 'Latitud']);
         return rows.reverse();
     }
     _getDownloadName() {
@@ -912,7 +928,7 @@ export class TopographicProfilePointList extends MapPointList {
         var mapName = this.app.mapMeta.name;
         var wb = XLSX.utils.book_new();
         wb.Props = {
-            Title: `Perfil topografico en ${mapName}`
+            Title: `Perfil topografico en ${mapName}`,
         };
         wb.SheetNames.push(mapName);
         var ws_data = this._getDataAsArray();
@@ -929,9 +945,9 @@ export class TopographicProfilePointList extends MapPointList {
         var buf = new ArrayBuffer(s.length); //convert s to arrayBuffer
         var view = new Uint8Array(buf); //create uint8array as viewer
         for (var i = 0; i < s.length; i++)
-            view[i] = s.charCodeAt(i) & 0xFF; //convert to octet
+            view[i] = s.charCodeAt(i) & 0xff; //convert to octet
         // Download
-        let blob = new Blob([buf], { type: "application/octet-stream" });
+        let blob = new Blob([buf], { type: 'application/octet-stream' });
         downloadBlob(blob, fileName);
     }
     _downloadPng() {
@@ -990,6 +1006,8 @@ export class TopographicProfilePointList extends MapPointList {
                 this.nodeRender.appendChild(i);
                 yield SVGInject(i);
                 this.mySvg = document.getElementById('perfilTopo');
+                if (!this.mySvg)
+                    return;
                 this.mySvg.id = ''; // remove Id...
                 {
                     let p = document.createElement('polyline');

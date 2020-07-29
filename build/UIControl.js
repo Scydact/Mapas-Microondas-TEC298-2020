@@ -1,7 +1,7 @@
 import { Point } from './Point.js';
 import { TopStatusMessageDisplay, StatusBarMessageDisplay, MouseMessageDisplay, DialogDisplay, } from './Panes.js';
 import { ClickMode } from './ClickMode.js';
-import { MapLine, MapPoint, TopographicProfilePoint, } from './MapObject.js';
+import { MapLine, MapPoint, } from './MapObject.js';
 import { EditPane } from './EditPane.js';
 import { Line } from './Line.js';
 /**
@@ -101,14 +101,15 @@ export class InteractivityManager {
         // Update hover status
         this.app.objectListList.forEach((e) => {
             e.setState('hover', false);
-            e.getCloseToScreenPoint(newPointScaled, mouseDistanceThreshold).forEach((e) => (e.setState('hover', true)));
+            e.getCloseToScreenPoint(newPointScaled, mouseDistanceThreshold).forEach((e) => e.setState('hover', true));
             e.updateNode();
         });
         // Update hover of topopoints (if available)
         let currentActive = this._getCurrentState('active');
         if (currentActive.line.length == 1 &&
             currentActive.point.length == 0 &&
-            currentActive.line[0].getDistanceToScreenPoint(newPointScaled) < mouseDistanceThreshold) {
+            currentActive.line[0].getDistanceToScreenPoint(newPointScaled) <
+                mouseDistanceThreshold) {
             // If clicked near the line, actuate the hoverPoints.
             // Direct copy from below, but applied to TopoPoints.
             let currentLine = currentActive.line[0];
@@ -255,12 +256,8 @@ export class InteractivityManager {
                     break;
                 }
                 case 'setTopographicPoint': {
-                    let hTxt = prompt('Altura de punto: ', '');
-                    if (hTxt) {
-                        let h = parseFloat(hTxt);
-                        let targetLine = this.temp.topoPointTool.sourceLine;
-                        targetLine.topoPoints.add(TopographicProfilePoint.fromCanvasPoint(targetLine, mouse.canvasSnap.copy(), h));
-                    }
+                    let l = this.temp.topoPointTool.sourceLine.topoPoints;
+                    l.toolbox.createElementPrompt(mouse.canvasSnap.copy());
                     break;
                 }
                 default: {
@@ -307,6 +304,10 @@ export class InteractivityManager {
         this.startDrag.assign(newPointScaled);
     }
     handlerKeyUp(keyEvent) {
+        if (this.out.dialog.getVisible()) {
+            this.out.dialog._onKeyUp(keyEvent);
+            return;
+        }
         let modifier = this.modifier;
         switch (keyEvent.key.toUpperCase()) {
             case 'SHIFT':
