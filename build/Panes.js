@@ -89,17 +89,22 @@ export class DialogDisplay {
         return !this.wrapperNode.classList.contains('disabled');
     }
     createOkButton(parentNode = this.createFooterButtonWrapperNode(this.node)) {
-        let exitCallback = () => this.clear();
-        let b = createButton(parentNode, 'OK', exitCallback, 'Aceptar y continuar.');
+        let b = createButton(parentNode, 'OK', () => this.exitCallback(), 'Aceptar y continuar.');
         b.classList.add('primary');
-        this.callbackKeyEnter = exitCallback;
-        this.callbackKeyEscape = exitCallback;
+        this.setDefaultExitCallback();
         return b;
     }
     createFooterButtonWrapperNode(parentNode = this.node) {
         let d = createElement(parentNode, 'div');
         d.classList.add('footerButtonWrapper');
         return d;
+    }
+    exitCallback() {
+        this.clear();
+    }
+    setDefaultExitCallback() {
+        this.callbackKeyEnter = this.exitCallback;
+        this.callbackKeyEscape = this.exitCallback;
     }
     clear() {
         this.node.innerHTML = '';
@@ -122,12 +127,11 @@ export class DialogDisplay {
         return true;
     }
     /**
-     *
+     * This does not call .clear()!.
      * @param HTMLElement The node to append to the pane.
      * @param doOkButton If true, will add an OK button to close the pane. Default true.
      */
     setNode(HTMLElement, doOkButton = true) {
-        this.clear();
         this.node.appendChild(HTMLElement);
         if (doOkButton)
             this.createOkButton();

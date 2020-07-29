@@ -133,16 +133,14 @@ export class DialogDisplay implements MessageDisplay {
     createOkButton(
         parentNode: HTMLElement = this.createFooterButtonWrapperNode(this.node)
     ) {
-        let exitCallback = () => this.clear();
         let b = createButton(
             parentNode,
             'OK',
-            exitCallback,
+            () => this.exitCallback(),
             'Aceptar y continuar.'
         );
         b.classList.add('primary');
-        this.callbackKeyEnter = exitCallback;
-        this.callbackKeyEscape = exitCallback;
+        this.setDefaultExitCallback();
         return b;
     }
 
@@ -150,6 +148,15 @@ export class DialogDisplay implements MessageDisplay {
         let d = createElement(parentNode, 'div');
         d.classList.add('footerButtonWrapper');
         return d;
+    }
+
+    exitCallback() {
+        this.clear();
+    }
+
+    setDefaultExitCallback() {
+        this.callbackKeyEnter = this.exitCallback;
+        this.callbackKeyEscape = this.exitCallback;
     }
 
     clear(): boolean {
@@ -179,12 +186,11 @@ export class DialogDisplay implements MessageDisplay {
     }
 
     /**
-     *
+     * This does not call .clear()!.
      * @param HTMLElement The node to append to the pane.
      * @param doOkButton If true, will add an OK button to close the pane. Default true.
      */
     setNode(HTMLElement: any, doOkButton: boolean = true): boolean {
-        this.clear();
         this.node.appendChild(HTMLElement);
 
         if (doOkButton) this.createOkButton();
