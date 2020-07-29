@@ -1,5 +1,4 @@
 import { TopographicProfilePointList } from "./MapObject.js";
-// TODO: Finish implementing me
 export class UndoRedoManager {
     constructor(app) {
         this.actionUndoStack = [];

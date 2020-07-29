@@ -79,8 +79,6 @@ export class InteractivityManager {
     handlerScreenPointMove(newPoint) {
         let newPointScaled = Point.ScalarProduct(newPoint, devicePixelRatio);
         if (this.clicking) {
-            // TODO: Start dragging only after <dragging> a few px from the center.
-            //this.dragging = true;
             if (!this.dragging) {
                 let dragDist = Point.Distance(this.startDrag, newPointScaled);
                 this.DEBUG_DRAG = dragDist;

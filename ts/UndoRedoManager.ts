@@ -9,7 +9,6 @@ export type UndoRedoStackActionObject = {
     oldData: any,
 }
 
-// TODO: Finish implementing me
 export class UndoRedoManager {
     app: App;
     actionUndoStack: UndoRedoStackActionObject[] = [];

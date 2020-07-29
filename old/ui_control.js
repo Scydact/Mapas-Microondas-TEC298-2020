@@ -7,7 +7,6 @@ let editPane;
 let temp;
 
 // only for IntelliSense, as this is be overriden later
-// TODO: Do something with all these important global variables scrambled around. Put them all inside 1 unified object or something.
 let mapLineList = new MapLineList();
 let mapPointList = new MapPointList();
 
@@ -105,8 +104,7 @@ let MousePane = class {
 
 let EditPane = class {
     // Order is the same as mapLists
-    // TODO: Unify mapList so it doesn't need to be rebuilt every single time it needs to be called.
-    active = []
+   active = []
 
     constructor() {
         this.wrapperNode = document.getElementById('editionWrapper');

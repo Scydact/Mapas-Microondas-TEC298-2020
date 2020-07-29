@@ -279,8 +279,7 @@ let saveString = 'saved_data_default';
 $(document).ready(function () {
     let mapApp = new App();
     (<any>window).mapApp = mapApp;
-
-    // TODO: Change to save_data_default when done testing.
+    
     let hasSavedData = mapApp.loadFromLocalStorage(saveString);
     if (!hasSavedData) {
         console.log('First run detected!');
