@@ -267,9 +267,13 @@ export class MapObjectList {
             toolNode.innerHTML = '';
             let AddRemoveDiv = createElement(toolNode, 'div');
             AddRemoveDiv.classList.add('btnGroup');
-            createButton(AddRemoveDiv, '+', () => this.toolbox.createElement(), this.toolboxTooltips.createElement);
-            createButton(AddRemoveDiv, '-', () => this.toolbox.deleteElement(), this.toolboxTooltips.deleteElement);
-            createButton(toolNode, 'Seleccionar todos', () => {
+            createButton(AddRemoveDiv, 
+            //'+',<div id=zoomPlus class='floatingButton'><i class="fas fa-plus" style="font-size: 0.75em;"></i></div>
+            '<i class="fas fa-plus" style="font-size: 0.75em;"></i>', () => this.toolbox.createElement(), this.toolboxTooltips.createElement);
+            createButton(AddRemoveDiv, 
+            //'-',
+            '<i class="fas fa-minus" style="font-size: 0.75em;"></i>', () => this.toolbox.deleteElement(), this.toolboxTooltips.deleteElement);
+            createButton(toolNode, '<i class="fas fa-check-square"></i><span>Seleccionar todos</span>', () => {
                 let elements = this.list;
                 let activeElements = this.getState('active');
                 // Deselect all if everything is already selected
@@ -278,7 +282,7 @@ export class MapObjectList {
                 this.updateNode();
                 this.app.draw();
             }, 'Selecciona/deselecciona todos los elementos de la lista.');
-            createButton(toolNode, 'Invertir selección', () => {
+            createButton(toolNode, '<i class="fas fa-adjust"></i><span>Invertir selección</span>', () => {
                 this.flipState('active');
                 this.updateNode();
                 this.app.draw();
@@ -920,12 +924,12 @@ export class TopographicProfilePointList extends MapPointList {
     }
     _extraNodeButtons(editNode) {
         lineBreak(editNode);
-        createButton(editNode, 'Invertir inicio/fin', () => {
+        createButton(editNode, '<i class="fas fa-exchange-alt"></i><span>Invertir inicio/fin</span>', () => {
             this.parentMapLine.l.flip();
             this.reverseList();
             this.app.draw();
         }, 'Invertir el orden de los puntos. Ej. en vez de A a B, sera de B a A.');
-        createButton(editNode, 'Descargar Excel', () => {
+        createButton(editNode, '<i class="fas fa-file-download"></i><span>Descargar Excel</span>', () => {
             this._downloadXlsx();
         }, 'Descargar la lista de puntos topograficos de esta linea en formato .xlsx');
     }

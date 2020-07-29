@@ -395,20 +395,22 @@ export abstract class MapObjectList implements Restorable {
 
             createButton(
                 AddRemoveDiv,
-                '+',
+                //'+',<div id=zoomPlus class='floatingButton'><i class="fas fa-plus" style="font-size: 0.75em;"></i></div>
+                '<i class="fas fa-plus" style="font-size: 0.75em;"></i>',
                 () => this.toolbox.createElement(),
                 this.toolboxTooltips.createElement
             );
             createButton(
                 AddRemoveDiv,
-                '-',
+                //'-',
+                '<i class="fas fa-minus" style="font-size: 0.75em;"></i>',
                 () => this.toolbox.deleteElement(),
                 this.toolboxTooltips.deleteElement
             );
 
             createButton(
                 toolNode,
-                'Seleccionar todos',
+                '<i class="fas fa-check-square"></i><span>Seleccionar todos</span>',
                 () => {
                     let elements = this.list;
                     let activeElements = this.getState('active');
@@ -426,7 +428,7 @@ export abstract class MapObjectList implements Restorable {
 
             createButton(
                 toolNode,
-                'Invertir selección',
+                '<i class="fas fa-adjust"></i><span>Invertir selección</span>',
                 () => {
                     this.flipState('active');
                     this.updateNode();
@@ -1240,7 +1242,7 @@ export class TopographicProfilePointList extends MapPointList {
 
         createButton(
             editNode,
-            'Invertir inicio/fin',
+            '<i class="fas fa-exchange-alt"></i><span>Invertir inicio/fin</span>',
             () => {
                 this.parentMapLine.l.flip();
                 this.reverseList();
@@ -1251,7 +1253,7 @@ export class TopographicProfilePointList extends MapPointList {
 
         createButton(
             editNode,
-            'Descargar Excel',
+            '<i class="fas fa-file-download"></i><span>Descargar Excel</span>',
             () => {
                 this._downloadXlsx(); 
             },

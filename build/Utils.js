@@ -50,9 +50,10 @@ export function titleCase(string) {
  * @param tooltip (optional) Tooltip to show when hovering the button.
  */
 export function createButton(parentNode, text, callback, tooltip) {
-    let b = document.createElement('input');
-    b.setAttribute('type', 'button');
-    b.setAttribute('value', text);
+    let b = document.createElement('div');
+    b.setAttribute('class', 'button');
+    //b.setAttribute('value', text);
+    b.innerHTML = text;
     if (tooltip) {
         b.setAttribute('title', tooltip);
     }

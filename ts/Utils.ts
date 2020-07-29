@@ -63,9 +63,10 @@ export function createButton(
     callback?,
     tooltip?: string
 ) {
-    let b = document.createElement('input');
-    b.setAttribute('type', 'button');
-    b.setAttribute('value', text);
+    let b = document.createElement('div');
+    b.setAttribute('class', 'button');
+    //b.setAttribute('value', text);
+    b.innerHTML = text;
     if (tooltip) {
         b.setAttribute('title', tooltip);
     }

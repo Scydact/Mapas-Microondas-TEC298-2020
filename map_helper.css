@@ -1,84 +1,43 @@
 :root {
-    font-family: 'Open Sans' ,'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    font-size: medium;
+    font-family: 'Open Sans', 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size  : medium;
 
-    --text-primary: #333;
+    --text-primary  : #333;
     --text-secondary: #555;
-    --bg-primary: #fff;
-    --bg-secondary: #ddd;
+    --bg-primary    : #fff;
+    --bg-secondary  : #ddd;
 
-    --bg-toolbox: #222;
-    --text-toolbox: #eee;
+    --bg-toolbox      : #222;
+    --text-toolbox    : #eee;
     --bg-toolbox-hover: #444;
 
-    --bg-active: rgb(53, 103, 240);
+    --bg-active  : rgb(53, 103, 240);
     --text-active: white;
 
     --border-radius-toolbox: 1.35rem;
-    --width-toolbox: 2.7rem; 
-    --shadow: 0 0 .5rem rgba(0,0,0,70%);
+    --width-toolbox        : 2.7rem;
+    --shadow               : 0 0 .5rem rgba(0, 0, 0, 70%);
 
-    --bg-rightpane: #222;
-    --text-rightpane: #eee;
+    --bg-rightpane      : #222;
+    --text-rightpane    : #eee;
     --bg-rightpane-hover: #444;
-    --padding-pane: 1.2rem;
+    --padding-pane      : 1.2rem;
 
     --border-radius-tab: .5rem;
-    --bg-tab-inactive: rgba(0,0,0,10%);
-    --bg-tab-hover: rgba(0,0,0,15%);
+    --bg-tab-inactive  : rgba(0, 0, 0, 10%);
+    --bg-tab-hover     : rgba(0, 0, 0, 15%);
 
-    --input-min-size: 2rem;
+    --input-min-size     : 2rem;
     --input-border-radius: 0.5rem;
 
-    --input-background: rgba(0,0,0,0.1);
-    --input-background-hover: rgba(0,0,0,0.2);
-    --input-background-active: rgb(53, 103, 240);
-    --input-color: black;
-    --input-color-hover: black;
-    --input-color-active: white;
-    
+    --btn-background       : rgba(0, 0, 0, 0.1);
+    --btn-background-hover : rgba(0, 0, 0, 0.2);
+    --btn-background-active: rgb(53, 103, 240);
+    --btn-color            : rgba(0, 0, 0, 0.8);
+    --btn-color-hover      : rgba(0, 0, 0, 0.8);
+    --btn-color-active     : white;
 
-}
 
-input {
-    background: var(--input-background);
-    color: var(--input-color);
-
-    border: none;
-
-    min-height: var(--input-min-size);
-    min-width: var(--input-min-size);
-    border-radius: var(--input-border-radius);
-    margin: 0.1rem;
-
-    flex-grow: 1;
-}
-
-input:hover, input:focus {
-    background: var(--input-background-hover);
-    color: var(--input-color-hover);
-}
-
-input:active {
-    background: var(--input-background-active);
-    color: var(--input-color-active);
-}
-
-.btnGroup {
-    display: inline-block;
-    margin: 0.1rem;
-}
-.btnGroup input {
-    margin: 0;
-    border-radius: 0;
-}
-.btnGroup input:first-child {
-    border-top-left-radius: var(--input-border-radius);
-    border-bottom-left-radius: var(--input-border-radius);
-}
-.btnGroup input:last-child {
-    border-top-right-radius: var(--input-border-radius);
-    border-bottom-right-radius: var(--input-border-radius);
 }
 
 * {
@@ -86,19 +45,25 @@ input:active {
 }
 
 body {
-    color: black;
+    color      : #222;
     padding    : 0;
     margin     : 0;
     user-select: none;
 }
 
+h1,
+h2,
+h3 {
+    color: #333;
+}
+
 h2 {
-    margin: 0;
+    margin    : 0;
     margin-top: 0.25rem;
 }
 
 #renderCanvas {
-    width: 100%;
+    width : 100%;
     height: 100%;
 }
 
@@ -113,8 +78,8 @@ h2 {
 
 #statusBarWrapper {
     position               : absolute;
-    bottom: 0;
-    left: 20%;
+    bottom                 : 0;
+    left                   : 20%;
     background             : black;
     color                  : white;
     min-width              : 25vw;
@@ -132,18 +97,20 @@ h2 {
 #msgWrapper {
     position : absolute;
     min-width: 30px;
-    top      : 0px;
+    top      : var(--border-radius-toolbox);
     left     : 50%;
     transform: translate(-50%, 0);
 
-    background-color: rgba(20, 20, 20, 70%);
-    backdrop-filter : blur(3px);
+    background-color: var(--bg-toolbox);
     color           : white;
 
-    padding                   : 0 1em;
-    border-bottom-left-radius : 1em;
-    border-bottom-right-radius: 1em;
+    padding      : 1rem;
+    border-radius: var(--border-radius-toolbox);
+    font-size    : 1.2rem;
+}
 
+#msgWrapper p {
+    margin: 0;
 }
 
 #loadingBarWrapper {
@@ -185,32 +152,33 @@ h2 {
 
 /* Tools */
 .floatingButtonWrapper {
-    position: absolute;
-    padding: 0;
-    margin: var(--border-radius-toolbox);
-    min-width: var(--width-toolbox);
-    transition: width 200ms ease;
-    box-shadow: var(--shadow);
+    position     : absolute;
+    padding      : 0;
+    margin       : var(--border-radius-toolbox);
+    min-width    : var(--width-toolbox);
+    transition   : width 200ms ease;
+    box-shadow   : var(--shadow);
     border-radius: var(--border-radius-toolbox);
 }
 
 .floatingButton {
-    color: var(--text-toolbox);
-    background: var(--bg-toolbox);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    color          : var(--text-toolbox);
+    background     : var(--bg-toolbox);
+    display        : flex;
+    flex-direction : column;
+    align-items    : center;
     justify-content: center;
-    min-height: var(--width-toolbox);
-    width: 100%;
+    min-height     : var(--width-toolbox);
+    width          : 100%;
 }
 
 .floatingButton:first-child {
-    border-top-left-radius: var(--border-radius-toolbox);
+    border-top-left-radius : var(--border-radius-toolbox);
     border-top-right-radius: var(--border-radius-toolbox);
 }
+
 .floatingButton:last-child {
-    border-bottom-left-radius: var(--border-radius-toolbox);
+    border-bottom-left-radius : var(--border-radius-toolbox);
     border-bottom-right-radius: var(--border-radius-toolbox);
 }
 
@@ -220,41 +188,41 @@ h2 {
 
 .floatingButton:active,
 .floatingButton.active {
-    color: var(--text-active);
+    color           : var(--text-active);
     background-color: var(--bg-active);
 }
 
 #toolBoxWrapper {
-    top: 0;
-    left: 0;
+    top  : 0;
+    left : 0;
     width: var(--width-toolbox);
 }
 
 .toolBtn {
-    display: grid;
+    display              : grid;
     grid-template-columns: var(--width-toolbox) auto;
-    grid-template-rows: 100%;
-    align-items: center;
-    justify-content: left;
+    grid-template-rows   : 100%;
+    align-items          : center;
+    justify-content      : left;
 
-    height: var(--width-toolbox);
+    height : var(--width-toolbox);
     padding: 0;
-    margin: 0;
+    margin : 0;
 
 }
 
 .toolBtn i {
 
-    grid-row: 1;
-    grid-column: 1;
+    grid-row    : 1;
+    grid-column : 1;
     justify-self: center;
 }
 
 .toolbox-text {
-    display: none;
+    display      : none;
     padding-right: 1.5rem;
-    grid-row: 1;
-    grid-column: 2;
+    grid-row     : 1;
+    grid-column  : 2;
 }
 
 /* On toolbar hover, expand and show tools */
@@ -268,15 +236,15 @@ h2 {
 
 #zoomButtonWrapper {
     bottom: 0;
-    left : 0;
+    left  : 0;
 }
 
 .buttonWrapper {
-    display: flex;
+    display        : flex;
     justify-content: space-between;
-    margin-bottom: 0.25rem;
-    flex-flow: wrap;
-    flex: 0 0;
+    margin-bottom  : 0.25rem;
+    flex-flow      : wrap;
+    flex           : 0 0;
 }
 
 
@@ -326,46 +294,46 @@ h2 {
 /* Panes */
 .rightPaneWrapper {
     position: fixed;
-    top: 0;
-    right: 0;
+    top     : 0;
+    right   : 0;
 
     height: 100%;
 
-    display: grid;
+    display              : grid;
     grid-template-columns: auto auto;
-    grid-template-rows: auto;
+    grid-template-rows   : auto;
 }
 
 .rightPaneNav {
-    height: 100%;
-    width: var(--width-toolbox);
-    color: var(--text-rightpane);
+    height    : 100%;
+    width     : var(--width-toolbox);
+    color     : var(--text-rightpane);
     background: var(--bg-rightpane);
     box-shadow: var(--shadow);
 
     grid-column: 2;
-    grid-row: 1;
+    grid-row   : 1;
 
-    display: flex;
+    display       : flex;
     flex-direction: column;
-    align-items: center;
-    transition: width 200ms ease;
+    align-items   : center;
+    transition    : width 200ms ease;
 }
 
 .rightPaneNav i {
-    font-size: 1.25rem;
+    font-size   : 1.25rem;
     justify-self: center;
-    grid-column: 2;
+    grid-column : 2;
 }
 
 .rightPaneItem {
-    width: 100%;
-    height: 5rem;
-    display: grid;
+    width                : 100%;
+    height               : 5rem;
+    display              : grid;
     grid-template-columns: auto var(--width-toolbox);
-    align-items: center;
-    justify-content: end;
-    overflow: hidden;
+    align-items          : center;
+    justify-content      : end;
+    overflow             : hidden;
 }
 
 .rightPaneItem:hover {
@@ -374,7 +342,7 @@ h2 {
 
 .rightPaneItem:active,
 .rightPaneItem.active {
-    color: var(--text-active);
+    color           : var(--text-active);
     background-color: var(--bg-active);
 }
 
@@ -391,7 +359,7 @@ h2 {
 }
 
 .rightPaneNav:hover .rightPaneItem>span {
-    display: block;
+    display   : block;
     text-align: right;
 }
 
@@ -400,10 +368,10 @@ h2 {
     height: 100%;
 
     grid-column: 1;
-    grid-row: 1;
+    grid-row   : 1;
 
     grid-auto-columns: 1fr;
-    grid-auto-flow: column;
+    grid-auto-flow   : column;
 
     display: grid;
 
@@ -412,87 +380,94 @@ h2 {
 /* Actual panes */
 .pane {
     background: white;
-    padding: var(--padding-pane);
-    display: none;
-    width: 25rem;
-    height: 100vh; /* This stops the things from expanding over 100% (e.g. long lists) */
+    padding   : var(--padding-pane);
+    display   : none;
+    width     : 25rem;
+    height    : 100vh;
+    /* This stops the things from expanding over 100% (e.g. long lists) */
     box-shadow: var(--shadow);
 }
 
 .pane.active {
-    display: flex;
+    display       : flex;
     flex-direction: column;
 }
 
 /* Tabs */
 .tabcontainer {
-    padding-left: 0;
-    padding-right: 0;
+    padding-left  : 0;
+    padding-right : 0;
     padding-bottom: 0;
 }
+
 .tabcontainer.active {
-    display: flex;
+    display       : flex;
     flex-direction: column;
 }
 
-.tabcontainer > .tabcontent,
-.tabcontainer > .tablinkContainer {
-    width: 100%;
+.tabcontainer>.tabcontent,
+.tabcontainer>.tablinkContainer {
+    width     : 100%;
     min-height: 0;
 }
 
-.tabcontainer  > h1, 
+.tabcontainer>h1,
 .tabcontent {
     padding: 0 var(--padding-pane) var(--padding-pane) var(--padding-pane);
 }
 
 .tablinkContainer {
-    flex-shrink: 0;
-    display: grid;
+    flex-shrink      : 0;
+    display          : grid;
     grid-auto-columns: 1fr;
-    grid-auto-rows: 1fr;
-    grid-auto-flow: column;
-    position: relative;
+    grid-auto-rows   : 1fr;
+    grid-auto-flow   : column;
+    position         : relative;
 }
+
 .tablinkContainer::after {
-    position: absolute;
-    content: '';
-    width: 100%;
-    bottom: 0;
-    left: 0;
-    z-index: 1;
+    position     : absolute;
+    content      : '';
+    width        : 100%;
+    bottom       : 0;
+    left         : 0;
+    z-index      : 1;
     border-bottom: 1px solid var(--bg-tab-inactive);
 }
 
 .tablink {
-    justify-self: stretch;
-    display: flex;
-    flex-direction: column;
+    justify-self   : stretch;
+    display        : flex;
+    flex-direction : column;
     justify-content: center;
-    align-items: center;
-    padding: .7rem 0 0.3rem 0;
-    
-    border: 1px solid var(--bg-tab-inactive);
+    align-items    : center;
+    padding        : .7rem 0 0.3rem 0;
+
+    border       : 1px solid var(--bg-tab-inactive);
     border-bottom: none;
 
-    border-top-left-radius: var(--border-radius-tab);
+    border-top-left-radius : var(--border-radius-tab);
     border-top-right-radius: var(--border-radius-tab);
 }
+
 .tablink:first-child {
     border-top-left-radius: 0;
 }
+
 .tablink:last-child {
     border-top-right-radius: 0;
 }
 
 .tablink.active {
     border-bottom: 1px solid var(--bg-primary);
-    z-index: 2;
+    z-index      : 2;
 }
+
 .tablink:not(.active) {
     background-color: var(--bg-tab-inactive);
-    z-index: 0;
+    z-index         : 0;
 }
+
 .tablink:not(.active):hover {
     background-color: var(--bg-tab-hover);
 }
@@ -500,12 +475,13 @@ h2 {
 .tabcontent {
     display: none;
 }
-.tabcontent.active {
-    display: flex;
-    flex-direction: column;
-    align-content: stretch;
 
-    flex-grow: 1;
+.tabcontent.active {
+    display       : flex;
+    flex-direction: column;
+    align-content : stretch;
+
+    flex-grow  : 1;
     flex-shrink: 1;
 
     min-height: 0;
@@ -523,21 +499,21 @@ h2 {
     pointer-events: none;
     background    : white;
     border-radius : 1rem;
-    padding: .25rem;
-    min-height: 1rem;
+    padding       : .25rem;
+    min-height    : 1rem;
     transform     : translate(3px, 3px);
-    box-shadow: var(--shadow);
+    box-shadow    : var(--shadow);
 }
 
 #mouseMsg>p {
     margin: 0.25em 0.5em;
 }
 
-#editionContentWrapper, 
-#editionContentWrapper > div {
-    display: flex;
+#editionContentWrapper,
+#editionContentWrapper>div {
+    display       : flex;
     flex-direction: column;
-    min-height: 0;
+    min-height    : 0;
 }
 
 #editionContentWrapper:empty {
@@ -592,7 +568,7 @@ h2 {
 }
 
 .scroll {
-    overflow-y: auto;
+    overflow-y : auto;
     flex-shrink: 1;
 }
 
@@ -600,4 +576,57 @@ h2 {
     background   : rgba(0, 0, 0, 10%);
     border-radius: 7px;
     padding      : 1rem 0.5rem;
+}
+
+/* Buttons */
+.button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: small;
+    background: var(--btn-background);
+    color     : var(--btn-color);
+
+    border: none;
+
+    min-height   : var(--input-min-size);
+    min-width    : var(--input-min-size);
+    border-radius: var(--input-border-radius);
+    margin       : 0.1rem;
+
+    flex-grow: 1;
+}
+.button > i:first-child:not(:only-child) {
+    margin-right: 0.25rem;
+}
+
+.button:hover,
+.button:focus {
+    background: var(--btn-background-hover);
+    color     : var(--btn-color-hover);
+}
+
+.button:active {
+    background: var(--btn-background-active);
+    color     : var(--btn-color-active);
+}
+
+.btnGroup {
+    display: inline-block;
+    margin : 0.1rem;
+}
+
+.btnGroup .button {
+    margin       : 0;
+    border-radius: 0;
+}
+
+.btnGroup .button:first-child {
+    border-top-left-radius   : var(--input-border-radius);
+    border-bottom-left-radius: var(--input-border-radius);
+}
+
+.btnGroup .button:last-child {
+    border-top-right-radius   : var(--input-border-radius);
+    border-bottom-right-radius: var(--input-border-radius);
 }
