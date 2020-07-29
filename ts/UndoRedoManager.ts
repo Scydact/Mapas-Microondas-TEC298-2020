@@ -1,4 +1,5 @@
 import { App } from "./App.js";
+import { TopographicProfilePointList } from "./MapObject.js";
 
 type UndoRedoStackAction = 'ModifyMapObjectListElement' | 'MapAddLine';
 export type UndoRedoStackActionObject = {
@@ -54,6 +55,9 @@ export class UndoRedoManager {
                 let list = action.source;
                 list.list = action.oldData;
                 list.updateNode();
+                if (list instanceof TopographicProfilePointList) {
+                    list.updateNodeRender();
+                }
                 break;
         }
         this.app.draw();

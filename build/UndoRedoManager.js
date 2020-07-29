@@ -1,3 +1,4 @@
+import { TopographicProfilePointList } from "./MapObject.js";
 // TODO: Finish implementing me
 export class UndoRedoManager {
     constructor(app) {
@@ -37,6 +38,9 @@ export class UndoRedoManager {
                 let list = action.source;
                 list.list = action.oldData;
                 list.updateNode();
+                if (list instanceof TopographicProfilePointList) {
+                    list.updateNodeRender();
+                }
                 break;
         }
         this.app.draw();

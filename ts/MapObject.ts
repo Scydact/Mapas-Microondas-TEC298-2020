@@ -317,6 +317,9 @@ export abstract class MapObjectList implements Restorable {
         this.list.forEach((e) => e.draw(context));
     }
 
+    /** Called after updateNode. */
+    _extraNode() {}
+
     /** Recreates the attached node (to show the list to the used) */
     updateNode(): boolean {
         if (this.node) {
@@ -376,7 +379,7 @@ export abstract class MapObjectList implements Restorable {
                 // Append to the actual list.
                 this.node.appendChild(div);
             }
-
+            this._extraNode();
             return true;
         }
         return false;
@@ -675,27 +678,6 @@ export class MapLine extends MapObject {
             let topoRender = createElement(outDiv, 'div');
             this.topoPoints.nodeRender = topoRender;
             this.topoPoints.updateNodeRender();
-            $(topoRender).on('click', () => {
-                let s = this.topoPoints.mySvg as any;
-
-                try {
-                    // Firefox needs these attributes to render the image.
-                    s.setAttribute('width', 2 * s.width.baseVal.value);
-                    s.setAttribute('height', 2 * s.height.baseVal.value);
-                    // Chrome doesnt need this, so it will throw error...
-                } catch (e) {}
-
-                svgToPng(s.outerHTML, (data) => {
-                    downloadUri(
-                        data,
-                        `perfil_topografico_${this.app.mapLoader.currentMap}.png`
-                    );
-                });
-
-                // Remove the Firefox's attributes, so image can autoscale again.
-                s.removeAttribute('width');
-                s.removeAttribute('height');
-            });
             
             lineBreak(outDiv);
 
@@ -1138,6 +1120,9 @@ export class TopographicProfilePointList extends MapPointList {
         return true;
     }
 
+    _extraNode() {
+    }
+
     _addExtra() {
         this.sortList();
     }
@@ -1242,13 +1227,14 @@ export class TopographicProfilePointList extends MapPointList {
 
         createButton(
             editNode,
-            '<i class="fas fa-exchange-alt"></i><span>Invertir inicio/fin</span>',
+            '<i class="fas fa-exchange-alt"></i><span>Invertir A/B</span>',
             () => {
                 this.parentMapLine.l.flip();
                 this.reverseList();
                 this.app.draw();
+                this.updateNodeRender();
             },
-            'Invertir el orden de los puntos. Ej. en vez de A a B, sera de B a A.'
+            'Invertir el orden de los puntos de inicio/fin. Ej. en vez de A a B, sera de B a A.'
         );
 
         createButton(
@@ -1257,8 +1243,46 @@ export class TopographicProfilePointList extends MapPointList {
             () => {
                 this._downloadXlsx(); 
             },
-            'Descargar la lista de puntos topograficos de esta linea en formato .xlsx'
+            'Descargar la lista de puntos topográficos de esta linea en formato .xlsx'
         );
+
+        createButton(
+            editNode,
+            '<i class="fas fa-chart-area"></i><span>Descargar perfil</span>',
+            () => {
+                let s = this.mySvg as any;
+                try {
+                    // Firefox needs these attributes to render the image.
+                    s.setAttribute('width', s.width.baseVal.value);
+                    s.setAttribute('height', s.height.baseVal.value);
+                    // Chrome doesnt even need/have this, so it will throw error...
+                } catch (e) {}
+    
+                svgToPng(s.outerHTML, (data) => {
+                    downloadUri(
+                        data,
+                        `perfil_topografico_${this.app.mapLoader.currentMap}.png`
+                    );
+                });
+    
+                // Remove the Firefox's attributes, so image can autoscale again.
+                s.removeAttribute('width');
+                s.removeAttribute('height');
+            },
+            'Descargar el perfil topográfico ya graficado (formato .png)'
+        );
+    }
+
+    /** Returns a point array {x: distanceFromStart, y: height} */
+    _getDataAsPointList() {
+        let out = [] as Point[];
+        let totalLength = this.parentMapLine.getLengthMetre();
+        this.list.forEach((currentPoint) => {
+            let d = currentPoint.position * totalLength;
+            let h = currentPoint.height;
+            out.push(new Point(d, h));
+        });
+        return out;
     }
 
     /** Generates this.mySvg and this.myPolyline */
@@ -1340,18 +1364,6 @@ export class TopographicProfilePointList extends MapPointList {
             }
         }
         return this.mySvg;
-    }
-
-    /** Returns a point array {x: distanceFromStart, y: height} */
-    _getDataAsPointList() {
-        let out = [] as Point[];
-        let totalLength = this.parentMapLine.getLengthMetre();
-        this.list.forEach((currentPoint) => {
-            let d = currentPoint.position * totalLength;
-            let h = currentPoint.height;
-            out.push(new Point(d, h));
-        });
-        return out;
     }
 
     async updateNodeRender() {

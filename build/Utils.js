@@ -131,15 +131,17 @@ function getSvgUrl(svg) {
 }
 function svgUrlToPng(svgUrl, callback) {
     const svgImage = document.createElement('img');
-    // imgPreview.style.position = 'absolute';
-    // imgPreview.style.top = '-9999px';
+    svgImage.style.position = 'absolute';
+    svgImage.style.top = '-9999px';
     document.body.appendChild(svgImage);
     svgImage.onload = function () {
         const canvas = document.createElement('canvas');
-        canvas.width = svgImage.clientWidth;
-        canvas.height = svgImage.clientHeight;
+        let w = 2000;
+        let h = w * svgImage.height / svgImage.width;
+        canvas.width = w;
+        canvas.height = h;
         const canvasCtx = canvas.getContext('2d');
-        canvasCtx.drawImage(svgImage, 0, 0);
+        canvasCtx.drawImage(svgImage, 0, 0, w, h);
         const imgData = canvas.toDataURL('image/png');
         callback(imgData);
         document.body.removeChild(svgImage);
