@@ -322,7 +322,8 @@ export class MapLine extends MapObject {
             let x = this.app;
             x.HOVER_LINE_LENGTH = this.getLengthMetre(); // DEBUG, used for adding distances
         }
-        return `L @ d = ${(this.getLengthMetre() / 1e3).toFixed(2)} km`;
+        let d = this.getFormattedLength();
+        return 'L @ d = ' + d;
     }
     toJObject() {
         let o = {
@@ -363,13 +364,17 @@ export class MapLine extends MapObject {
         let p2 = this.app.canvasPointToScreenPoint(this.l.p2);
         return new Line(p1, p2);
     }
+    /** Returns the length of this line, in canvas units */
+    getLength() {
+        return this.l.length();
+    }
     /** Returns the length of this line, in metres. */
     getLengthMetre() {
-        return this.l.length() / this.app.mapMeta.oneMetreInPx;
+        return this.app.DistanceUtils.canvas2metre(this.l.length());
     }
-    /** Returns the distance formatted in KM */
+    /** Returns the distance formatted in the units specified on  */
     getFormattedLength() {
-        return `${(this.getLengthMetre() / 1000).toFixed(2)} km`;
+        return this.app.DistanceFormat.canvas2unit(this.l.length());
     }
     // TODO: Remove this;
     /** Returns the distance from this line to the given point, supposing that this line is infinite. */
@@ -734,8 +739,7 @@ export class TopographicProfilePoint extends MapPoint {
         this.height = height;
     }
     getHoverMessageContent() {
-        let dp = ((this.position * this.parentMapLine.getLengthMetre()) /
-            1000).toFixed(2);
+        let dp = this.app.DistanceFormat.canvas2unit(this.position * this.parentMapLine.l.length(), false);
         let dl = this.parentMapLine.getFormattedLength();
         return `PT @ d = ${dp} / ${dl}`;
     }
@@ -786,8 +790,8 @@ export class TopographicProfilePoint extends MapPoint {
     }
     getListNodeElementContent() {
         let p = document.createElement('p');
-        p.innerHTML = `d = ${((this.position * this.parentMapLine.getLengthMetre()) /
-            1000).toFixed(2)} km, h = ${this.height.toFixed(2)} m`;
+        let dp = this.app.DistanceFormat.canvas2unit(this.position * this.parentMapLine.getLength());
+        p.innerHTML = `d = ${dp}, h = ${this.height} m`;
         return p;
     }
 }
@@ -835,7 +839,9 @@ export class TopographicProfilePointList extends MapPointList {
                 input.setAttribute('type', 'number');
                 let diag = this.app.interman.out.dialog;
                 let f = diag.createFooterButtonWrapperNode(d);
-                let cancelCallback = () => { diag.clear(); };
+                let cancelCallback = () => {
+                    diag.clear();
+                };
                 let okCallback = () => {
                     let hTxt = input.value;
                     let n = parseFloat(hTxt);
@@ -893,7 +899,7 @@ export class TopographicProfilePointList extends MapPointList {
      *  - lat
      *  - pos (%)
      */
-    _getDataAsArray() {
+    _getDataAsTableArray() {
         let rows = [];
         let totalLength = this.parentMapLine.getLengthMetre();
         let mapMeta = this.app.mapMeta;
@@ -914,7 +920,7 @@ export class TopographicProfilePointList extends MapPointList {
     /** Creates a csv blob from this object */
     _toCsv() {
         // TODO: Move this to Utils
-        let data = this._getDataAsArray();
+        let data = this._getDataAsTableArray();
         let dataStr = data.map((e) => e.join('\t')).join('\n');
         return 'data:text/csv;charset=UTF-8,sep=\t\n' + dataStr;
     }
@@ -932,7 +938,7 @@ export class TopographicProfilePointList extends MapPointList {
             Title: `Perfil topografico en ${mapName}`,
         };
         wb.SheetNames.push(mapName);
-        var ws_data = this._getDataAsArray();
+        var ws_data = this._getDataAsTableArray();
         var ws = XLSX.utils.aoa_to_sheet(ws_data);
         wb.Sheets[mapName] = ws;
         var wb_out = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
@@ -994,7 +1000,13 @@ export class TopographicProfilePointList extends MapPointList {
             createButton(btnWrap, '<i class="fas fa-bezier-curve"></i><span>Descargar SVG</span>', () => this._downloadSvg(), 'Descargar el perfil topográfico ya graficado (formato .svg)');
             this.app.interman.out.dialog.setNode(d);
         }, 'Descargar el perfil seleccionado en varios formatos.');
-        createButton(editNode, '<i class="fas fa-info-circle"></i><span>Info</span>', () => { }, 'Informacion sobre la linea.');
+        createButton(editNode, '<i class="fas fa-info-circle"></i><span>Info</span>', () => this._infoDialog(), 'Informacion sobre la linea.');
+    }
+    _infoDialog() {
+        let d = document.createElement('div');
+        createElement(d, 'h1', 'Informacion del perfil topográfico');
+        createElement(d, 'p', 'Longitud de linea:' + this.parentMapLine.getFormattedLength());
+        createElement(d, 'p', 'Longitud de linea:' + this.parentMapLine.getFormattedLength());
     }
     /** Returns a point array {x: distanceFromStart, y: height} */
     _getDataAsPointList() {
@@ -1019,7 +1031,7 @@ export class TopographicProfilePointList extends MapPointList {
                 yield SVGInject(i);
                 this.mySvg = document.getElementById('perfilTopo');
                 if (!this.mySvg)
-                    return;
+                    return; // In case the original svg is not loaded...
                 this.mySvg.id = ''; // remove Id...
                 {
                     let p = document.createElement('polyline');

@@ -1,13 +1,35 @@
-import { ObjectAssignProperty, createElement, createLabel, createSelect } from "./Utils.js";
-import { MapLoader } from "./MapLoader.js";
+import { ObjectAssignProperty, createElement, createLabel, createSelect, lineBreak, } from './Utils.js';
+import { MapLoader } from './MapLoader.js';
+const DistanceUnitsLongNames = {
+    m: 'Metros',
+    km: 'Kilometros',
+    mi: 'Millas terrestres',
+    nmi: 'Millas nauticas',
+    ft: 'Pies',
+    cu: 'CU',
+};
+/**
+ * Multiply Metre by this value to convert to the desired unit.
+ * Divide the unit by this value to convert back to metre.
+ * */
+export const MetreConversion = {
+    m: 1,
+    km: 1 / 1000,
+    cu: 0.236284125751452,
+    mi: 1 / 1609.344,
+    nmi: 1 / 1852,
+    ft: 0.3048,
+};
 /**
  * Constains simple settings, and methods to load them to the forms
  */
 export class Settings {
     constructor() {
-        this.version = 1.3;
+        this.version = 1.4;
         this.map = 'hato_mayor';
         this.snap = true;
+        this.distanceUnits = 'km';
+        this.distanceDigits = 2;
         this.paneState = {
             config: false,
             elements: false,
@@ -79,7 +101,7 @@ export class Settings {
     toJObject() {
         this.getOpenPanes();
         let o = {};
-        Settings.dataProperties.forEach((e) => o[e] = this[e]);
+        Settings.dataProperties.forEach((e) => (o[e] = this[e]));
         o['version'] = this.version;
         return o;
     }
@@ -115,10 +137,12 @@ export class Settings {
      */
     updateSettingsNode(wrapperNode, mapLoader) {
         wrapperNode.innerHTML = '';
-        { // Version
+        {
+            // Version
             document.getElementById('versionDisplay').innerHTML = `v${this.version}`;
         }
-        { // Mapa
+        {
+            // Mapa
             let d = createElement(wrapperNode, 'div');
             createElement(d, 'h2', 'Mapa');
             $(createLabel(d, 'Mapa: ', 'El mapa actualmente cargado.')).prop('for', 'setting_current_map');
@@ -140,7 +164,8 @@ export class Settings {
                 this.prop('map', map);
             });
         }
-        { // Snap
+        {
+            // Snap
             let d = createElement(wrapperNode, 'div');
             createElement(d, 'h2', 'Snap');
             $(createLabel(d, 'Snap: ', 'Similar al snap de los programas CAD, \npermite hacer click directamente sobre los elementos de forma exacta.')).prop('for', 'setting_snap');
@@ -153,12 +178,50 @@ export class Settings {
                 this.prop('snap', val);
             });
         }
+        {
+            // Distance units
+            let d = createElement(wrapperNode, 'div');
+            createElement(d, 'h2', 'Mediciones');
+            {
+                // Unit to use
+                $(createLabel(d, 'Unidades: ', 'La unidad usada en mediciones de distancia.\n No afecta las graficas de perfiles topograficos (ya que usa las distancias en m)')).prop('for', 'setting_distance_unit');
+                let form = createSelect(d, Object.keys(DistanceUnitsLongNames), Object.values(DistanceUnitsLongNames));
+                form.id = 'setting_distance_unit';
+                form.value = this.distanceUnits;
+                $(form).change((e) => {
+                    let newVal = form.value;
+                    this.prop('distanceUnits', newVal);
+                });
+            }
+            lineBreak(d);
+            {
+                // Round digits
+                $(createLabel(d, 'Decimales: ', 'Cantidad de decimales para redondear las distancias.')).prop('for', 'setting_distance_digits');
+                let form = createElement(d, 'input');
+                form.id = 'setting_distance_digits';
+                form.value = this.distanceDigits.toString();
+                form.type = 'number';
+                form.min = '0';
+                form.step = '1';
+                $(form).change((e) => {
+                    let newVal = parseInt(form.value);
+                    this.prop('distanceDigits', newVal);
+                });
+            }
+        }
     }
 }
+/**
+ * Basic data properties.
+ * Items in this list will be saved/loaded automatically.
+ * NOTE: Must manually add to updateSettingsNode().
+ */
 Settings.dataProperties = [
     'map',
     'snap',
-    'paneState'
+    'paneState',
+    'distanceUnits',
+    'distanceDigits',
 ];
 /** Manages a single Pane-Button pair that depend on each other to show/hide. */
 class PaneButtonPair {
@@ -201,7 +264,9 @@ class TabCollection {
                 this.set(i);
             });
         });
-        let idToOpen = (firstOpenId !== undefined && firstOpenId < PanePairs.length) ? firstOpenId : 0;
+        let idToOpen = firstOpenId !== undefined && firstOpenId < PanePairs.length
+            ? firstOpenId
+            : 0;
         this.set(idToOpen);
     }
     /** Closes all the panes */

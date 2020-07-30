@@ -3,11 +3,10 @@ import { MapPosState } from './MapPosState.js';
 import { MapMeta } from './MapMeta.js';
 import { MapLoader } from './MapLoader.js';
 import { InteractivityManager } from './UIControl.js';
-import { Settings } from './Settings.js';
+import { Settings, DistanceUnits, MetreConversion } from './Settings.js';
 import { MapLineList, MapPointList, MapObjectStyleList } from './MapObject.js';
 import { Restorable } from './Utils.js';
 import { UndoRedoManager } from './UndoRedoManager.js';
-import { map } from 'jquery';
 
 /**
  * Main class of this map application. Should be loaded once.
@@ -63,10 +62,7 @@ export class App {
         point: new MapPointList(this),
     };
 
-    objectListList = [
-        this.objectList.line,
-        this.objectList.point,
-    ];
+    objectListList = [this.objectList.line, this.objectList.point];
 
     globalDefaultStyle: MapObjectStyleList = {
         normal: {
@@ -110,13 +106,85 @@ export class App {
         this.objectList.line.globalStyle = this.globalDefaultStyle;
         this.objectList.line.updateNode();
         this.objectList.line.updateNodeButtons($('#lineListButtonWrapper')[0]);
-    
+
         this.objectList.point.node = $('#pointListWrapper')[0];
         this.objectList.point.globalStyle = this.globalDefaultStyle;
         this.objectList.point.updateNode();
-        this.objectList.point.updateNodeButtons($('#pointListButtonWrapper')[0]);
-    
+        this.objectList.point.updateNodeButtons(
+            $('#pointListButtonWrapper')[0]
+        );
     }
+
+    /** Util functions to convert canvas units to distance units */
+    DistanceUtils = {
+        /** Converts canvas units to metre */
+        canvas2metre: (d: number) => d / this.mapMeta.oneMetreInPx,
+        /** Converts canvas units to km */
+        canvas2km: (d: number) => (d * 1e-3) / this.mapMeta.oneMetreInPx,
+        /** Converts canvas units to the unit specified by settings. */
+        canvas2unit: (d: number, unit = this.settings.distanceUnits) => {
+            if (unit != 'cu') {
+                return (d / this.mapMeta.oneMetreInPx) * MetreConversion[unit];
+            } else {
+                return d;
+            }
+        },
+        unit2canvas: (d: number, unit: DistanceUnits) => {
+            if (unit != 'cu') {
+                let m = d / MetreConversion[unit];
+                return m * this.mapMeta.oneMetreInPx;
+            } else {
+                return d; // Conversion to canvas not necessary.
+            }
+        },
+        /**
+         * Converts from one unit to another.
+         * @param d Number to convert to another unit.
+         * @param unit1 Unit of the given number (to convert from).
+         * @param unit2 Unit to convert to.
+         */
+        unit2unit: (d: number, unit1: DistanceUnits, unit2: DistanceUnits) => {
+            // Convert to m
+            let m = d / MetreConversion[unit1];
+            // Convert to desired unit
+            let o = d * MetreConversion[unit2];
+            return o;
+        },
+    };
+
+    private _gdd() {
+        return this.settings.distanceDigits;
+    }
+
+    /** Util functions that convert number to a distance string */
+    DistanceFormat = {
+        /** Rounds the number to the amount of digits set by Settings */
+        round: (d: number) => d.toFixed(this._gdd()),
+        /** Converts from canvas units to metre */
+        canvas2metre: (d: number, appendUnit = true) => {
+            let a = appendUnit ? ' m' : '';
+            this.DistanceUtils.canvas2metre(d).toFixed(this._gdd()) + a;
+        },
+        /** Converts from canvas units to km */
+        canvas2km: (d: number, appendUnit = true) => {
+            let a = appendUnit ? ' km' : '';
+            return this.DistanceUtils.canvas2km(d).toFixed(this._gdd()) + a;
+        },
+
+        /** Converts to the unit specified by Settings */
+        canvas2unit: (
+            d: number,
+            appendUnit = true,
+            unit = this.settings.distanceUnits
+        ) => {
+            let a = appendUnit ? ' ' + unit : '';
+            return (
+                this.DistanceFormat.round(
+                    this.DistanceUtils.canvas2unit(d, unit)
+                ) + a
+            );
+        },
+    };
 
     /** Calls this.settings.updateSettingsNode(ARGS) to update the settings node */
     updateSettingsNode() {
@@ -153,8 +221,6 @@ export class App {
             (pos, translate) => this.posState.scale * pos + translate
         );
     }
-
-
 
     /** Returns an object that can be saved to JSON and loaded via assignSaveObject() */
     toSaveObject() {
@@ -246,7 +312,9 @@ export class App {
     draw() {
         let canvas = this.canvas;
         let context = canvas.getContext('2d');
-        let clickMode = (this.interman) ? this.interman.clickMode : {mode: null}
+        let clickMode = this.interman
+            ? this.interman.clickMode
+            : { mode: null };
 
         // Update width/height of canvas
         let windowScale = window.devicePixelRatio;
@@ -265,7 +333,7 @@ export class App {
         if (clickMode.mode == 'setLinePoint2') {
             this.interman.temp.lineTool.draftLine.draw(context);
         }
-        if (clickMode.mode == "setTopographicPoint") {
+        if (clickMode.mode == 'setTopographicPoint') {
             this.interman.temp.topoPointTool.draftLine.draw(context);
         }
 
@@ -279,7 +347,7 @@ let saveString = 'saved_data_default';
 $(document).ready(function () {
     let mapApp = new App();
     (<any>window).mapApp = mapApp;
-    
+
     let hasSavedData = mapApp.loadFromLocalStorage(saveString);
     if (!hasSavedData) {
         console.log('First run detected!');
@@ -300,5 +368,5 @@ window.onbeforeunload = function (event) {
     } else {
         mapApp.saveToLocalStorage(saveString);
     }
-    window.scrollTo(0,1);
+    window.scrollTo(0, 1);
 };

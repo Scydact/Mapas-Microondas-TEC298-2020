@@ -145,8 +145,7 @@ export class InteractivityManager {
                 let LineProjection = Line.PointProjection(tpt.sourceLine.l, this.app.mouse.canvasSnap);
                 tpt.draftLine.l.p2 = LineProjection;
                 let distance = Point.Distance(LineProjection, tpt.sourceLine.l.p1);
-                msg += `\nd = ${(distance /
-                    (1000 * this.app.mapMeta.oneMetreInPx)).toFixed(2)} km`;
+                msg += `\nd = ${this.app.DistanceFormat.canvas2unit(distance)}`;
             }
         }
         this.out.mouse.set(msg);

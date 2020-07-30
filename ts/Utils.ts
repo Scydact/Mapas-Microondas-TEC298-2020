@@ -116,8 +116,8 @@ export function lineBreak(parentNode: HTMLElement) {
  */
 export function createSelect(
     parentNode: HTMLElement,
-    optionList: string[],
-    optionValueList?: string[],
+    optionList: readonly string[],
+    optionValueList?: readonly string[],
     tooltip?: string
 ) {
     let l = document.createElement('select');
