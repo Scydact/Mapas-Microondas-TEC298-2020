@@ -45,7 +45,7 @@ export class App {
     mapLoader = new MapLoader();
 
     /** Simple settings manager. */
-    settings = new Settings();
+    settings: Settings;
 
     /** Canvas element that the app draws to. */
     canvas: HTMLCanvasElement;
@@ -95,6 +95,11 @@ export class App {
         this.canvas = document.getElementById(
             'renderCanvas'
         ) as HTMLCanvasElement;
+
+            
+        this.interman = new InteractivityManager(this);
+        this.settings = new Settings();
+
         this.updateSettingsNode();
         this.settings.eventHandlerList_PropertyChanged.push((property, val) => {
             if (property == 'map') {
@@ -189,6 +194,7 @@ export class App {
     /** Calls this.settings.updateSettingsNode(ARGS) to update the settings node */
     updateSettingsNode() {
         this.settings.updateSettingsNode(
+            this.interman,
             document.querySelector('#settings'),
             this.mapLoader
         );
@@ -353,7 +359,7 @@ $(document).ready(function () {
         console.log('First run detected!');
     }
     mapApp.load(mapApp.settings.map);
-    mapApp.interman = new InteractivityManager(mapApp);
+    //mapApp.interman = new InteractivityManager(mapApp);
     mapApp.undoman = new UndoRedoManager(mapApp);
 
     $(window).ready(() => mapApp.interman.onWindowReady());

@@ -40,8 +40,6 @@ export class App {
         this.mapMeta = new MapMeta();
         /** Loads the map sections to the DOM and draws them on the canvas. */
         this.mapLoader = new MapLoader();
-        /** Simple settings manager. */
-        this.settings = new Settings();
         /** Contains all the object lists of this app. */
         this.objectList = {
             line: new MapLineList(this),
@@ -131,6 +129,8 @@ export class App {
             },
         };
         this.canvas = document.getElementById('renderCanvas');
+        this.interman = new InteractivityManager(this);
+        this.settings = new Settings();
         this.updateSettingsNode();
         this.settings.eventHandlerList_PropertyChanged.push((property, val) => {
             if (property == 'map') {
@@ -151,7 +151,7 @@ export class App {
     }
     /** Calls this.settings.updateSettingsNode(ARGS) to update the settings node */
     updateSettingsNode() {
-        this.settings.updateSettingsNode(document.querySelector('#settings'), this.mapLoader);
+        this.settings.updateSettingsNode(this.interman, document.querySelector('#settings'), this.mapLoader);
     }
     /**
      * Loads a map.
@@ -279,7 +279,7 @@ $(document).ready(function () {
         console.log('First run detected!');
     }
     mapApp.load(mapApp.settings.map);
-    mapApp.interman = new InteractivityManager(mapApp);
+    //mapApp.interman = new InteractivityManager(mapApp);
     mapApp.undoman = new UndoRedoManager(mapApp);
     $(window).ready(() => mapApp.interman.onWindowReady());
 });

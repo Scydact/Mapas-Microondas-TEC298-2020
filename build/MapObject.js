@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, svgToPng, downloadUri, downloadBlob, getSvgUrl, downloadUrl, } from './Utils.js';
+import { ObjectAssignProperty, createButton, createElement, createLabel, lineBreak, svgToPng, downloadUri, downloadBlob, getSvgUrl, downloadUrl, TopoCalculator, formatEng, } from './Utils.js';
 import { Point } from './Point.js';
 import { Line } from './Line.js';
 /** Generic MapObject that can be drawn, saved, and restored. */
@@ -799,6 +799,21 @@ export class TopographicProfilePoint extends MapPoint {
 export class TopographicProfilePointList extends MapPointList {
     constructor(parentMapLine) {
         super(parentMapLine.app);
+        /** Data to do Fresnel radius calculation */
+        this.Fresnel = {
+            /** n-th Fresnel radius */
+            n: 1,
+            /**
+             * Distance from first/last point (relative from 0% to 100%).
+             *
+             * Note: It doesnt matter if it is from the start or the end,
+             * because the calculation is symmetrical. E.g., Fn(0.3) == Fn(0.7).
+             */
+            d: 0.5,
+            /** If true, distance input will be shown as percent instead
+             * of as calculated distance (in the info pane) */
+            showAsPercent: false,
+        };
         this.toolboxTooltips = {
             createElement: 'Crear nuevo punto topografico.',
             deleteElement: 'Eliminar los puntos topograficos seleccionados.',
@@ -856,8 +871,13 @@ export class TopographicProfilePointList extends MapPointList {
                 createButton(f, 'Cancelar', cancelCallback);
                 createButton(f, 'OK', okCallback).classList.add('primary');
                 diag.setNode(d, false);
-                diag.callbackKeyEnter = okCallback;
-                diag.callbackKeyEscape = cancelCallback;
+                diag.callback = (code) => {
+                    if (code)
+                        okCallback();
+                    else
+                        cancelCallback();
+                    diag.clear();
+                };
                 input.focus();
             },
         };
@@ -1003,10 +1023,93 @@ export class TopographicProfilePointList extends MapPointList {
         createButton(editNode, '<i class="fas fa-info-circle"></i><span>Info</span>', () => this._infoDialog(), 'Informacion sobre la linea.');
     }
     _infoDialog() {
+        let diag = this.app.interman.out.dialog;
         let d = document.createElement('div');
-        createElement(d, 'h1', 'Informacion del perfil topográfico');
-        createElement(d, 'p', 'Longitud de linea:' + this.parentMapLine.getFormattedLength());
-        createElement(d, 'p', 'Longitud de linea:' + this.parentMapLine.getFormattedLength());
+        createElement(d, 'h1', 'Información');
+        // 2 col grid
+        let g = createElement(d, 'div');
+        g.style.display = 'grid';
+        g.style.gridTemplateColumns = 'auto auto';
+        g.style.gridAutoRows = '1fr';
+        g.style.columnGap = '1rem';
+        g.style.justifyItems = 'end';
+        g.style.alignItems = 'center';
+        let divide = (parentNode) => {
+            let s = createElement(parentNode, 'span');
+            s.style.background = 'black';
+            s.style.gridColumn = '1 / 3';
+            s.style.width = '100%';
+            s.style.height = '1px';
+            return s;
+        };
+        createElement(g, 'span', 'Longitud de linea: ');
+        createElement(g, 'span', this.parentMapLine.getFormattedLength());
+        let data = this._getDataAsPointList();
+        if (data.length > 1) {
+            let n = data.length;
+            let h1 = data[0].y;
+            let h2 = data[n - 1].y;
+            let dh = h2 - h1;
+            let dd = data[n - 1].x - data[0].x;
+            let min_h = Infinity;
+            let max_h = -Infinity;
+            data.forEach((e) => {
+                if (min_h > e.y)
+                    min_h = e.y;
+                if (max_h < e.y)
+                    max_h = e.y;
+            });
+            let abs_dh = max_h - min_h;
+            /** Converts metres to canvasUnits (data.x is in metres) */
+            let m2u = (d) => this.app.DistanceUtils.unit2canvas(d, 'm');
+            /** Converts canvasUnits to a formatted string */
+            let u2str = (d) => this.app.DistanceFormat.canvas2unit(d);
+            /** Formats a number in metre (rounds and adds 'm') */
+            let m2str = (d) => this.app.DistanceFormat.round(d) + ' m';
+            divide(g);
+            createElement(g, 'span', 'Longitud entre A/B: ');
+            createElement(g, 'span', u2str(m2u(dd)));
+            createElement(g, 'span', 'Altura A: ');
+            createElement(g, 'span', m2str(h1));
+            createElement(g, 'span', 'Altura B: ');
+            createElement(g, 'span', m2str(h2));
+            createElement(g, 'span', 'Diferencia de altura A/B: ');
+            createElement(g, 'span', m2str(Math.abs(dh)));
+            createElement(g, 'span', 'Diferencia entre mayor y menor altitud: ');
+            createElement(g, 'span', m2str(abs_dh));
+            divide(g);
+            /**
+             * Ask for: FREQ
+             * Perdidas espacio libre
+             * Maxima distancia permisible
+             * Reflexion
+             * Radio de Fresnel <n> a <d> desde <A||B>
+             * Verificacion de obstaculos (en cada punto)
+             */
+            let round = (n) => n.toFixed(this.app.settings.calcDigits);
+            let f = this.app.settings.calcFrequency;
+            createElement(g, 'span', 'Frecuencia de operación: ');
+            let opFrecSpan = diag.createEngineerNumberInput((code, str, num) => {
+                this.app.settings.prop('calcFrequency', num);
+                diag.clear();
+                this._infoDialog();
+            }, f, 'Hz', 'Frecuencia de operacion: ', 3, false);
+            g.appendChild(opFrecSpan);
+            let x;
+            createElement(g, 'span', 'Perdidas de espacio libre: ');
+            x = TopoCalculator.freeSpaceLossDB(dd, f);
+            createElement(g, 'span', `${round(x)} dB @ d=${u2str(m2u(dd))} & f=${formatEng(f, 'Hz')}`);
+            createElement(g, 'span', 'Máxima distancia permisible: ');
+            x = TopoCalculator.maxPermisibleDistance(data[0].y, data[n - 1].y);
+            createElement(g, 'span', `${u2str(m2u(x))} @ h1=${h1} m & h2=${h2} m`);
+            createElement(g, 'span', 'Punto de reflexión: ');
+            x = TopoCalculator.reflectionPoint(dd, h1, h2);
+            createElement(g, 'span', `[A] -- ${u2str(m2u(x[0]))} -- [P] -- ${u2str(m2u(x[1]))} -- [B]`);
+            createElement(g, 'span', 'Maximo radio de Fresnel[n1]: ');
+            x = TopoCalculator.fresnelRadius(dd / 2, dd / 2, f, 1);
+            createElement(g, 'span', m2str(x));
+        }
+        diag.setNode(d);
     }
     /** Returns a point array {x: distanceFromStart, y: height} */
     _getDataAsPointList() {

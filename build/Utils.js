@@ -168,4 +168,101 @@ export function downloadUrl(url, fileName) {
     link.setAttribute('download', fileName);
     link.click();
 }
+const metricPrefixes = {
+    'y': 'yocto',
+    'z': 'zepto',
+    'a': 'atto',
+    'f': 'femto',
+    'p': 'pico',
+    'n': 'nano',
+    'µ': 'micro',
+    'm': 'milli',
+    '': '',
+    'k': 'kilo',
+    'M': 'mega',
+    'G': 'giga',
+    'T': 'tera',
+    'P': 'peta',
+    'E': 'exa',
+    'Z': 'zetta',
+    'Y': 'yotta',
+};
+const metricPrefixesShort = Object.keys(metricPrefixes);
+const metricPrefixesLong = Object.values(metricPrefixes);
+/**
+ * Formats a number in engineering notation.
+ *
+ * Examples:
+ *  - 2 ('Hz') => 2 Hz
+ *  - 0.01 ('A') => 10 mA
+ *  - 1.023e-8 ('F') => 10.24 nF
+ *  - 3.49243e10 ('bps') => 34.92 Gbps
+ *  - 7.34e-36 ('') =>
+ * @param n Number to format
+ * @param suffix Suffix to add (Hz, m, s, ...). If falsy, will output in engineering exponent notation (0.01 => 10e-3 instead of the standard 1e-4)
+ * @param showTrailingZeros (false) If true, trailing zeroes will always be shown.
+ * @param roundDigits (2) Number of digits to round to.
+ * @param useLongPrefixes (false) If true, will use 'milli', 'kilo', 'mega'... intead of 'm', 'k', 'M'.
+ * @param useExtendedSet (false) if true, will use extended metric prefixes from exp18 to exp24 ('atto', 'zepto', 'yocto' and 'exa', 'zetta', 'yotta')
+ */
+export function formatEng(n, suffix, showTrailingZeros = false, roundDigits = 2, useLongPrefixes = false, useExtendedSet = false) {
+    let factor = Math.floor(Math.log10(Math.abs(n)) / 3);
+    let offset = 8;
+    let cap = (useExtendedSet) ? 8 : 5;
+    let prefix = (useLongPrefixes) ? metricPrefixesLong : metricPrefixesShort;
+    let num = n / Math.pow(10, (factor * 3));
+    let numPart = (showTrailingZeros) ?
+        num.toFixed(roundDigits) :
+        (Math.round((num + Number.EPSILON) * Math.pow(10, roundDigits)) / Math.pow(10, roundDigits)).toString();
+    let selectedPrefix = (Math.abs(factor) > cap || !suffix) ?
+        'e' + (factor * 3).toString() :
+        ' ' + prefix[factor + offset] + suffix;
+    return numPart + selectedPrefix;
+}
+export function parseEng(data) {
+    let comp = typeof data;
+    let str;
+    if (comp == 'number')
+        return data;
+    else if (comp != 'string')
+        str = data.toString();
+    else
+        str = data;
+    var re = /([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)([yzafpnuµmkMGTPEZY]?)(.*)/;
+    var searchResult = str.replace(/ /g, '').match(re);
+    if (!searchResult)
+        return parseFloat(str);
+    var fullMatch, num, symbol, extraBits;
+    [fullMatch, num, symbol, extraBits] = searchResult;
+    let n = parseFloat(num);
+    let s = symbol.replace('u', 'µ');
+    let e = metricPrefixesShort.findIndex((e) => e === s);
+    if (e == -1)
+        return n;
+    let exponent = (e - 8) * 3;
+    return n * Math.pow(10, exponent);
+}
+export const C0 = 299792458;
+export const TopoCalculator = {
+    watt2dbm: (w) => 10 * Math.log10(w * 1e3),
+    dbm2watt: (dbm) => 1e-3 * Math.pow(10, (dbm / 10)),
+    freeSpaceLoss: (d, f) => Math.pow((4 * Math.PI * d * f / C0), 2),
+    freeSpaceLossDB: (d, f) => 20 * Math.log10(4 * Math.PI * d * f / C0),
+    maxPermisibleDistance: (h1, h2) => 1000 * Math.sqrt(17) * (Math.sqrt(h1) + Math.sqrt(h2)),
+    reflectionC: (h1, h2) => (h1 - h2) / (h1 + h2),
+    reflectionM: (d, h1, h2) => d * d / (4 * (4 / 3) * 6370e3 * (h1 + h2)),
+    reflectionB: (d, h1, h2) => {
+        let c = TopoCalculator.reflectionC(h1, h2);
+        let m = TopoCalculator.reflectionM(d, h1, h2);
+        return c / (1 + m * Math.sqrt(1 - c ^ 2));
+    },
+    reflectionPoint: (d, h1, h2) => {
+        let b = TopoCalculator.reflectionB(d, h1, h2);
+        return [
+            0.5 * d * (1 + b),
+            0.5 * d * (1 - b),
+        ];
+    },
+    fresnelRadius: (d1, d2, f, n) => Math.sqrt(n * (C0 / f) * d1 * d2 / (d1 + d2)),
+};
 //# sourceMappingURL=Utils.js.map

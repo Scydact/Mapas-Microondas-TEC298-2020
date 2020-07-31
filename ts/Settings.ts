@@ -9,9 +9,10 @@ import {
 } from './Utils.js';
 import { MapLoader } from './MapLoader.js';
 import { timers } from 'jquery';
+import { InteractivityManager } from './UIControl.js';
 
 type PropertyChangeHandler = (
-    changedValue?: string,
+    changedValue?: SettingsDataProperties,
     newValue?: any,
     oldValue?: any
 ) => any;
@@ -63,6 +64,8 @@ export class Settings implements Restorable {
         'paneState',
         'distanceUnits',
         'distanceDigits',
+        'calcDigits',
+        'calcFrequency',
     ] as const;
 
     version = 1.4;
@@ -71,6 +74,8 @@ export class Settings implements Restorable {
 
     distanceUnits: DistanceUnits = 'km';
     distanceDigits: number = 2;
+    calcDigits: number = 2;
+    calcFrequency: number = 1e9;
 
     paneState = {
         config: false,
@@ -205,10 +210,11 @@ export class Settings implements Restorable {
 
     /**
      * Fills the given node with a form to edit settings.
+     * @param interman Interactivity manager to make dialog boxes.
      * @param wrapperNode Parent node to fill.
      * @param mapLoader MapLoader object, used to change/get currentMap.
      */
-    updateSettingsNode(wrapperNode: HTMLElement, mapLoader: MapLoader) {
+    updateSettingsNode(interman: InteractivityManager,wrapperNode: HTMLElement, mapLoader: MapLoader) {
         wrapperNode.innerHTML = '';
 
         {
@@ -274,7 +280,6 @@ export class Settings implements Restorable {
             // Distance units
             let d = createElement(wrapperNode, 'div');
             createElement(d, 'h2', 'Mediciones');
-
             {
                 // Unit to use
                 $(
@@ -300,11 +305,11 @@ export class Settings implements Restorable {
             }
             lineBreak(d);
             {
-                // Round digits
+                // Distance Round digits
                 $(
                     createLabel(
                         d,
-                        'Decimales: ',
+                        'Decimales p/ distancias: ',
                         'Cantidad de decimales para redondear las distancias.'
                     )
                 ).prop('for', 'setting_distance_digits');
@@ -314,11 +319,73 @@ export class Settings implements Restorable {
                 form.value = this.distanceDigits.toString();
                 form.type = 'number';
                 form.min = '0';
+                form.max = '20';
                 form.step = '1';
 
                 $(form).change((e) => {
                     let newVal = parseInt(form.value);
                     this.prop('distanceDigits', newVal);
+                });
+            }
+
+            
+        }
+        {
+            // Calculations
+            let d = createElement(wrapperNode, 'div');
+            createElement(d, 'h2', 'Cálculos');
+            {
+                // Operation frequency
+                $(
+                    createLabel(
+                        d,
+                        'Frecuencia p/ calculos: ',
+                        'La frecuencia predeterminada para los calculos.'
+                    )
+                ).prop('for', 'setting_default_freq');
+
+                let form = interman.out.dialog.createEngineerNumberInput(
+                    (code, str, num) => {
+                        this.prop('calcFrequency', num)
+                    },
+                    this.calcFrequency,
+                    'Hz',
+                    'Frecuencia de operacion base:',
+                    10
+                )
+                d.appendChild(form);
+
+                this.eventHandlerList_PropertyChanged.push(
+                    (prop, newVal) => {
+                        if (prop == 'calcFrequency'){
+                            let f = form as any;
+                            f.set(newVal);
+                        }
+                    }
+                );
+            }
+            lineBreak(d);
+            {
+                // Calc Round digits
+                $(
+                    createLabel(
+                        d,
+                        'Decimales p/ calculos: ',
+                        'Cantidad de decimales para redondear calculos como Perdidas de espacio libre, etc....'
+                    )
+                ).prop('for', 'setting_calc_digits');
+
+                let form = createElement(d, 'input') as HTMLInputElement;
+                form.id = 'setting_calc_digits';
+                form.value = this.calcDigits.toString();
+                form.type = 'number';
+                form.min = '0';
+                form.max = '20';
+                form.step = '1';
+
+                $(form).change((e) => {
+                    let newVal = parseInt(form.value);
+                    this.prop('calcDigits', newVal);
                 });
             }
         }

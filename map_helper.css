@@ -686,3 +686,16 @@ h2 {
     border-top-right-radius   : var(--input-border-radius);
     border-bottom-right-radius: var(--input-border-radius);
 }
+
+.engFormatInput {
+    border: 1px solid var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 0 1rem;
+    margin: 0.2rem;
+    border-radius: 4px;
+}
+
+.engFormatInput:hover {
+    background: var(--bg-primary);
+    box-shadow: 0 0 3px 0 rgba(0,0,0,0.2);
+}
