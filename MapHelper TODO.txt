@@ -1,0 +1,37 @@
+General:
+ - [Priority] Add new maps
+ - [Priority] Fix: [Escape] and click on empty do not deselect objects
+ - [Priority] Tutorial
+ - Render 'hover' lines first.
+ - Auto select newly created line/point
+ - Allow line/point export/import as json (to save/load)
+ - OOOORRRR (and?) make a save/load to localStorage window.
+ - Allow line/point export as table format (csv to make calculations on excel)
+ - Allow rotation too (how? idk)
+
+Config:
+ - Add help menu
+ - Add map antialiasing option.
+ - Add reset tutorial and reset all.
+
+UI:
+ - Add a Popup MessageDisplay that can be selected & copied. Can be used to output text or graphs.
+
+Mobile support:
+ - Fix mousemove (map panning) on high res devices.
+   - Maybe add a minimun movement required before actually moving. (Save a point on click, and only start moving if a certain distance has been traveled (5px?) from that point.
+
+Line/Point:
+ - Fix edit pane not updating on new line creation.
+ - [Priority] Point styles (cross, angled line...)
+ - [Priority] Deselect topographic points on line deselect.
+ - Allow manual input
+ - Give a direction indicator (arrow) when hovering an element that is not on screen.
+ - Allow moving the points after being placed.
+ - Allow moving the points during placement.
+ - Allow in-map topographic visualization (plot).
+ - Allow free space loss calculation (freq. input).
+ - Allow max distance between 2 points calc.
+ - Allow default distance configuration (in km, m, miles, nautical miles...)
+ - Add a ruler (black and white, like the scale), and display it when adding new line.
+ - Add ruler tool (uses said ruler).
