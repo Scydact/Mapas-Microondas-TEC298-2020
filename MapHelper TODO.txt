@@ -7,7 +7,11 @@ General:
  - Allow line/point export/import as json (to save/load)
  - OOOORRRR (and?) make a save/load to localStorage window.
  - Allow line/point export as table format (csv to make calculations on excel)
- - Allow rotation too (how? idk)
+ - Allow rotation too (change renderer and point mapper to allow matrix transforms)
+
+Performance:
+ - [Priority] Remove JQuery!!
+ - Optimize canvas write (only map if visible)
 
 Config:
  - Add help menu

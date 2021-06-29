@@ -28,16 +28,6 @@ export class InteractivityManager {
         this.hoverDistance = 7; // TODO: Move to settings
         this.hoverDistanceFactor = 1;
         this.DEBUG_DRAG = 0;
-        this.temp = {
-            lineTool: {
-                draftLine: new MapLine(this.app),
-                p1: Point.ZERO(),
-            },
-            topoPointTool: {
-                draftLine: new MapLine(this.app),
-                sourceLine: new MapLine(this.app),
-            },
-        };
         this.out = {
             topMsg: new TopStatusMessageDisplay(),
             status: new StatusBarMessageDisplay(),
@@ -54,6 +44,16 @@ export class InteractivityManager {
         this.app = app;
         this.clickMode = new ClickMode(app);
         this.editPane = new EditPane(app);
+        this.temp = {
+            lineTool: {
+                draftLine: new MapLine(this.app),
+                p1: Point.ZERO(),
+            },
+            topoPointTool: {
+                draftLine: new MapLine(this.app),
+                sourceLine: new MapLine(this.app),
+            },
+        };
     }
     _getMouseDistanceThreshold() {
         return devicePixelRatio * this.hoverDistance * this.hoverDistanceFactor;

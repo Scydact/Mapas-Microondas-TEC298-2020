@@ -40,6 +40,17 @@ export class InteractivityManager {
         alt: false,
     };
 
+    temp: {
+        lineTool: {
+            draftLine: MapLine,
+            p1: Point,
+        },
+        topoPointTool: {
+            draftLine: MapLine,
+            sourceLine: MapLine,
+        },
+    };
+
     scaleMultiplier = 0.8;
     touchZooming = 0;
     touchZoomingDistance = 0;
@@ -53,17 +64,6 @@ export class InteractivityManager {
 
     DEBUG_DRAG = 0;
 
-    temp = {
-        lineTool: {
-            draftLine: new MapLine(this.app),
-            p1: Point.ZERO(),
-        },
-        topoPointTool: {
-            draftLine: new MapLine(this.app),
-            sourceLine: new MapLine(this.app),
-        },
-    };
-
     out = {
         topMsg: new TopStatusMessageDisplay(),
         status: new StatusBarMessageDisplay(),
@@ -75,6 +75,17 @@ export class InteractivityManager {
         this.app = app;
         this.clickMode = new ClickMode(app);
         this.editPane = new EditPane(app);
+
+        this.temp = {
+            lineTool: {
+                draftLine: new MapLine(this.app),
+                p1: Point.ZERO(),
+            },
+            topoPointTool: {
+                draftLine: new MapLine(this.app),
+                sourceLine: new MapLine(this.app),
+            },
+        };
     }
 
     _getMouseDistanceThreshold() {

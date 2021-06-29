@@ -576,9 +576,13 @@ export class MapLineList extends MapObjectList {
 export class MapPoint extends MapObject {
     constructor() {
         super(...arguments);
-        this.p = Point.ZERO();
+        this._p = Point.ZERO();
         this.drawStyle = { type: 'dot', scale: 1.5, offset: 1 };
     }
+    get p() {
+        return this._p;
+    }
+    set p(val) { } // ignore p values
     /** Creates a new line and sets its defining points. */
     static fromPoint(p, app) {
         let x = new this(app);
@@ -1233,9 +1237,9 @@ export class TopographicProfilePointList extends MapPointList {
                     C: [60e3, 250],
                 };
                 let selectedScaleIndex = 'A';
-                if (dh <= scales.C[1] * 1.1 && dd <= scales.C[0])
+                if (h_max * 1.1 <= scales.C[1] && dd <= scales.C[0])
                     selectedScaleIndex = 'C';
-                else if (dh <= scales.B[1] * 1.1 && dd <= scales.B[0])
+                else if (h_max * 1.1 <= scales.B[1] && dd <= scales.B[0])
                     selectedScaleIndex = 'B';
                 let selectedScale = scales[selectedScaleIndex];
                 switch (selectedScaleIndex) {
@@ -1257,8 +1261,9 @@ export class TopographicProfilePointList extends MapPointList {
                 let pd = Point.Minus(p2, p1);
                 let mappedPointList = pointList.map((p) => {
                     let x = ((p.x - d_min) * pd.x) / selectedScale[0] + p1.x;
-                    let y_t = ((p.y - h_min) * pd.y) / selectedScale[1];
+                    let y_t = (p.y * pd.y) / selectedScale[1];
                     let y = -Math.sqrt(Math.pow(pr, 2) - Math.pow((x - pc.x), 2)) + pc.y + y_t;
+                    console.log(p, (new Point(x, y)));
                     return new Point(x, y);
                 });
                 // Create polyline string

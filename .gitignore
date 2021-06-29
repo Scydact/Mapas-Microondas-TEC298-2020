@@ -2,5 +2,4 @@
 .vscode/*
 node_modules/*
 jscolor-examples.html
-package-lock.json
 .prettierrc
