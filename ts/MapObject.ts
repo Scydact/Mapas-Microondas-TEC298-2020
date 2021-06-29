@@ -1662,9 +1662,9 @@ export class TopographicProfilePointList extends MapPointList {
                 C: [60e3, 250],
             };
             let selectedScaleIndex = 'A';
-            if (h_max * 1.1 <= scales.C[1] && dd <= scales.C[0])
+            if (h_max <= scales.C[1] * 1.2 && dd <= scales.C[0])
                 selectedScaleIndex = 'C';
-            else if (h_max * 1.1 <= scales.B[1] && dd <= scales.B[0])
+            else if (h_max <= scales.B[1] * 1.2 && dd <= scales.B[0])
                 selectedScaleIndex = 'B';
 
             let selectedScale = scales[selectedScaleIndex];
@@ -1690,7 +1690,6 @@ export class TopographicProfilePointList extends MapPointList {
                 let x = ((p.x - d_min) * pd.x) / selectedScale[0] + p1.x;
                 let y_t = (p.y * pd.y) / selectedScale[1];
                 let y = -Math.sqrt(pr ** 2 - (x - pc.x) ** 2) + pc.y + y_t;
-                console.log(p, (new Point(x,y)));
                 return new Point(x, y);
             });
 

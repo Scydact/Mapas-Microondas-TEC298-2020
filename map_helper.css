@@ -624,6 +624,7 @@ h2 {
     background   : rgba(0, 0, 0, 10%);
     border-radius: 7px;
     padding      : 1rem 0.5rem;
+    min-height: 20em;
 }
 
 /* Buttons */
