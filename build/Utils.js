@@ -12,7 +12,7 @@ export function decimalToSexagecimal(dec) {
         '°' +
         Math.floor(minutes).toString() +
         "'" +
-        seconds.toFixed(0) +
+        (~~seconds).toFixed(0) +
         "''");
 }
 /**

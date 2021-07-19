@@ -202,12 +202,12 @@ MapLoader.mapStruct = {
     san_cristobal: {
         elementSize: { w: 512, h: 528 },
         gridSize: { w: 17, h: 13 },
-        mapMeta: MapMeta.fromJson("{\"name\":\"San Cristobal\",\"deg\":{\"p1\":{\"x\":18.500666,\"y\":70.249583},\"p2\":{\"x\":69.999555,\"y\": 18.334}},\"px\":{\"p1\":{\"x\":1249,\"y\":246},\"p2\":{\"x\":7484,\"y\":4602}},\"oneMetreInPx\":0.23587486042433833}"),
+        mapMeta: MapMeta.fromJson("{\"name\":\"San Cristobal\",\"deg\":{\"p1\":{\"x\":70.249583,\"y\":18.500666},\"p2\":{\"x\":69.999555,\"y\": 18.334}},\"px\":{\"p1\":{\"x\":1249,\"y\":246},\"p2\":{\"x\":7484,\"y\":4602}},\"oneMetreInPx\":0.23587486042433833}"),
     },
     santiago_rodriguez: {
         elementSize: { w: 512, h: 528 },
         gridSize: { w: 17, h: 13 },
-        mapMeta: MapMeta.fromJson("{\"name\":\"Santiago Rodríguez\",\"deg\":{\"p1\":{\"x\":19.5,\"y\":71.5},\"p2\":{\"x\":71.25,\"y\": 19.333333}},\"px\":{\"p1\":{\"x\":1285,\"y\":235},\"p2\":{\"x\":7476,\"y\":4590}},\"oneMetreInPx\":0.23587486042433833}"),
+        mapMeta: MapMeta.fromJson("{\"name\":\"Santiago Rodríguez\",\"deg\":{\"p1\":{\"x\":71.5,\"y\":19.5},\"p2\":{\"x\":71.25,\"y\": 19.333333}},\"px\":{\"p1\":{\"x\":1285,\"y\":235},\"p2\":{\"x\":7476,\"y\":4590}},\"oneMetreInPx\":0.23587486042433833}"),
     },
 };
 //# sourceMappingURL=MapLoader.js.map
