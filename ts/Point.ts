@@ -30,7 +30,7 @@ export class Point {
     }
 
     /** Point initialized at (0, 0) */
-    static ZERO() { return new Point(0, 0)}
+    static ZERO() { return new Point(0, 0) }
 
     /** Assigns values 'x' and 'y' from an object. */
     assign(o) {
@@ -81,31 +81,31 @@ export class Point {
 
     /** Returns the direct product of each vector's element */
     static BinaryProduct(p1: Point, p2: Point) {
-        return Point.BinaryOperation(p1, p2, (a,b) => a * b)
+        return Point.BinaryOperation(p1, p2, (a, b) => a * b)
     }
-    
+
     /** 
      * Returns the direct division of each vector's element (x1/x2)
      * @param p1 Numerator
      * @param p2 Denominator
      */
     static BinaryDivision(p1: Point, p2: Point) {
-        return Point.BinaryOperation(p1, p2, (a,b) => a / b)
+        return Point.BinaryOperation(p1, p2, (a, b) => a / b)
     }
 
     /** Returns a new point with reciprocal elements. (x, y) => (1/x, 1/y) */
     static Reciprocal(p: Point) {
-        return Point.UnaryOperation(p, (a) => 1/a);
+        return Point.UnaryOperation(p, (a) => 1 / a);
     }
 
     /** Returns the vector subtraction. */
     static Minus(p1: Point, p2: Point) {
-        return Point.BinaryOperation(p1, p2, (a,b) => a - b)
+        return Point.BinaryOperation(p1, p2, (a, b) => a - b)
     }
 
     /** Returns the vector sum. */
     static Plus(p1: Point, p2: Point) {
-        return Point.BinaryOperation(p1, p2, (a,b) => a + b)
+        return Point.BinaryOperation(p1, p2, (a, b) => a + b)
     }
 
     /** Multiplies x & y by an scalar */
@@ -133,12 +133,12 @@ export class Point {
 
     /** Normalizes the vector */
     static Normalize(a) {
-        return Point.ScalarProduct(a, 1/Point.Abs(a));
+        return Point.ScalarProduct(a, 1 / Point.Abs(a));
     }
 
     /** Returns the scalar projection of a on b */
     static VectorProjection(a: Point, b: Point) {
-        let scale = Point.Dot(a, b) / Point.Abs(b); 
+        let scale = Point.Dot(a, b) / Point.Abs(b);
         return Point.ScalarProduct(b, scale);
     }
 
@@ -155,7 +155,25 @@ export class Point {
 
     /** Returns the midpoint between two points. */
     static MidPoint(p1: Point, p2: Point) {
-        return Point.BinaryOperation(p1, p2, (a,b) => (a+b)/2);
+        return Point.BinaryOperation(p1, p2, (a, b) => (a + b) / 2);
+    }
+
+    static RectangleOverlap(l1: Point, r1: Point, l2: Point, r2: Point) {
+        if (l1.x == r1.x || l1.y == r1.y
+            || l2.x == r2.x || l2.y == r2.y) {
+            // the line cannot have positive overlap
+            return false;
+        }
+
+        // If one rectangle is on left side of other
+        if (l1.x >= r2.x || l2.x >= r1.x)
+            return false;
+
+        // If one rectangle is above other
+        if (l1.y >= r2.y || l2.y >= r1.y)
+            return false;
+
+        return true;
     }
 
     //#endregion

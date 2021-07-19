@@ -133,26 +133,31 @@ MapLoader.mapStruct = {
         elementSize: { w: 528, h: 520 },
         gridSize: { w: 17, h: 13 },
         mapMeta: MapMeta.fromJson("{\"name\":\"Azua\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":18.5},\"p2\":{\"x\":70.5,\"y\":18.33333}},\"px\":{\"p1\":{\"x\":1221,\"y\":255},\"p2\":{\"x\":7463,\"y\":4613}},\"oneMetreInPx\":0.23706773905510017}"),
+        //mapMeta: MapMeta.fromLegacyString('Azua', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1221,"x2Px":7463,"y1Deg":18.5,"y2Deg":18.33333,"y1Px":255,"y2Px":4613,"oneMetreInPx":1.9511393698710089}'),
     },
     constanza: {
         elementSize: { w: 520, h: 528 },
         gridSize: { w: 17, h: 13 },
         mapMeta: MapMeta.fromJson("{\"name\":\"Constanza\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19},\"p2\":{\"x\":70.5,\"y\":18.83333}},\"px\":{\"p1\":{\"x\":1289,\"y\":283},\"p2\":{\"x\":7507,\"y\":4642}},\"oneMetreInPx\":0.23663853123929837}"),
+        //mapMeta: MapMeta.fromLegacyString('Constanza', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1289,"x2Px":7507,"y1Deg":19,"y2Deg":18.83333,"y1Px":283,"y2Px":4642,"oneMetreInPx":1.96375716712138}'),
     },
     hato_mayor: {
         elementSize: { w: 512, h: 528 },
         gridSize: { w: 17, h: 13 },
         mapMeta: MapMeta.fromJson("{\"name\":\"Hato Mayor\",\"deg\":{\"p1\":{\"x\":69.5,\"y\":18.833333},\"p2\":{\"x\":69.25,\"y\":18.666666}},\"px\":{\"p1\":{\"x\":1223,\"y\":189},\"p2\":{\"x\":7432,\"y\":4552}},\"oneMetreInPx\":0.23598654280720946}"),
+        //mapMeta: MapMeta.fromLegacyString('Hato Mayor', '{"x1Deg":69.5,"x2Deg":69.25,"x1Px":1223,"x2Px":7432,"y1Deg":18.833333,"y2Deg":18.666666,"y1Px":189,"y2Px":4552,"oneMetreInPx":1.9551870650091925}'),
     },
     jarabacoa: {
         elementSize: { w: 528, h: 520 },
         gridSize: { w: 17, h: 13 },
         mapMeta: MapMeta.fromJson("{\"name\":\"Jarabacoa\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.16666},\"p2\":{\"x\":70.5,\"y\":19}},\"px\":{\"p1\":{\"x\":1252,\"y\":271},\"p2\":{\"x\":7460,\"y\":4628}},\"oneMetreInPx\":0.23666838456942246}"),
+        //mapMeta: MapMeta.fromLegacyString('Jarabacoa', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1252,"x2Px":7460,"y1Deg":19.16666,"y2Deg":19,"y1Px":271,"y2Px":4628,"oneMetreInPx":1.9614630420557655}'),
     },
     puerto_plata: {
         elementSize: { w: 512, h: 536 },
         gridSize: { w: 18, h: 13 },
         mapMeta: MapMeta.fromJson("{\"name\":\"Puerto Plata\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.833333},\"p2\":{\"x\":70.5,\"y\":19.666666}},\"px\":{\"p1\":{\"x\":1343,\"y\":254},\"p2\":{\"x\":7542,\"y\":4588}},\"oneMetreInPx\":0.2358035678014027}"),
+        //mapMeta: MapMeta.fromLegacyString('Puerto Plata', '{"x1Deg":70.75,"x2Deg":70.5,"x1Px":1342,"x2Px":7543,"y1Deg":19.833333,"y2Deg":19.666666,"y1Px":92,"y2Px":4588,"oneMetreInPx":1.9511866481881994}'), 
     },
     comendador: {
         elementSize: { w: 528, h: 520 },
@@ -178,6 +183,31 @@ MapLoader.mapStruct = {
         elementSize: { w: 528, h: 520 },
         gridSize: { w: 17, h: 13 },
         mapMeta: MapMeta.fromJson("{\"name\":\"San Francisco (Arriba)\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.666667},\"p2\":{\"x\":70.5,\"y\":19.5}},\"px\":{\"p1\":{\"x\":1256,\"y\":249},\"p2\":{\"x\":7449,\"y\":4606}},\"oneMetreInPx\":0.23587486042433833}"),
+    },
+    fantino: {
+        elementSize: { w: 520, h: 528 },
+        gridSize: { w: 17, h: 13 },
+        mapMeta: MapMeta.fromJson("{\"name\":\"Fantino\",\"deg\":{\"p1\":{\"x\":70.5,\"y\":19.166667},\"p2\":{\"x\":70.5,\"y\":19.5}},\"px\":{\"p1\":{\"x\":1169,\"y\":266},\"p2\":{\"x\":7371,\"y\":4637}},\"oneMetreInPx\":0.23587486042433833}"),
+    },
+    janico: {
+        elementSize: { w: 528, h: 520 },
+        gridSize: { w: 17, h: 13 },
+        mapMeta: MapMeta.fromJson("{\"name\":\"Janico\",\"deg\":{\"p1\":{\"x\":71.0,\"y\":19.333333},\"p2\":{\"x\":70.75,\"y\":19.166667}},\"px\":{\"p1\":{\"x\":1192,\"y\":285},\"p2\":{\"x\":7397,\"y\":4643}},\"oneMetreInPx\":0.23587486042433833}"),
+    },
+    miches: {
+        elementSize: { w: 512, h: 528 },
+        gridSize: { w: 17, h: 13 },
+        mapMeta: MapMeta.fromJson("{\"name\":\"Miches\",\"deg\":{\"p1\":{\"x\":69.25,\"y\":19.05},\"p2\":{\"x\":69.0,\"y\":18.833333}},\"px\":{\"p1\":{\"x\":450,\"y\":221},\"p2\":{\"x\":6659,\"y\":5883}},\"oneMetreInPx\":0.23587486042433833}"),
+    },
+    san_cristobal: {
+        elementSize: { w: 512, h: 528 },
+        gridSize: { w: 17, h: 13 },
+        mapMeta: MapMeta.fromJson("{\"name\":\"San Cristobal\",\"deg\":{\"p1\":{\"x\":18.500666,\"y\":70.249583},\"p2\":{\"x\":69.999555,\"y\": 18.334}},\"px\":{\"p1\":{\"x\":1249,\"y\":246},\"p2\":{\"x\":7484,\"y\":4602}},\"oneMetreInPx\":0.23587486042433833}"),
+    },
+    santiago_rodriguez: {
+        elementSize: { w: 512, h: 528 },
+        gridSize: { w: 17, h: 13 },
+        mapMeta: MapMeta.fromJson("{\"name\":\"Santiago Rodríguez\",\"deg\":{\"p1\":{\"x\":19.5,\"y\":71.5},\"p2\":{\"x\":71.25,\"y\": 19.333333}},\"px\":{\"p1\":{\"x\":1285,\"y\":235},\"p2\":{\"x\":7476,\"y\":4590}},\"oneMetreInPx\":0.23587486042433833}"),
     },
 };
 //# sourceMappingURL=MapLoader.js.map

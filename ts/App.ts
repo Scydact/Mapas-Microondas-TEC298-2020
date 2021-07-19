@@ -96,7 +96,7 @@ export class App {
             'renderCanvas'
         ) as HTMLCanvasElement;
 
-            
+
         this.interman = new InteractivityManager(this);
         this.settings = new Settings();
 
@@ -118,6 +118,21 @@ export class App {
         this.objectList.point.updateNodeButtons(
             $('#pointListButtonWrapper')[0]
         );
+
+        if (false)
+        console.log(JSON.stringify(
+            Object.entries(MapLoader.mapStruct)
+                .map(([key, val]) => {
+                    var {mapMeta, ...rest} = val;
+                    var {name, ...rest2} = mapMeta;
+                    return [key, {name, ...rest, ...rest2}]
+                })
+                .reduce((accum, curr) => {
+                    let o = {...accum}
+                    o[curr[0] as string] = curr[1]
+                    return o
+                }, {})
+        ))
     }
 
     /** Util functions to convert canvas units to distance units */

@@ -109,6 +109,20 @@ export class Point {
     static MidPoint(p1, p2) {
         return Point.BinaryOperation(p1, p2, (a, b) => (a + b) / 2);
     }
+    static RectangleOverlap(l1, r1, l2, r2) {
+        if (l1.x == r1.x || l1.y == r1.y
+            || l2.x == r2.x || l2.y == r2.y) {
+            // the line cannot have positive overlap
+            return false;
+        }
+        // If one rectangle is on left side of other
+        if (l1.x >= r2.x || l2.x >= r1.x)
+            return false;
+        // If one rectangle is above other
+        if (l1.y >= r2.y || l2.y >= r1.y)
+            return false;
+        return true;
+    }
     //#endregion
     //#region Complex operations
     /**

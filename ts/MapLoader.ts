@@ -6,8 +6,8 @@ import { TopographicProfilePoint } from "./MapObject.js";
  * Interface for basic map data structure, including section size, grid size, and its Metadata (default points and coords)
  */
 export interface mapData {
-    elementSize: {w: number, h: number},
-    gridSize: {w: number, h:number},
+    elementSize: { w: number, h: number },
+    gridSize: { w: number, h: number },
     mapMeta: MapMeta;
 }
 
@@ -18,7 +18,7 @@ type MapChangeHandler = (changedMap?: string) => any;
  * Contains methods to load and draw the actual map on a canvas.
  */
 export class MapLoader {
-    static mapStruct: {[name: string]: mapData} = {
+    static mapStruct: { [name: string]: mapData } = {
         azua: {
             elementSize: { w: 528, h: 520 },
             gridSize: { w: 17, h: 13 },
@@ -77,6 +77,31 @@ export class MapLoader {
             gridSize: { w: 17, h: 13 },
             mapMeta: MapMeta.fromJson("{\"name\":\"San Francisco (Arriba)\",\"deg\":{\"p1\":{\"x\":70.75,\"y\":19.666667},\"p2\":{\"x\":70.5,\"y\":19.5}},\"px\":{\"p1\":{\"x\":1256,\"y\":249},\"p2\":{\"x\":7449,\"y\":4606}},\"oneMetreInPx\":0.23587486042433833}"),
         },
+        fantino: {
+            elementSize: { w: 520, h: 528 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"Fantino\",\"deg\":{\"p1\":{\"x\":70.5,\"y\":19.166667},\"p2\":{\"x\":70.5,\"y\":19.5}},\"px\":{\"p1\":{\"x\":1169,\"y\":266},\"p2\":{\"x\":7371,\"y\":4637}},\"oneMetreInPx\":0.23587486042433833}"),
+        },
+        janico: {
+            elementSize: { w: 528, h: 520 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"Janico\",\"deg\":{\"p1\":{\"x\":71.0,\"y\":19.333333},\"p2\":{\"x\":70.75,\"y\":19.166667}},\"px\":{\"p1\":{\"x\":1192,\"y\":285},\"p2\":{\"x\":7397,\"y\":4643}},\"oneMetreInPx\":0.23587486042433833}"),
+        },
+        miches: {
+            elementSize: { w: 512, h: 528 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"Miches\",\"deg\":{\"p1\":{\"x\":69.25,\"y\":19.05},\"p2\":{\"x\":69.0,\"y\":18.833333}},\"px\":{\"p1\":{\"x\":450,\"y\":221},\"p2\":{\"x\":6659,\"y\":5883}},\"oneMetreInPx\":0.23587486042433833}"),
+        },
+        san_cristobal: {
+            elementSize: { w: 512, h: 528 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"San Cristobal\",\"deg\":{\"p1\":{\"x\":18.500666,\"y\":70.249583},\"p2\":{\"x\":69.999555,\"y\": 18.334}},\"px\":{\"p1\":{\"x\":1249,\"y\":246},\"p2\":{\"x\":7484,\"y\":4602}},\"oneMetreInPx\":0.23587486042433833}"),
+        },
+        santiago_rodriguez: {
+            elementSize: { w: 512, h: 528 },
+            gridSize: { w: 17, h: 13 },
+            mapMeta: MapMeta.fromJson("{\"name\":\"Santiago Rodríguez\",\"deg\":{\"p1\":{\"x\":19.5,\"y\":71.5},\"p2\":{\"x\":71.25,\"y\": 19.333333}},\"px\":{\"p1\":{\"x\":1285,\"y\":235},\"p2\":{\"x\":7476,\"y\":4590}},\"oneMetreInPx\":0.23587486042433833}"),
+        },
     }
 
     loadedMapCache = [];
@@ -91,7 +116,7 @@ export class MapLoader {
 
     mapChangedEventRun(map: string) {
         this.eventHandlerList_MapChanged.forEach((e) => e(map));
-    }  
+    }
 
     /**
      * Returns the (assembled, not grid) size of the selected map.
@@ -111,9 +136,9 @@ export class MapLoader {
         let loadBarMsg = document.getElementById("loadingBarMsg");
         let n1 = this.currentLoadedImages;
         let n2 = this.totalImages;
-        let pc = (100 * n1/n2).toFixed(2) + '%';
+        let pc = (100 * n1 / n2).toFixed(2) + '%';
 
-        loadBarMsg.innerHTML =`Cargando: ${pc} (${n1}/${n2})`;
+        loadBarMsg.innerHTML = `Cargando: ${pc} (${n1}/${n2})`;
         let loadBar = document.getElementById("loadingBarPercent");
         loadBar.style.width = pc;
     };
@@ -124,7 +149,7 @@ export class MapLoader {
      */
     setDefaultZoom(mapPosStateObject: MapPosState) {
         // Focus entire map on screen
-        
+
         mapPosStateObject.translate.x = -(this.imageSize.w - innerWidth) / 2;
         mapPosStateObject.translate.y = -(this.imageSize.h - innerHeight) / 2;
         mapPosStateObject.scale = 1;
@@ -146,8 +171,8 @@ export class MapLoader {
      * @param globalDraw Draw function to call when loading the map
      */
     load(mapMeta: MapMeta, map: string, mapPosStateObject: MapPosState, globalDraw: Function) {
-        if (this.currentMap === map) {return false}
-        
+        if (this.currentMap === map) { return false }
+
         this.currentMap = map;
         this.mapChangedEventRun(map);
 

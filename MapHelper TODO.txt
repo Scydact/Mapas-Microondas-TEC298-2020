@@ -1,3 +1,43 @@
+Reestructure entire thing.
+ - Optimize for "regular" displays first (720p)
+ - Dont call "draw", instead, update an Status.
+ - Will only redraw on Status update, and on requestAnimationFrame().
+ - Give ID to all elements (react compatibility)
+ - Allow matrix math to allow rotation and scaling!
+ - Add help!
+ - Settings per element:
+   - Color: DEFAULT or custom
+   - Width: DEFAULT or custom
+ - Multiple canvas layers:
+   - Main canvas container
+   - Layer BaseMap (updated only if MapPosition is changed)
+   - Layer Lines   (updated only if MapLines is different or BaseMap is updated)
+   - Layer Points  (updated only if MapPoints is different or BaseMap is updated)
+   - Layer extra (like in-map topo)
+   - Popup layer (use HTML instead of canvas)
+ 
+
+DONE:
+ - Use react?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 General:
  - [Priority] Add new maps
  - [Priority] Fix: [Escape] and click on empty do not deselect objects
